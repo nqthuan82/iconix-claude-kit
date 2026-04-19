@@ -1,0 +1,92 @@
+name: Validate ICONIX Kit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-agents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check agent file frontmatter
+        run: |
+          set -e
+          fail=0
+          for f in agents/*.md; do
+            if ! head -1 "$f" | grep -q '^---$'; then
+              echo "ERROR: $f is missing YAML frontmatter opening"
+              fail=1
+            fi
+            if ! head -20 "$f" | grep -q '^name:'; then
+              echo "ERROR: $f is missing 'name:' in frontmatter"
+              fail=1
+            fi
+            if ! head -20 "$f" | grep -q '^description:'; then
+              echo "ERROR: $f is missing 'description:' in frontmatter"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Check command file frontmatter
+        run: |
+          set -e
+          fail=0
+          for f in commands/*.md; do
+            if ! head -1 "$f" | grep -q '^---$'; then
+              echo "ERROR: $f is missing YAML frontmatter opening"
+              fail=1
+            fi
+            if ! head -10 "$f" | grep -q '^description:'; then
+              echo "ERROR: $f is missing 'description:' in frontmatter"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Ensure agent names are unique
+        run: |
+          names=$(grep -h '^name:' agents/*.md | sort)
+          dupes=$(echo "$names" | uniq -d)
+          if [ -n "$dupes" ]; then
+            echo "ERROR: Duplicate agent names found:"
+            echo "$dupes"
+            exit 1
+          fi
+
+  smoke-test-installer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make installer executable
+        run: chmod +x ./iconix-init
+
+      - name: Install into a scratch project
+        run: |
+          mkdir -p /tmp/test-project
+          cd /tmp/test-project
+          "${GITHUB_WORKSPACE}/iconix-init" \
+            --source "${GITHUB_WORKSPACE}" \
+            --prefix CI \
+            --language python
+
+      - name: Verify installation
+        run: |
+          cd /tmp/test-project
+          test -d .claude/agents || { echo "agents dir missing"; exit 1; }
+          test -d .claude/commands || { echo "commands dir missing"; exit 1; }
+          test -f iconix.config.yaml || { echo "config missing"; exit 1; }
+          grep -q 'prefix: "CI"' iconix.config.yaml || { echo "prefix not patched"; exit 1; }
+          grep -q 'language: "python"' iconix.config.yaml || { echo "language not patched"; exit 1; }
+          # Count agents
+          agent_count=$(ls .claude/agents/ | wc -l)
+          if [ "$agent_count" -lt 10 ]; then
+            echo "Expected at least 10 agents, found $agent_count"
+            exit 1
+          fi
+          echo "OK — installation validated"

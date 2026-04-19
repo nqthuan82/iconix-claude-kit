@@ -1,0 +1,38 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code runtime
+.claude/runtime/
+.claude/sessions/
+
+# Don't commit per-project artifacts if someone installs into this repo
+# (the kit itself is clean; these appear only when installed into a project)
+/requirements/
+/use-cases/
+/robustness/
+/domain-model/
+/class-model/
+/sequence/
+/container-mapping/
+/nfr-annotations/
+/adrs/
+/test-cases/
+/features/
+/test-matrices/
+/milestone-reports/
+/reviews/
+/migration/
+/iconix.config.yaml
+
+# Logs and temp
+*.log
+*.tmp
+/tmp/
