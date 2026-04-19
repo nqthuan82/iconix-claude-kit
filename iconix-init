@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# iconix-init — Install the ICONIX Claude Code agent kit into a project.
+#
+# Usage:
+#   iconix-init                          # install into current directory (project scope)
+#   iconix-init --global                 # install into ~/.claude (user scope, all projects)
+#   iconix-init --prefix RGS             # set the project ID prefix
+#   iconix-init --language csharp        # set the stack language
+#   iconix-init --force                  # overwrite existing agent files
+#   iconix-init --source <path|url>      # pull agents from a local path or git URL
+#
+# After install, open Claude Code in the project and run:
+#   /agents        (to list installed agents)
+#   /iconix-next   (to run the pipeline on the next use case)
+
+set -euo pipefail
+
+SCOPE="project"
+PREFIX=""
+LANGUAGE=""
+FORCE=false
+SOURCE=""
+DEFAULT_SOURCE_URL="https://github.com/your-org/iconix-claude-kit.git"
+
+usage() {
+  grep '^#' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --global) SCOPE="global"; shift ;;
+    --prefix) PREFIX="$2"; shift 2 ;;
+    --language) LANGUAGE="$2"; shift 2 ;;
+    --force) FORCE=true; shift ;;
+    --source) SOURCE="$2"; shift 2 ;;
+    -h|--help) usage ;;
+    *) echo "Unknown flag: $1" >&2; usage ;;
+  esac
+done
+
+# Determine install target
+if [[ "$SCOPE" == "global" ]]; then
+  TARGET_BASE="${HOME}/.claude"
+  echo "→ Installing globally at ${TARGET_BASE}"
+else
+  TARGET_BASE="$(pwd)/.claude"
+  echo "→ Installing into current project at ${TARGET_BASE}"
+fi
+
+AGENTS_DIR="${TARGET_BASE}/agents"
+COMMANDS_DIR="${TARGET_BASE}/commands"
+mkdir -p "${AGENTS_DIR}" "${COMMANDS_DIR}"
+
+# Resolve source (local path, git URL, or default)
+WORKDIR="$(mktemp -d)"
+trap "rm -rf ${WORKDIR}" EXIT
+
+if [[ -z "${SOURCE}" ]]; then
+  SOURCE="${DEFAULT_SOURCE_URL}"
+fi
+
+if [[ -d "${SOURCE}" ]]; then
+  echo "→ Copying from local path: ${SOURCE}"
+  cp -r "${SOURCE}/." "${WORKDIR}/"
+elif [[ "${SOURCE}" == *.git || "${SOURCE}" == http* ]]; then
+  echo "→ Cloning from: ${SOURCE}"
+  git clone --depth=1 "${SOURCE}" "${WORKDIR}/kit" >/dev/null 2>&1
+  mv "${WORKDIR}/kit/"* "${WORKDIR}/"
+else
+  echo "ERROR: --source must be a directory or a git URL" >&2
+  exit 1
+fi
+
+# Copy agents
+for f in "${WORKDIR}/agents/"*.md; do
+  name="$(basename "$f")"
+  dest="${AGENTS_DIR}/${name}"
+  if [[ -f "${dest}" && "${FORCE}" != true ]]; then
+    echo "  skip ${name} (exists, use --force to overwrite)"
+  else
+    cp "$f" "${dest}"
+    echo "  installed agent: ${name}"
+  fi
+done
+
+# Copy commands
+for f in "${WORKDIR}/commands/"*.md; do
+  name="$(basename "$f")"
+  dest="${COMMANDS_DIR}/${name}"
+  if [[ -f "${dest}" && "${FORCE}" != true ]]; then
+    echo "  skip command ${name}"
+  else
+    cp "$f" "${dest}"
+    echo "  installed command: ${name}"
+  fi
+done
+
+# Seed project-level config (only at project scope)
+if [[ "${SCOPE}" == "project" ]]; then
+  CONFIG_FILE="$(pwd)/iconix.config.yaml"
+  if [[ ! -f "${CONFIG_FILE}" || "${FORCE}" == true ]]; then
+    cp "${WORKDIR}/templates/iconix.config.yaml" "${CONFIG_FILE}"
+    # Patch prefix / language if provided
+    if [[ -n "${PREFIX}" ]]; then
+      sed -i.bak "s/prefix: \"PRJ\"/prefix: \"${PREFIX}\"/" "${CONFIG_FILE}" && rm -f "${CONFIG_FILE}.bak"
+    fi
+    if [[ -n "${LANGUAGE}" ]]; then
+      sed -i.bak "s/language: \"csharp\"/language: \"${LANGUAGE}\"/" "${CONFIG_FILE}" && rm -f "${CONFIG_FILE}.bak"
+    fi
+    echo "  created iconix.config.yaml"
+  else
+    echo "  iconix.config.yaml already exists (use --force to overwrite)"
+  fi
+
+  # Seed folder structure
+  mkdir -p \
+    requirements use-cases robustness domain-model \
+    class-model sequence container-mapping nfr-annotations \
+    adrs test-cases features test-matrices milestone-reports \
+    docs/architecture docs/iconix
+  echo "  created ICONIX folder structure"
+
+  # Seed templates for team reference
+  mkdir -p "docs/iconix/templates"
+  cp "${WORKDIR}/templates/use-case-template.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/robustness-template.puml" "docs/iconix/templates/" 2>/dev/null || true
+fi
+
+cat <<'EOF'
+
+✓ ICONIX kit installed.
+
+Next steps:
+  1. Review and edit iconix.config.yaml (project prefix, stack, containers)
+  2. Drop your architecture doc at docs/architecture/
+  3. Open Claude Code in this directory
+  4. Run /agents to confirm agents are loaded
+  5. Run /iconix-next to start the pipeline, or invoke an agent explicitly:
+     "Use the iconix-product-owner agent to draft use cases from meeting-notes.md"
+
+Agents installed:
+  - iconix-orchestrator    (routing + phase enforcement)
+  - iconix-product-owner   (requirements, use cases, glossary)
+  - iconix-analyst         (robustness diagrams, domain model)
+  - iconix-architect       (packages, NFRs, ADRs)
+  - iconix-developer       (sequence diagrams, code, unit tests)
+  - iconix-tester          (test cases, Gherkin, regression matrix)
+  - iconix-traceability    (ID ledger, milestone gates, change impact)
+  - iconix-reviewer        (code vs design drift detection)
+  - iconix-docs            (user / dev / API docs generation)
+  - iconix-migration       (reverse-engineer ICONIX onto legacy code)
+
+Commands installed:
+  /iconix-next     run next pipeline step
+  /iconix-status   milestone readiness report
+  /iconix-impact   change impact analysis
+  /iconix-review   ICONIX-style code review
+  /iconix-docs     generate user/dev/api docs
+  /iconix-migrate  reverse-engineer from existing code
+
+EOF

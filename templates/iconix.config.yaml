@@ -1,0 +1,38 @@
+# ICONIX project configuration
+# Each project drops this file at its root to parameterize the agent kit.
+
+project:
+  name: "YourProject"
+  prefix: "PRJ"           # ID prefix, e.g., RGS-UC-017
+
+stack:
+  language: "csharp"       # csharp | java | python | typescript | go
+  test_framework: "xunit"  # xunit | nunit | junit | pytest | jest
+  bdd: true
+  bdd_framework: "specflow" # specflow | cucumber | behave
+
+diagrams:
+  format: "plantuml"       # plantuml | mermaid
+  output_dir: "docs/iconix"
+
+architecture:
+  canonical_doc: "docs/architecture/system-architecture.md"
+  containers:
+    # List the named containers in your architecture.
+    # The Architect agent will map UCs to these.
+    - name: "Backend"
+    - name: "WebAPI"
+    - name: "Frontend"
+    - name: "Database"
+
+nfr_catalog: "docs/nfr-catalog.md"
+
+# Custom test families for your domain (e.g., gaming, finance, healthcare)
+domain_test_families:
+  # - "regulatory-audit"
+  # - "transaction-idempotency"
+
+milestones:
+  require_traceability_pass: true
+  require_rule_validation: true
+  max_revisions_per_artifact: 3   # anti-analysis-paralysis guardrail
