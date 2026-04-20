@@ -19,18 +19,20 @@ iconix-kit/
 │   ├── iconix-traceability.md
 │   ├── iconix-reviewer.md     # code ↔ design drift detection
 │   ├── iconix-docs.md         # user / dev / API doc generation
-│   └── iconix-migration.md    # retrofit ICONIX onto legacy code
+│   └── iconix-migration.md    # retrofit ICONIX onto legacy code (Graphify-aware in v0.3.0+)
 ├── commands/                # Claude Code slash commands
 │   ├── iconix-next.md
 │   ├── iconix-status.md
 │   ├── iconix-impact.md
 │   ├── iconix-review.md
 │   ├── iconix-docs.md
-│   └── iconix-migrate.md
+│   ├── iconix-migrate.md
+│   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
 └── templates/               # per-project templates
     ├── iconix.config.yaml
     ├── use-case-template.md
-    └── robustness-template.puml
+    ├── robustness-template.puml
+    └── graphify-setup.md      # Graphify integration setup guide
 ```
 
 ## Install into a project

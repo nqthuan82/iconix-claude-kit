@@ -5,6 +5,37 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-04-19
+
+### Added
+- **Graphify integration (Phase 1, migration agent only)**: `iconix-migration`
+  now runs in graph-assisted mode when `iconix.config.yaml` enables Graphify.
+  In graph-assisted mode:
+  - Phase 1 (code survey) uses graph queries instead of code walking
+  - Phases 2-3 (class model, sequence diagrams) seed from graph nodes/edges
+  - Every artifact carries a `## Provenance` footer showing
+    EXTRACTED / INFERRED / AMBIGUOUS edge counts
+  - Stale graphs (>30 days) block migration; >7 days warns
+- `knowledge_graph:` section in `iconix.config.yaml` template
+  (disabled by default; portability preserved)
+- `/iconix-graphify` slash command — bootstraps Graphify in a project
+- `templates/graphify-setup.md` — full setup guide with confidence tuning,
+  MCP server config, troubleshooting
+
+### Changed
+- `iconix-migration` agent now declares "operating mode" at start of every
+  run (graph-assisted | code-walking)
+- Orchestrator routing recognizes graph-assisted vs code-walking flow
+- Installer copies Graphify setup guide into project templates
+
+### Notes
+- Other 9 agents (orchestrator, product-owner, analyst, architect,
+  developer, tester, traceability, reviewer, docs) are **unchanged** in this
+  release. Phase 2 will extend graph integration to architect/reviewer/
+  traceability/docs once Phase 1 is validated in real use.
+- This is an additive change. Existing projects on v0.2.0 continue to work
+  identically without enabling `knowledge_graph`.
+
 ## [0.2.0] — 2026-04-19
 
 ### Added

@@ -125,6 +125,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   mkdir -p "docs/iconix/templates"
   cp "${WORKDIR}/templates/use-case-template.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/robustness-template.puml" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/graphify-setup.md" "docs/iconix/templates/" 2>/dev/null || true
 fi
 
 cat <<'EOF'
@@ -158,5 +159,6 @@ Commands installed:
   /iconix-review   ICONIX-style code review
   /iconix-docs     generate user/dev/api docs
   /iconix-migrate  reverse-engineer from existing code
+  /iconix-graphify bootstrap Graphify integration (optional, for migration)
 
 EOF

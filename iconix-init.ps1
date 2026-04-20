@@ -102,6 +102,7 @@ try {
 
         Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\graphify-setup.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
     }
 
     Write-Host ""

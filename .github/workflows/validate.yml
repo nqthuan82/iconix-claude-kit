@@ -83,10 +83,20 @@ jobs:
           test -f iconix.config.yaml || { echo "config missing"; exit 1; }
           grep -q 'prefix: "CI"' iconix.config.yaml || { echo "prefix not patched"; exit 1; }
           grep -q 'language: "python"' iconix.config.yaml || { echo "language not patched"; exit 1; }
-          # Count agents
+          # Count agents (v0.2.0 baseline = 10)
           agent_count=$(ls .claude/agents/ | wc -l)
           if [ "$agent_count" -lt 10 ]; then
             echo "Expected at least 10 agents, found $agent_count"
             exit 1
           fi
+          # v0.3.0: knowledge_graph section must be present in config
+          grep -q 'knowledge_graph:' iconix.config.yaml || { echo "knowledge_graph section missing"; exit 1; }
+          # v0.3.0: knowledge graph must be disabled by default (portability)
+          grep -q 'enabled: false' iconix.config.yaml || { echo "knowledge_graph should default to enabled: false"; exit 1; }
+          # v0.3.0: graphify command must be installed
+          test -f .claude/commands/iconix-graphify.md || { echo "iconix-graphify command missing"; exit 1; }
+          # v0.3.0: graphify setup guide must be copied to templates
+          test -f docs/iconix/templates/graphify-setup.md || { echo "graphify-setup.md missing"; exit 1; }
+          # v0.3.0: migration agent must mention graphify
+          grep -q -i 'graphify' .claude/agents/iconix-migration.md || { echo "migration agent missing graphify integration"; exit 1; }
           echo "OK — installation validated"
