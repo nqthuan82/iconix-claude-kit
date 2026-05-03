@@ -49,6 +49,22 @@ When routing, produce a short plan:
 <why this order, what gates will be checked>
 ```
 
+# REQ change flow
+
+When a new or changed requirement arrives against an existing artifact set:
+
+1. Dispatch **Traceability** with `/iconix-impact REQ-XXX` → produces `change-impact/CI-<date>.md`
+2. Dispatch **Product Owner** in change mode — pass the CI report; it updates only the affected UCs
+3. Re-run **M1 gate** (Traceability, scoped to changed UCs)
+4. Dispatch **Analyst** in change mode — pass the CI report; it updates only the affected RBs
+5. Dispatch **Architect** only if the CI report touches containers or NFRs
+6. Re-run **M2 gate** (Traceability, scoped)
+7. Dispatch **Developer** and **Tester** in parallel in change mode — pass the CI report
+8. Re-run **M3 gate** (Traceability, scoped)
+
+Always include the CI report path in your dispatch plan so each agent can self-scope.
+Never re-run agents on artifacts outside the blast radius listed in the CI report.
+
 # What you never do
 - Produce use cases, diagrams, code, tests, or ADRs directly
 - Override an agent's domain rules (e.g., you cannot approve a UC with a robustness rule violation)

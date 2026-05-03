@@ -195,9 +195,10 @@ Only `RB-005`, `RB-012`, `RB-019` — unaffected RBs are untouched.
 Full chain validated for the changed slice. Artifacts outside the blast radius are not
 re-validated and do not block the gate.
 
-> **Note:** ICONIX agent prompts are currently written for greenfield production. Until a
-> dedicated "update mode" is added, scope each agent explicitly:
-> `"Use iconix-analyst to update RB-005 and RB-012 only — see change-impact/CI-<date>.md."`
+> **Change mode:** The Orchestrator has a `# REQ change flow` that drives this entire
+> sequence automatically via `/iconix-next`. Product Owner, Analyst, and Tester each have
+> a `# Change mode` section — the Orchestrator passes the CI report path in its dispatch
+> plan so each agent self-scopes to the blast radius only.
 
 ### `/iconix-migrate` — code-walking vs. graph-assisted mode
 

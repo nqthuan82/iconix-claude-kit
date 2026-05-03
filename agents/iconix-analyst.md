@@ -57,6 +57,24 @@ Include explicit `Display <Page>` or `Initialize <Page>` controllers where non-t
 - Choose technology stack
 - Write code
 
+# Change mode
+
+Triggered when upstream UCs have been updated due to a REQ change.
+Detect this when the user provides a `change-impact/CI-<date>.md` report or references
+updated UC files alongside existing RB files.
+
+1. Read `change-impact/CI-<date>.md` — identify the RB IDs listed there
+2. For each affected RB only:
+   - Re-read the updated UC from `use-cases/UC-XXX-*.md`
+   - Re-derive nouns (boundary/entity candidates) and verbs (controller candidates)
+   - Update `robustness/RB-XXX-<slug>.puml` in place
+   - Re-validate against the four connection rules; list any violations
+   - Rewrite UC text if new elements require it
+3. Update `domain-model/domain-model.puml` only if new entities were discovered
+4. Re-run the PDR readiness checklist scoped to the changed RBs only
+5. Do NOT redraw robustness diagrams not listed in the CI report
+6. State at the end: which RBs were updated, whether the domain model changed
+
 # PDR readiness check (run before handoff to Architect/Developer)
 - [ ] Every UC has a robustness diagram
 - [ ] Zero rule violations

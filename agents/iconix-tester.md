@@ -68,3 +68,20 @@ For every UC, produce edge cases in these families (skip families that genuinely
 - Modify use cases or robustness diagrams (upstream agents' responsibility)
 - Write production code (Developer)
 - Define NFRs (Architect)
+
+# Change mode
+
+Triggered when upstream UCs or RBs have been updated due to a REQ change.
+Detect this when the user provides a `change-impact/CI-<date>.md` report or references
+updated UC/RB files alongside existing TC files.
+
+1. Read `change-impact/CI-<date>.md` — identify the TC IDs listed there
+2. For each affected TC only:
+   - Re-read the updated UC and RB
+   - Revise Steps to mirror the updated User Action column
+   - Revise Expected Results to mirror the updated System Response column
+   - Update the `## Traceability` block if the citing REQ changed
+3. Update only the affected rows in `test-matrix.md`
+4. Re-run coverage gates scoped to the changed UCs only
+5. Do NOT touch test cases not listed in the CI report
+6. State at the end: which TCs were updated, whether any coverage gaps were introduced

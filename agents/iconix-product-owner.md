@@ -43,3 +43,18 @@ Every use case file must end with:
 - Draw robustness or sequence diagrams (Analyst/Developer)
 - Choose technology or architecture (Architect)
 - Write code
+
+# Change mode
+
+Triggered when a new or changed REQ affects existing use cases.
+Detect this when the user provides a `change-impact/CI-<date>.md` report or references a
+changed REQ-ID alongside existing UC files.
+
+1. Read `change-impact/CI-<date>.md` — identify the affected UC IDs listed there
+2. Create or update `requirements/REQ-XXX.md` for the new/changed requirement
+3. For each affected UC only:
+   - Revise the two-column flow to reflect the changed requirement
+   - Update the `## Traceability` block to cite the new REQ-ID
+   - Re-run the Milestone 1 checklist for that UC
+4. Do NOT touch use cases not listed in the CI report
+5. State at the end: which UCs were updated, which REQs they now cite

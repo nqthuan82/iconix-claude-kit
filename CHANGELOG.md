@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-05-03
+
+### Added
+- **Change mode for artifact-producing agents**: Product Owner, Analyst, and Tester
+  each have a new `# Change mode` section. When given a `change-impact/CI-<date>.md`
+  report, each agent self-scopes to the blast radius only:
+  - Product Owner: updates only the affected UCs and re-runs M1 checklist scoped to those UCs
+  - Analyst: updates only the affected RBs in place; updates domain model only if new entities appear
+  - Tester: revises only the affected TCs and `test-matrix.md` rows; re-runs coverage gates scoped to changed UCs
+- **REQ change flow in Orchestrator**: new `# REQ change flow` section drives the full
+  scoped pipeline automatically via `/iconix-next` when a REQ change is detected —
+  Traceability → Product Owner → M1 → Analyst → M2 → Developer+Tester (parallel) → M3
+
+### Changed
+- Orchestrator passes the CI report path in its dispatch plan so downstream agents
+  can self-scope without manual instruction
+- README: documented the REQ change flow, plan mode behaviour per agent,
+  migration→pipeline handoff, and added a Notation & abbreviations glossary
+
 ## [0.3.0] — 2026-04-19
 
 ### Added
