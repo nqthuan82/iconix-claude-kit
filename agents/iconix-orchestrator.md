@@ -49,6 +49,34 @@ When routing, produce a short plan:
 <why this order, what gates will be checked>
 ```
 
+# Bug flow
+
+When a bug is reported against existing functionality, triage before routing.
+Never route straight to Developer — the design may be the defect, not the code.
+
+## Step 1 — Triage (always first)
+Dispatch **Reviewer** against the affected UC or source file.
+The Reviewer classifies the bug in its `## Bug triage` section as:
+- **Type 1 — Implementation bug**: code diverges from a correct design
+- **Type 2 — Design bug**: design is wrong; code faithfully implements the wrong thing
+
+## Type 1 flow — implementation bug
+```
+Reviewer (triage → Type 1)
+  └─► Developer — bug fix mode (fix code to match existing SD; no artifacts change)
+        └─► Tester — bug verification mode (re-run TCs for the affected UC;
+                      check for regressions in UCs sharing touched classes)
+```
+No ICONIX artifacts change. Traceability chain stays intact.
+
+## Type 2 flow — design bug
+Treat as a design defect: the UC (and possibly the REQ) needs correction.
+```
+Reviewer (triage → Type 2)
+  └─► /iconix-impact UC-XXX (Traceability) → produces CI report
+        └─► follow # REQ change flow from this point
+```
+
 # REQ change flow
 
 When a new or changed requirement arrives against an existing artifact set:

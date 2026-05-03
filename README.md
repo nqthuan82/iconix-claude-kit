@@ -200,6 +200,46 @@ re-validated and do not block the gate.
 > a `# Change mode` section — the Orchestrator passes the CI report path in its dispatch
 > plan so each agent self-scopes to the blast radius only.
 
+### Handling a bug that affects existing use cases
+
+Bugs must be triaged before routing — the defect may be in the code or in the design.
+Never go straight to Developer without a triage step.
+
+**Step 1 — Always triage first**
+
+Invoke the Reviewer against the affected UC or source file. It classifies the bug in
+a `## Bug triage` section of its report:
+
+| Type | Meaning | Indicator |
+|---|---|---|
+| **Type 1 — Implementation bug** | Code diverges from a correct design | Code does not match the SD |
+| **Type 2 — Design bug** | Design is wrong; code faithfully implements the wrong thing | Code matches the SD but behaviour is still wrong |
+
+**Type 1 flow — implementation bug**
+
+```
+Reviewer (triage → Type 1)
+  └─► Developer — bug fix mode
+        │  fix code to match existing SD only; no artifacts change
+        └─► Tester — bug verification mode
+              re-run failing TCs; check for regressions in UCs sharing touched classes
+```
+
+No ICONIX artifacts change. Traceability chain stays intact.
+
+**Type 2 flow — design bug**
+
+```
+Reviewer (triage → Type 2)
+  └─► /iconix-impact UC-XXX (Traceability) → produces CI report
+        └─► follow the REQ change flow from this point
+              (Product Owner → M1 → Analyst → M2 → Developer + Tester → M3)
+```
+
+> **Bug modes:** Reviewer has a `# Bug triage` section; Developer has `# Bug fix mode`;
+> Tester has `# Bug verification mode`. The Orchestrator's `# Bug flow` drives the full
+> sequence automatically via `/iconix-next` when a bug is reported.
+
 ### `/iconix-migrate` — code-walking vs. graph-assisted mode
 
 ```

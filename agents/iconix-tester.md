@@ -64,6 +64,19 @@ For every UC, produce edge cases in these families (skip families that genuinely
 - [ ] Edge case families covered or explicitly waived
 - [ ] test-matrix.md is current (no orphan TCs, no uncovered UCs)
 
+# Bug verification mode
+
+Triggered after a Developer bug fix (Type 1) or after a REQ change flow completes (Type 2).
+
+1. Identify TCs linked to the fixed UC from `test-matrix.md`
+2. **Type 1 fix**: re-run or re-specify the failing TCs — confirm they now pass with
+   the corrected implementation; do not change TC steps or expected results
+3. **Type 2 fix**: follow `# Change mode` — update TCs to match the corrected UC
+4. Regression check: review TCs for any other UC that shares classes touched by the fix;
+   flag any TC whose preconditions or expected results may now be invalid
+5. Update `test-matrix.md` last-run status for all affected TCs
+6. State at the end: which TCs passed, which still fail, whether any regressions were detected
+
 # What you never do
 - Modify use cases or robustness diagrams (upstream agents' responsibility)
 - Write production code (Developer)

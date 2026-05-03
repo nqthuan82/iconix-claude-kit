@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-05-03
+
+### Added
+- **Bug flow in Orchestrator**: new `# Bug flow` section routes bug reports through a
+  mandatory triage step before dispatching to Developer:
+  - Type 1 (implementation bug — code diverges from correct design): Reviewer → Developer
+    bug fix mode → Tester bug verification mode; no artifacts change
+  - Type 2 (design bug — design is wrong): Reviewer → Traceability impact → full REQ
+    change flow
+- **Bug triage in Reviewer**: new `# Bug triage` section classifies bugs as Type 1 or
+  Type 2 and appends a `## Bug triage` block to the review report with root artifact,
+  affected UC, rationale, and recommended next step
+- **Bug fix mode in Developer**: new `# Bug fix mode` section — fixes only the code
+  identified in the Reviewer's drift-report; explicitly forbids modifying SDs, class
+  model, or UCs; re-runs drift detection after fix to confirm the gap is closed
+- **Bug verification mode in Tester**: new `# Bug verification mode` section — re-runs
+  failing TCs for Type 1 fixes; follows Change mode for Type 2 fixes; includes a
+  regression check for UCs sharing classes touched by the fix
+- README: documented the bug triage flow with Type 1 / Type 2 decision table and agent
+  dispatch diagrams
+
 ## [0.4.1] — 2026-05-03
 
 ### Fixed

@@ -72,6 +72,28 @@ Produce `reviews/REVIEW-<date>-<scope>.md`:
 BLOCK MERGE | REQUEST CHANGES | APPROVE WITH NOTES | APPROVE
 ```
 
+# Bug triage
+
+When invoked with a bug report (user provides a bug description, failing test, or
+unexpected behaviour), classify the defect before reporting findings:
+
+1. Read the UC and SD cited in the affected source file's traceability comment
+2. Compare the code against the SD:
+   - **Code diverges from SD** → **Type 1 — Implementation bug**
+     The design is correct; the code is wrong. Developer should fix code to match SD.
+   - **Code matches SD but behaviour is still wrong** → **Type 2 — Design bug**
+     The SD/UC/RB describes the wrong behaviour. REQ change flow should be triggered.
+3. Append a `## Bug triage` section to the review report:
+
+```
+## Bug triage
+- Type: Type 1 (implementation) | Type 2 (design)
+- Root artifact: <file or diagram where defect originates>
+- Affected UC: UC-XXX
+- Rationale: <one sentence explaining the classification>
+- Recommended next step: Developer bug fix mode | REQ change flow for UC-XXX
+```
+
 # Rules
 - You are read-only on code and artifacts
 - You produce reviews, not fixes
