@@ -35,6 +35,63 @@ State the mode you are operating in at the start of every migration run.
 
 ---
 
+# Pre-run idempotency check
+
+Run this before any Phase 1 work, in both modes. It prevents silent overwrites of
+human-reviewed artifacts from a previous migration run.
+
+## Step 1 — Detect previous migration runs
+Check whether `migration/` contains any `survey-*.md` files. If yes, record the most
+recent survey date as `<last-run-date>`.
+
+## Step 2 — Check for promoted artifacts
+Read `ids.registry.md` (maintained by Traceability). For each permanent ID of type
+UC, RB, SD, CLS, TC — check whether a corresponding DRAFT file exists in the output
+paths below. If a permanent ID exists for a slug, that artifact has already been
+promoted and must not be overwritten. Report it as **already promoted — skipping**.
+
+## Step 3 — Check for human-edited DRAFTs
+For each of the following output paths, check if the file exists AND was last modified
+after `<last-run-date>`:
+
+```
+migration/coverage-gaps.md
+class-model/class-model.puml
+sequence/SD-DRAFT-*.puml
+robustness/RB-DRAFT-*.puml
+use-cases/UC-DRAFT-*.md
+```
+
+If a file has been modified after the last survey date, a human has likely edited it.
+**Do not overwrite silently.** Report each such file as:
+
+```
+⚠ DRAFT modified since last run: use-cases/UC-DRAFT-001-checkout.md
+  Last migration: 2026-04-10 | File modified: 2026-04-15
+  Options: (a) skip this artifact, (b) overwrite and lose edits
+  → Defaulting to SKIP. Pass --force to overwrite.
+```
+
+Proceed only with artifacts that are:
+- Not yet promoted (no permanent ID in registry), AND
+- Not modified since the last migration run (or `--force` was passed)
+
+## Step 4 — Report before proceeding
+Before starting Phase 1, output a pre-run summary:
+
+```
+## Idempotency check
+- Previous run detected: <last-run-date> | none
+- Artifacts already promoted (will skip): <list or "none">
+- DRAFTs modified by humans (will skip): <list or "none">
+- Artifacts safe to (re)generate: <list>
+```
+
+If all artifacts are already promoted or human-edited, abort and tell the user there is
+nothing left to migrate.
+
+---
+
 # Workflow — Graph-assisted mode
 
 ## Phase 0 — Graph readiness check (graph-assisted mode only)
@@ -130,7 +187,8 @@ Produce `migration/handoff-<date>.md`:
 
 # Workflow — Code-walking mode (fallback)
 
-When Graphify is not enabled, use the original 7-phase code-walking workflow:
+When Graphify is not enabled, use the original 7-phase code-walking workflow.
+Run the `# Pre-run idempotency check` before Phase 1, same as graph-assisted mode.
 
 ## Phase 1 — Code survey (manual)
 1. Walk the repository; identify entry points (controllers, handlers, routes, UI screens)
@@ -205,3 +263,5 @@ use-cases/UC-DRAFT-*.md        # Phase 5
 - Skip the handoff report — humans need to know what was inferred vs observed
 - Use Graphify INFERRED edges as if they were EXTRACTED facts
 - Proceed with a stale graph (>30 days) without refreshing
+- Silently overwrite a DRAFT that has been modified since the last migration run
+- Regenerate an artifact whose permanent ID already exists in `ids.registry.md`

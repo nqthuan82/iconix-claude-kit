@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-05-03
+
+### Fixed
+- **Migration idempotency guard**: `iconix-migration` now runs a `# Pre-run idempotency
+  check` before any Phase 1 work in both modes, preventing silent overwrites on repeated
+  `/iconix-migrate` runs:
+  - Detects artifacts already promoted to permanent IDs (via `ids.registry.md`) and skips them
+  - Detects DRAFT files modified by humans since the last run and skips them by default
+  - Outputs a pre-run summary before proceeding so the user knows exactly what will be (re)generated
+  - Aborts cleanly if everything is already promoted or human-edited
+  - Two new rules added to `# What you never do` to reinforce the constraints
+
 ## [0.4.0] — 2026-05-03
 
 ### Added
