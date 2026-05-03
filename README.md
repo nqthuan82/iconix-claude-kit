@@ -97,6 +97,199 @@ Every artifact ends with a `## Traceability` block citing upstream IDs. The
 If a link is missing or an ID is reused, downstream work is frozen until the
 issue is resolved.
 
+## Command → Agent communication flow
+
+### Command routing
+
+| Command | Dispatches to | Purpose |
+|---|---|---|
+| `/iconix-next` | Orchestrator → current phase agent | Advance the pipeline one step |
+| `/iconix-status` | Traceability (read-only) | Milestone readiness report |
+| `/iconix-impact <ID>` | Traceability | Downstream blast-radius of a change |
+| `/iconix-review` | Reviewer | Code ↔ design drift on current git diff |
+| `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
+| `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
+| `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
+
+### `/iconix-next` pipeline
+
+The Orchestrator inspects the current artifact state and dispatches to whichever phase is
+incomplete. It never produces artifacts itself.
+
+```
+/iconix-next
+  └─► Orchestrator
+          │
+          ▼
+   [phase detection]
+          │
+          ├─► Product Owner    — draft REQs, UCs, glossary
+          │        │
+          │    [M1 gate] ── Traceability ── validates REQ→UC links; freezes on failure
+          │
+          ├─► Analyst          — robustness diagrams, domain model
+          │
+          ├─► Architect        — container mapping, NFRs, ADRs
+          │        │
+          │    [M2 gate] ── Traceability ── validates UC→RB→container links
+          │
+          ├─► Developer        — sequence diagrams, class model, code skeletons
+          │
+          ├─► Tester           — test cases, Gherkin, coverage matrix
+          │        │
+          │    [M3 gate] ── Traceability ── validates SD→CLS→TC links
+          │
+          └─► (done — all phases complete)
+```
+
+Traceability runs **at every gate**, not just at the end. If a link is missing or an ID is
+reused, it freezes downstream work until resolved.
+
+### Handling a new REQ that affects existing use cases
+
+When a new or changed requirement touches use cases that already have downstream artifacts
+(robustness diagrams, sequence diagrams, test cases), the pipeline does **not** restart
+from scratch — only the affected slice is updated.
+
+**Step 1 — Run impact check before touching anything**
+
+```text
+/iconix-impact REQ-XXX
+```
+
+Traceability maps the full blast radius and produces `change-impact/CI-<date>.md`:
+
+```
+New/changed REQ-XXX
+  └─► UC-005, UC-012, UC-019        (UCs that cite this REQ)
+        ├─► RB-005, RB-012, RB-019  (robustness diagrams for those UCs)
+        │     └─► SD-008, SD-014    (sequence diagrams citing those RBs)
+        │           └─► CLS-PaymentService, CLS-OrderCart
+        │                 └─► TC-022, TC-031, TC-047
+        └─► any other UC sharing the affected classes → also flagged
+```
+
+**Step 2 — Product Owner updates requirements and affected UCs**
+
+- Creates `REQ-XXX.md` for the new requirement
+- Revises each affected UC's two-column flow
+- Updates `## Traceability` block in each UC to cite the new REQ
+
+**Step 3 — M1 gate re-runs (scoped to changed UCs)**
+
+Traceability re-validates only the touched UCs. Freezes downstream if any check fails.
+
+**Step 4 — Analyst updates only the affected robustness diagrams**
+
+Only `RB-005`, `RB-012`, `RB-019` — unaffected RBs are untouched.
+
+**Step 5 — M2 gate re-runs (scoped)**
+
+**Step 6 — Developer and Tester update in parallel (scoped)**
+
+- Developer revises only the SDs and class model entries in the blast radius
+- Tester revises only the TCs linked to the affected UCs
+
+**Step 7 — M3 gate re-runs**
+
+Full chain validated for the changed slice. Artifacts outside the blast radius are not
+re-validated and do not block the gate.
+
+> **Note:** ICONIX agent prompts are currently written for greenfield production. Until a
+> dedicated "update mode" is added, scope each agent explicitly:
+> `"Use iconix-analyst to update RB-005 and RB-012 only — see change-impact/CI-<date>.md."`
+
+### `/iconix-migrate` — code-walking vs. graph-assisted mode
+
+```
+/iconix-migrate [path]
+  └─► Migration agent
+          │
+          ├─ knowledge_graph.enabled = false (default)
+          │       └─► walk source code directly → 7-phase extraction
+          │
+          └─ knowledge_graph.enabled = true
+                  └─► query Graphify graph (graphify-out/graph.json)
+                          └─► faster extraction with provenance labels:
+                              EXTRACTED / INFERRED / AMBIGUOUS
+```
+
+Enable graph-assisted mode with `/iconix-graphify` (builds the graph and patches
+`knowledge_graph.enabled = true` in `iconix.config.yaml`).
+
+### Migration → pipeline handoff
+
+Migration is a **one-time bootstrap** for legacy codebases. It produces only DRAFTs;
+the normal pipeline resumes once Traceability promotes them to permanent IDs.
+
+```
+[Legacy codebase]
+  └─► Migration agent
+          │
+          ├─► migration/survey-<date>.md       }
+          ├─► class-model/class-model.puml      }  all stamped DRAFT
+          ├─► sequence/SD-DRAFT-*.puml          }  until human review
+          ├─► robustness/RB-DRAFT-*.puml        }
+          ├─► use-cases/UC-DRAFT-*.md           }
+          └─► migration/coverage-gaps.md
+                  │
+                  ▼
+          Traceability agent
+          (human review → promotes DRAFT IDs to permanent REQ/UC/RB/SD/CLS IDs)
+                  │
+                  ▼
+          Normal pipeline resumes
+          Analyst → Architect → [M2 gate] → Developer → Tester → [M3 gate]
+```
+
+| Downstream agent | Consumes from Migration |
+|---|---|
+| **Traceability** | All DRAFT artifacts — re-allocates permanent IDs after review |
+| **Analyst** | `UC-DRAFT-*.md`, `RB-DRAFT-*.puml` — validates and promotes through M1/M2 |
+| **Architect** | `class-model.puml` — maps to containers, produces ADRs |
+| **Developer** | `SD-DRAFT-*.puml`, `class-model.puml` — starting point for detailed design |
+| **Tester** | `coverage-gaps.md` — identifies which use cases lack test coverage |
+
+DRAFT IDs are **unstable** — downstream agents must not treat them as permanent until
+Traceability has assigned real IDs.
+
+## Plan mode
+
+Claude Code's `/plan` toggle puts the session into read-only mode — `Write` and `Bash`
+are blocked. ICONIX agents behave differently depending on whether they need to write
+artifacts.
+
+### Which agents work in plan mode
+
+| Agent | Plan mode behaviour |
+|---|---|
+| **Orchestrator** | Full — reads artifact state and outputs a dispatch plan without writing |
+| **Traceability** | Full — `/iconix-status` and `/iconix-impact` are read-only by nature |
+| **Analyst, Architect, Developer, Tester, Reviewer, Docs, Product Owner** | Partial — can describe what they would produce but cannot write `.puml` / `.md` files to disk |
+| **Migration** | Most restricted — loses both `Write` and `Bash`; can survey the codebase but cannot output any DRAFT artifacts |
+
+### Recommended plan mode workflows
+
+Use plan mode **before** committing to a pipeline step:
+
+```text
+/plan
+/iconix-next          # Orchestrator shows what it would dispatch — review before approving
+/iconix-status        # Traceability reads artifact state — works fully
+/iconix-impact UC-017 # Blast-radius check — works fully
+/plan                 # exit plan mode, then run the actual step
+```
+
+Avoid plan mode when you need artifacts written (robustness diagrams, sequence diagrams,
+use cases, test cases). Exit plan mode first, then invoke the agent.
+
+### Current limitation
+
+ICONIX agents have no built-in plan mode awareness — they will simply stall at the first
+`Write` call rather than gracefully switching to inline output. If you regularly use plan
+mode for design review, consider adding a `# Plan mode` section to the relevant agent
+files instructing them to emit artifact content inline when `Write` is unavailable.
+
 ## Updating the kit
 
 Re-run the installer with `--force` to overwrite agent definitions. Your
@@ -123,6 +316,39 @@ Treat this kit like any other dependency:
 - Pin to a commit/tag when cloning from git
 - When refining an agent, bump a version note in its frontmatter and
   document the change in a commit message
+
+## Notation & abbreviations
+
+### Traceability ID types
+
+| Abbreviation | Full name | Description |
+|---|---|---|
+| `REQ` | Requirement | Functional or business requirement captured by the Product Owner |
+| `UC` | Use Case | Actor–system interaction in two-column format |
+| `RB` | Robustness Diagram | Boundary / Controller / Entity analysis linking UC to design |
+| `SD` | Sequence Diagram | Detailed interaction diagram showing message flow between objects |
+| `CLS` | Class | Class model element (used in traceability chain SD → CLS) |
+| `TC` | Test Case | Verifiable test derived from a UC or SD |
+
+### Process & methodology terms
+
+| Abbreviation | Full name | Description |
+|---|---|---|
+| ICONIX | ICONIX Process | Lightweight OO software development methodology by Rosenberg & Stephens |
+| NFR | Non-Functional Requirement | Quality attribute or constraint (performance, security, availability, etc.) |
+| ADR | Architecture Decision Record | Documented architectural decision with context and consequences |
+| M1 | Milestone 1 — Requirements Review | Gate: Traceability validates all REQ → UC links before analysis begins |
+| M2 | Milestone 2 — Preliminary Design Review (PDR) | Gate: Traceability validates UC → RB → container links before detailed design |
+| M3 | Milestone 3 — Critical Design Review (CDR) | Gate: Traceability validates SD → CLS → TC links before implementation |
+
+### Technical abbreviations
+
+| Abbreviation | Full name |
+|---|---|
+| CLI | Command-Line Interface |
+| API | Application Programming Interface |
+| WSL | Windows Subsystem for Linux |
+| BRD | Business Requirements Document |
 
 ## Philosophy
 
