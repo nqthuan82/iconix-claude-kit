@@ -35,6 +35,7 @@ iconix-kit/
     ├── robustness-template.puml # includes UC scenario text as comment block
     ├── sequence-template.puml   # UC steps as group blocks
     ├── test-case-template.md
+    ├── test-plan-template.md
     ├── adr-template.md          # architecture decision record
     ├── change-impact-template.md
     └── graphify-setup.md        # Graphify integration setup guide

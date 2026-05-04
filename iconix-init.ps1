@@ -106,6 +106,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml")  "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\sequence-template.puml")    "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\test-case-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\test-plan-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\change-impact-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\graphify-setup.md")         "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
     }

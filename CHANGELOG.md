@@ -5,6 +5,21 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] — 2026-05-04
+
+### Added
+- `templates/test-plan-template.md` — pre-CDR test plan template with five sections:
+  release scope (UC table), TC inventory by type, automation status, coverage status
+  (blocker check), and outstanding risks
+- `agents/iconix-tester.md` — `# Pre-CDR test plan summary` now references
+  `templates/test-plan-template.md` as the authoritative format
+- `agents/iconix-tester.md` — `test-plan/test-plan-<date>.md` added to
+  `# Artifacts you produce` with downstream consumers noted (Traceability M3 gate, Docs)
+- `agents/iconix-docs.md` — `test-plan/test-plan-<date>.md` added to `# Inputs you use`;
+  release notes section now includes a test coverage summary from the test plan
+- `iconix-init` + `iconix-init.ps1` — both installers now copy `test-plan-template.md`
+  to `docs/iconix/templates/`
+
 ## [0.7.2] — 2026-05-04
 
 ### Added

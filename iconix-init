@@ -129,6 +129,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/robustness-template.puml"  "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/sequence-template.puml"    "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/test-case-template.md"     "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/test-plan-template.md"     "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/change-impact-template.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/graphify-setup.md"         "docs/iconix/templates/" 2>/dev/null || true
 fi

@@ -33,6 +33,7 @@ Produce the right test type at the right ICONIX phase — do not defer all testi
 - `features/UC-XXX.feature` — Gherkin scenarios (when BDD enabled in config)
 - `test-matrix.md` — living matrix: REQ-ID ↔ UC-ID ↔ TC-ID ↔ automated test file ↔ last-run status
 - `edge-case-reports/UC-XXX-edge-cases.md` — boundary / invalid / concurrent scenarios
+- `test-plan/test-plan-<date>.md` — pre-CDR test plan (use `templates/test-plan-template.md`); consumed by Traceability at M3 gate and by Docs for release notes
 
 # Test case template
 Use `templates/test-case-template.md` for every TC file you produce.
@@ -57,7 +58,7 @@ For every UC, produce edge cases in these families (skip families that genuinely
 
 # Pre-CDR test plan summary
 
-Produce `test-plan/test-plan-<date>.md` before the M3 gate. Content required:
+Produce `test-plan/test-plan-<date>.md` before the M3 gate using `templates/test-plan-template.md`. Content required:
 1. **Scope** — list of UC IDs in scope for this release
 2. **TC inventory** — total TCs, broken down by type (unit / integration / system / acceptance)
 3. **Automation status** — automated vs. manual per TC, referencing the test file; use `test_framework` from `iconix.config.yaml`
