@@ -401,6 +401,19 @@ Treat this kit like any other dependency:
 | WSL | Windows Subsystem for Linux |
 | BRD | Business Requirements Document |
 
+## What the kit intentionally does not cover
+
+These gaps are by design — they require human judgment, physical meetings, or tooling outside Claude Code's scope. Knowing they exist prevents teams from assuming the kit handles everything.
+
+| Gap | Why it's out of scope | Recommended practice |
+|---|---|---|
+| **UI storyboards / screen mock-ups** | Wireframing requires a design tool; Claude Code cannot render or validate UI prototypes | Use Figma, Balsamiq, or hand-drawn sketches; attach images to UC files as references |
+| **Stakeholder review meetings** | Requirements Review (M1) and PDR (M2) should include customers, end users, and marketing — the kit only produces the artifacts for those meetings | Run the meeting with human participants; use the kit's milestone report as the agenda |
+| **Persona analysis** | Persona creation requires primary user research; no agent currently models this | Define personas externally and reference them in `iconix.config.yaml` or a `personas/` folder |
+| **Effort estimation** | ICONIX recommends estimating from UC scenarios, not functional requirements — this requires team velocity data the kit cannot access | Count controllers per RB as a proxy for complexity; map to story points manually |
+| **Code header / stub generation** | Generating compilable code skeletons from class diagrams is language- and framework-specific | Use IDE code-generation features seeded from `class-model.puml` |
+| **TDD red-green-refactor cycle** | The kit derives TCs from RBs before coding, which sets up test-first thinking, but it does not drive the red-green loop | Write the generated TC stubs as failing tests before implementing the corresponding SD operations |
+
 ## Philosophy
 
 Faithful to ICONIX's minimalism: six primary agents, three commands,

@@ -5,6 +5,14 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.2] — 2026-05-04
+
+### Added
+- `README.md` — `## What the kit intentionally does not cover` section: six
+  documented gaps (UI storyboards, stakeholder review meetings, persona analysis,
+  effort estimation, code header generation, TDD red-green cycle) each with a
+  brief rationale and recommended practice for teams
+
 ## [0.7.1] — 2026-05-04
 
 ### Added
