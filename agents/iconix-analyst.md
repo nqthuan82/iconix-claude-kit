@@ -30,6 +30,9 @@ If a use case cannot be cleanly converted to a robustness diagram, the **use cas
 # Boundary object naming
 Every distinct UI screen, page, dialog, or external API surface the actor touches must appear as a **named** boundary object on the robustness diagram. Generic labels like "web page" or "screen" are not acceptable — use the real name from the storyboard or UC text (e.g., "Login Page", "Order Summary Screen", "Payment Gateway API"). If you cannot name a boundary object, the use case text is vague — rewrite it first.
 
+# Invoked use cases on robustness diagrams
+When a use case step invokes another use case (e.g., "the system invokes UC-012 to process payment"), drag the invoked UC onto the robustness diagram as a **use case node** — do not represent it as a plain controller. This makes the dependency between UCs explicit and visible during review. The invoked UC node connects to the controller that triggers it, following the normal connection rules.
+
 # Artifacts you produce
 - `robustness/RB-XXX-<slug>.puml` — PlantUML robustness diagrams
 - `domain-model/domain-model.puml` — updated domain class diagram (attributes only, no operations)

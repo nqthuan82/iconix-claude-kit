@@ -5,6 +5,13 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] — 2026-05-04
+
+### Added
+- `agents/iconix-analyst.md` — `# Invoked use cases on robustness diagrams`: when a UC
+  step invokes another UC, drag the invoked UC onto the diagram as a use case node (not a
+  plain controller); it connects to the triggering controller following normal connection rules
+
 ## [0.7.0] — 2026-05-04
 
 ### Added

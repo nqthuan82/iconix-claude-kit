@@ -114,7 +114,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 7 | Make a boundary object for each screen (unambiguous names) | ✅ | `iconix-analyst.md` `# Boundary object naming` — generic labels rejected, real name required |
 | 6 | Controllers are typically logical software functions, not control classes | ⚠️ | Mentioned implicitly; no explicit anti-controller-class rule |
 | 5 | Don't worry about the direction of the arrows on a robustness diagram | ❌ | Not stated; arrow direction is irrelevant to the two RB goals |
-| 4 | Show invoked use cases on the robustness diagram | ❌ | Not mentioned in Analyst |
+| 4 | Show invoked use cases on the robustness diagram | ✅ | `iconix-analyst.md` `# Invoked use cases on robustness diagrams` |
 | 3 | Robustness diagram = conceptual design, not literal detailed design | ⚠️ | Implied; not stated |
 | 2 | Boundary/entity → object instances on SD; controllers → messages on SD | ✅ | Developer agent explicitly converts controllers to messages |
 | 1 | RB is an "object picture" of a UC — forces refinement of UC text and object model | ✅ | Core purpose stated in Analyst |
@@ -351,7 +351,7 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 2 | Domain modeling | 10 | 0 | 0 | **100%** |
 | 3 | Use case modeling | 7 | 2 | 1 | **80%** |
 | 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
-| 5 | Robustness analysis (Top 10) | 6 | 2 | 2 | **70%** |
+| 5 | Robustness analysis (Top 10) | 7 | 2 | 1 | **75%** |
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
 | 7 | Technical architecture | 4 | 1 | 5 | **45%** |
 | 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
@@ -379,9 +379,9 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 - ~~NFR requirements in trace chain~~ (Ch9 #5) — `iconix-traceability.md` validation check #9 + chain diagram
 - ~~Integration and acceptance test types~~ (Ch12 V-model) — `iconix-tester.md` `# Test types (V-model)` table
 
-### Priority 1 — Small effort, self-contained
+### Closed in v0.7.1
 
-1. **Invoked use cases on RB** (Ch5 #4): `iconix-analyst.md` — when a UC invokes another UC, show the invoked UC as a node on the robustness diagram.
+- ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
 
 ### Priority 2 — Out of kit scope (human-process items)
 
