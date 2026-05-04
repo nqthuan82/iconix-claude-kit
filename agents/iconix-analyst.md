@@ -37,7 +37,10 @@ If a use case cannot be cleanly converted to a robustness diagram, the **use cas
 1. Read the use case from `use-cases/UC-XXX-*.md`
 2. Extract nouns → candidate boundary/entity objects
 3. Extract verbs → candidate controllers
-4. Draw robustness diagram (PlantUML) covering basic + ALL alternate courses on one diagram
+4. Draw robustness diagram (PlantUML) covering basic + ALL alternate courses on one diagram.
+   **Embed the full UC scenario text as a comment block at the top of the `.puml` file**
+   (see `templates/robustness-template.puml`). Each step is numbered to match the UC.
+   This makes the diagram self-contained for review — no need to open the UC file separately.
 5. Validate against the four rules above; list any violations
 6. Rewrite use case text so every sentence maps to ≥1 element on the diagram
 7. Update domain model with any new entities/attributes discovered

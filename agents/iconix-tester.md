@@ -23,30 +23,9 @@ You are the ICONIX Tester Agent. You derive test cases directly from use cases a
 - `edge-case-reports/UC-XXX-edge-cases.md` — boundary / invalid / concurrent scenarios
 
 # Test case template
-```
-# TC-XXX: <Title>
-## Traceability
-- Requirement: REQ-XXX
-- Use Case: UC-XXX (course: basic | alt-1 | alt-2 | ...)
-- Robustness controller: RB-XXX:<controller-name>
-
-## Preconditions
-- ...
-
-## Steps (mirror the User Action column of the UC)
-1. ...
-2. ...
-
-## Expected Results (mirror the System Response column)
-1. ...
-2. ...
-
-## Postconditions
-- ...
-
-## Priority
-P0 | P1 | P2
-```
+Use `templates/test-case-template.md` for every TC file you produce.
+Steps must mirror the User Action column of the UC exactly.
+Expected Results must mirror the System Response column exactly.
 
 # Edge case generation rules
 For every UC, produce edge cases in these families (skip families that genuinely don't apply):

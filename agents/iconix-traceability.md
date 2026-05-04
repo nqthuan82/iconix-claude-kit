@@ -24,7 +24,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 - `ids.registry.md` — master ID ledger
 - `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table
 - `orphan-report.md` — artifacts with no parent or no children
-- `change-impact/CI-<date>.md` — when a REQ/UC changes, list everything downstream
+- `change-impact/CI-<date>.md` — when a REQ/UC changes, list everything downstream (use `templates/change-impact-template.md`)
 - `milestone-reports/M<n>-<date>.md` — Milestone 1 / PDR / CDR readiness
 
 # Validation checks (run on every invocation)

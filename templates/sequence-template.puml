@@ -1,0 +1,46 @@
+@startuml SD-XXX
+' Traceability: UC-XXX | RB-XXX
+' UC-XXX: <Use Case Title>
+
+' Lifelines — one per boundary and entity from the robustness diagram
+actor       "User"            as U
+boundary    "ScreenName"      as B
+control     "DoSomething"     as C
+entity      "DomainClass"     as E
+
+' ── Basic Course ────────────────────────────────────────────
+
+group Step 1 — <UC step 1 user action>
+  U -> B : submitAction()
+  B -> C : process()
+end
+
+group Step 2 — <UC step 2 system response>
+  C -> E : getData()
+  E --> C : data
+  C --> B : result
+  B --> U : displayResult()
+end
+
+' ── Alternate Course A: <name> ──────────────────────────────
+
+group Alternate A1 — <UC alternate step text> #Pink
+  C -> B : showError()
+  B --> U : displayError()
+end
+
+' ── Alternate Course B: <name> ──────────────────────────────
+
+group Alternate B1 — <UC alternate step text> #Pink
+  B --> U : displayWarning()
+end
+
+note over U, E
+  Traceability:
+  - UC: UC-XXX
+  - Robustness: RB-XXX
+  - Class model: (updated by Developer)
+  - Test cases: (filled by Tester)
+end note
+
+@enduml

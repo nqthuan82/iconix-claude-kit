@@ -30,9 +30,13 @@ iconix-kit/
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
 └── templates/               # per-project templates
     ├── iconix.config.yaml
+    ├── req-template.md          # atomic requirement
     ├── use-case-template.md
-    ├── robustness-template.puml
-    └── graphify-setup.md      # Graphify integration setup guide
+    ├── robustness-template.puml # includes UC scenario text as comment block
+    ├── sequence-template.puml   # UC steps as group blocks
+    ├── test-case-template.md
+    ├── change-impact-template.md
+    └── graphify-setup.md        # Graphify integration setup guide
 ```
 
 ## Install into a project
@@ -381,7 +385,7 @@ Treat this kit like any other dependency:
 | Abbreviation | Full name | Description |
 |---|---|---|
 | ICONIX | ICONIX Process | Lightweight OO software development methodology by Rosenberg & Stephens |
-| NFR | Non-Functional Requirement | Quality attribute or constraint (performance, security, availability, etc.) |
+| NFR | Non-Functional Requirement | Quality attribute or constraint (performance[], availability[], security[], scalability[], compliance[], observability[]) |
 | ADR | Architecture Decision Record | Documented architectural decision with context and consequences |
 | M1 | Milestone 1 — Requirements Review | Gate: Traceability validates all REQ → UC links before analysis begins |
 | M2 | Milestone 2 — Preliminary Design Review (PDR) | Gate: Traceability validates UC → RB → container links before detailed design |

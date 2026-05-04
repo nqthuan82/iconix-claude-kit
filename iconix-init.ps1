@@ -100,9 +100,13 @@ try {
         foreach ($f in $folders) { New-Item -ItemType Directory -Force -Path $f | Out-Null }
         Write-Host "  created ICONIX folder structure"
 
-        Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
-        Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
-        Copy-Item (Join-Path $WorkDir "templates\graphify-setup.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\req-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")      "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml")  "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\sequence-template.puml")    "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\test-case-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\change-impact-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\graphify-setup.md")         "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
     }
 
     Write-Host ""

@@ -1,27 +1,44 @@
 @startuml RB-XXX
-' Robustness diagram for UC-XXX
-' ICONIX rules:
-'   Actor <-> Boundary (OK)
-'   Boundary <-> Controller (OK)
-'   Controller <-> Controller (OK)
-'   Controller <-> Entity (OK)
+' ============================================================
+' UC-XXX: <Use Case Title>
+'
+' Basic Course:
+'   Step 1 | User: <user action>
+'           | System: <system response>
+'   Step 2 | User: <user action>
+'           | System: <system response>
+'
+' Alternate Course A: <name>
+'   A1 | User: <user action>
+'      | System: <system response>
+'
+' Alternate Course B: <name>
+'   B1 | User: <user action>
+'      | System: <system response>
+' ============================================================
+' ICONIX connection rules:
+'   Actor <-> Boundary           OK
+'   Boundary <-> Controller      OK
+'   Controller <-> Controller    OK
+'   Controller <-> Entity        OK
 ' FORBIDDEN:
-'   Actor <-> Controller/Entity
-'   Boundary <-> Boundary
-'   Boundary <-> Entity
-'   Entity <-> Entity
+'   Actor -> Controller/Entity   (must go via Boundary)
+'   Boundary -> Boundary         (must go via Controller)
+'   Boundary -> Entity           (must go via Controller)
+'   Entity -> Entity             (must go via Controller)
+' ============================================================
 
 skinparam actor {
   BackgroundColor #FFFFFF
 }
 
-' Stereotypes
 !define BOUNDARY(x) entity "x" as x <<boundary>>
 !define ENTITY(x) entity "x" as x <<entity>>
 !define CONTROLLER(x) entity "x" as x <<controller>>
 
 actor User as U
 
+' Basic course elements
 BOUNDARY(ScreenName)
 CONTROLLER(DoSomething)
 ENTITY(DomainClass)
@@ -30,8 +47,16 @@ U --> ScreenName
 ScreenName --> DoSomething
 DoSomething --> DomainClass
 
-' Alternate courses (shade differently if tool supports)
+' Alternate course elements (shaded)
 CONTROLLER(HandleError) #Pink
 DoSomething --> HandleError
 HandleError --> ScreenName
+
+note bottom
+  Traceability:
+  - UC: UC-XXX
+  - Downstream RB: (this file)
+  - Sequence diagram: (filled by Developer)
+end note
+
 @enduml

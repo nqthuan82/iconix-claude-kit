@@ -5,6 +5,34 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.2] — 2026-05-04
+
+### Added
+- `templates/sequence-template.puml` — PlantUML sequence diagram template with UC step
+  text embedded as `group` blocks (basic course + alternate courses shaded `#Pink`)
+- `templates/req-template.md` — atomic requirement template with statement, rationale,
+  acceptance criteria, priority, and traceability block
+- `templates/test-case-template.md` — test case template extracted from Tester agent
+  inline format; mirrors UC two-column steps and expected results exactly
+- `templates/change-impact-template.md` — CI report template with blast radius tree,
+  flat affected artifact table, and recommended dispatch order
+
+### Changed
+- `templates/robustness-template.puml` — now embeds full UC scenario text (basic +
+  alternate courses) as a numbered comment block at the top of the file
+- `agents/iconix-analyst.md` — workflow step 4 now requires UC scenario text to be
+  embedded in the RB `.puml` header comment block (references robustness-template.puml)
+- `agents/iconix-developer.md` — workflow step 2 now requires each UC step to be wrapped
+  in a PlantUML `group` block in the SD `.puml` (references sequence-template.puml)
+- `agents/iconix-product-owner.md` — artifact declarations now reference
+  `req-template.md` and `use-case-template.md` explicitly
+- `agents/iconix-tester.md` — replaced inline test case template block with reference
+  to `templates/test-case-template.md`; file template is the authoritative format
+- `agents/iconix-traceability.md` — CI report artifact declaration now references
+  `templates/change-impact-template.md`
+- `iconix-init` + `iconix-init.ps1` — both installers now copy all 7 templates to
+  `docs/iconix/templates/` (previously only 3 were copied)
+
 ## [0.5.1] — 2026-05-04
 
 ### Fixed

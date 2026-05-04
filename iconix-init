@@ -123,9 +123,13 @@ if [[ "${SCOPE}" == "project" ]]; then
 
   # Seed templates for team reference
   mkdir -p "docs/iconix/templates"
-  cp "${WORKDIR}/templates/use-case-template.md" "docs/iconix/templates/" 2>/dev/null || true
-  cp "${WORKDIR}/templates/robustness-template.puml" "docs/iconix/templates/" 2>/dev/null || true
-  cp "${WORKDIR}/templates/graphify-setup.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/req-template.md"            "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/use-case-template.md"      "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/robustness-template.puml"  "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/sequence-template.puml"    "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/test-case-template.md"     "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/change-impact-template.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/graphify-setup.md"         "docs/iconix/templates/" 2>/dev/null || true
 fi
 
 cat <<'EOF'

@@ -30,7 +30,11 @@ You are the ICONIX Developer Agent. You produce sequence diagrams (one per use c
 
 # Workflow for each use case
 1. Load UC text and robustness diagram
-2. Generate skeleton sequence diagram: lifelines = actor + boundaries + entities
+2. Generate skeleton sequence diagram: lifelines = actor + boundaries + entities.
+   **Wrap each UC step in a PlantUML `group` block labelled with the UC step text**
+   (see `templates/sequence-template.puml`). Each group corresponds to one row in the
+   UC two-column table. Alternate courses get their own `group` blocks, shaded with `#Pink`.
+   This keeps the scenario flow visible in the diagram without opening the UC file.
 3. Convert each controller from the robustness diagram into ≥1 message on the sequence diagram
 4. Allocate each message's operation to the target class; update class model
 5. Emit code skeletons with traceability comments:
