@@ -36,18 +36,16 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
-| 10 | Focus on real-world objects (not technical/GUI) | ⚠️ | Analyst agent mentions entity classes; no explicit rule against GUI classes |
-| 9 | Use generalization (is-a) and aggregation (has-a) relationships | ⚠️ | Analyst produces domain model but no explicit is-a/has-a rule |
-| 8 | Time-box initial domain model to a couple of hours | ❌ | No time-box guidance in kit |
-| 7 | Organize around key abstractions from the problem domain | ⚠️ | Implied in Analyst domain model instructions |
-| 6 | Don't mistake the domain model for a data model | ❌ | Not stated |
-| 5 | Don't confuse a domain object with a database table | ❌ | Not stated |
-| 4 | Use the domain model as the project glossary | ⚠️ | Glossary is a separate Product Owner artifact |
+| 10 | Focus on real-world objects (not technical/GUI) | ✅ | `iconix-analyst.md` `# Domain model rules` rule 1 — "real-world objects only" |
+| 9 | Use generalization (is-a) and aggregation (has-a) relationships | ✅ | `iconix-analyst.md` `# Domain model rules` rule 4 |
+| 8 | Time-box initial domain model to a couple of hours | ✅ | `iconix-analyst.md` `# Domain model rules` rule 5 |
+| 7 | Organize around key abstractions from the problem domain | ✅ | `iconix-analyst.md` `# Domain model rules` rules 1 + 3 (real-world objects + glossary) |
+| 6 | Don't mistake the domain model for a data model | ✅ | `iconix-analyst.md` `# Domain model rules` rule 2 |
+| 5 | Don't confuse a domain object with a database table | ✅ | `iconix-analyst.md` `# Domain model rules` rule 2 |
+| 4 | Use the domain model as the project glossary | ✅ | `iconix-analyst.md` `# Domain model rules` rule 3 — "domain model = project glossary" |
 | 3 | Draw the domain model before writing use cases | ✅ | Orchestrator enforces Product Owner → Analyst order (domain model first) |
-| 2 | Don't expect the domain model to match final class diagrams exactly | ❌ | Not stated |
-| 1 | Don't put GUI classes on the domain model | ❌ | Not stated |
-
-**Gap summary:** The Analyst agent (`iconix-analyst.md`) lacks a dedicated domain modeling section with these constraints. Consider adding a `# Domain model rules` block.
+| 2 | Don't expect the domain model to match final class diagrams exactly | ✅ | `iconix-analyst.md` `# Domain model rules` rule 6 |
+| 1 | Don't put GUI classes on the domain model | ✅ | `iconix-analyst.md` `# Domain model rules` rule 1 |
 
 ---
 
@@ -57,7 +55,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
-| 10 | Two-paragraph rule — UC must fit in two paragraphs (basic + alternate courses) | ❌ | Not enforced in Product Owner |
+| 10 | Two-paragraph rule — UC must fit in two paragraphs (basic + alternate courses) | ✅ | `iconix-product-owner.md` rule 3 + M1 checklist item 3 |
 | 9 | Organize use cases with actors and use case diagrams (packages) | ⚠️ | Product Owner groups UCs but no use case diagram artifact |
 | 8 | Write use cases in active voice | ✅ | `iconix-product-owner.md` — "active voice" stated |
 | 7 | Write use case using event/response flow (user action → system response) | ✅ | Two-column UC format (User Action / System Response) |
@@ -68,7 +66,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 2 | Reference domain classes by name | ✅ | Product Owner |
 | 1 | Reference boundary classes (screens) by name | ✅ | Product Owner and Analyst both enforce named screens |
 
-**Gap summary:** Two-paragraph rule (#10) is a primary anti-analysis-paralysis guard that the kit does not enforce. UI storyboard guidance (#6) is absent.
+**Gap summary:** Two-paragraph rule (#10) closed in v0.6.0. UI storyboard guidance (#6) remains absent (out of kit scope).
 
 ---
 
@@ -81,21 +79,21 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 10 | Domain model describes ≥80% of key problem-domain abstractions | ❌ | M1 gate checks REQ→UC links; does not audit domain model coverage |
 | 9 | Domain model shows is-a and has-a relationships | ❌ | Not checked at M1 |
 | 8 | Use cases describe both basic and alternate courses, in active voice | ✅ | M1 checklist in Product Owner |
-| 7 | Passive-voice "shall" requirements are NOT mixed into active-voice UC text | ⚠️ | Not explicitly enforced; Traceability only checks ID links |
+| 7 | Passive-voice "shall" requirements are NOT mixed into active-voice UC text | ✅ | `iconix-product-owner.md` rule 6 + M1 checklist item 4 |
 | 6 | Use cases organized into packages with at least one UC diagram per package | ❌ | No UC diagram artifact |
 | 5 | Use cases written in context of the object model | ✅ | Product Owner rule |
 | 4 | Use cases written in context of the user interface (screens named) | ✅ | Product Owner + Analyst rule |
 | 3 | UCs supplemented with storyboard / screen mock-up / GUI prototype | ❌ | No storyboard step |
 | 2 | Review with end users, stakeholders, marketing, and technical staff | ❌ | Kit is AI-agent-driven; human review gating is not modeled |
-| 1 | Structure review using eight easy steps | ❌ | M1 gate has its own checklist but not mapped to these 8 steps |
+| 1 | Structure review using eight easy steps | ⚠️ | M1 checklist now has 8 items aligned to these steps; human review participation still not modeled |
 
 **Eight easy steps to a better use case (M1 sub-checklist):**
 
 | Step | Status | Kit location |
 |---|---|---|
 | 1. Remove everything out of scope | ❌ | Not in M1 checklist |
-| 2. Change passive voice to active voice | ⚠️ | Implied; not a checklist step |
-| 3. Check that use case text is not too abstract | ❌ | Not in M1 checklist |
+| 2. Change passive voice to active voice | ✅ | `iconix-product-owner.md` M1 checklist item 4 — no "shall" in UC text |
+| 3. Check that use case text is not too abstract | ✅ | `iconix-product-owner.md` M1 checklist item 5 — every screen/field/object named |
 | 4. Accurately reflect the GUI | ⚠️ | Screens-named rule covers this partially |
 | 5. Name participating domain objects | ✅ | Explicitly in Product Owner |
 | 6. Make sure you have all the alternate courses | ✅ | M1 checklist |
@@ -113,7 +111,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 10 | Paste the use case text directly onto the robustness diagram | ✅ | `iconix-analyst.md` step 4 — UC text embedded as comment block in `.puml` |
 | 9 | Take entity classes from the domain model; add any missing ones | ✅ | Analyst rule |
 | 8 | Expect to rewrite the use case while drawing the robustness diagram | ✅ | Analyst updates UC in parallel with RB |
-| 7 | Make a boundary object for each screen (unambiguous names) | ⚠️ | Screens-named rule is there; not explicitly enforced per screen |
+| 7 | Make a boundary object for each screen (unambiguous names) | ✅ | `iconix-analyst.md` `# Boundary object naming` — generic labels rejected, real name required |
 | 6 | Controllers are typically logical software functions, not control classes | ⚠️ | Mentioned implicitly; no explicit anti-controller-class rule |
 | 5 | Don't worry about the direction of the arrows on a robustness diagram | ❌ | Not stated; arrow direction is irrelevant to the two RB goals |
 | 4 | Show invoked use cases on the robustness diagram | ❌ | Not mentioned in Analyst |
@@ -324,7 +322,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 |---|---|---|---|
 | 10 | Use a modeling tool with linkage and traceability between REQs and UCs | ✅ | Traceability agent + `ids.registry.md` |
 | 9 | Link requirements to use cases (drag-and-drop / `## Traceability` block) | ✅ | Every artifact has `## Traceability` section |
-| 8 | Avoid dysfunctional requirements — keep "shall" statements out of UC text | ⚠️ | Not explicitly enforced; Traceability checks links, not text quality |
+| 8 | Avoid dysfunctional requirements — keep "shall" statements out of UC text | ✅ | `iconix-product-owner.md` rule 6 + M1 checklist item 4 |
 | 7 | Write at least one test case for each requirement | ✅ | REQ→UC→TC chain; coverage matrix validates this |
 | 6 | Treat requirements as first-class citizens (explicit REQ files) | ✅ | `requirements/REQ-XXX.md` per requirement |
 | 5 | Distinguish between different types of requirements (functional vs. NFR) | ✅ | `iconix.config.yaml` NFR catalog; separate NFR annotation files |
@@ -337,7 +335,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | Pattern | Status | Kit location |
 |---|---|---|
-| Passive voice "shall" statements in UC text | ❌ | Not detected — text quality not checked by any agent |
+| Passive voice "shall" statements in UC text | ✅ | `iconix-product-owner.md` rule 6 — detected and relocated to REQ file |
 | Intermangled NFRs in UC text | ❌ | Not detected |
 | Repeated requirements inline in multiple UCs | ❌ | Not detected |
 
@@ -350,10 +348,10 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | Chapter | Topic | ✅ | ⚠️ | ❌ | Coverage |
 |---|---|---|---|---|---|
 | 1 | ICONIX pipeline + milestones | 6 | 0 | 2 | **75%** |
-| 2 | Domain modeling | 1 | 4 | 5 | **30%** |
-| 3 | Use case modeling | 6 | 2 | 2 | **70%** |
-| 4 | Requirements Review (M1) | 3 | 1 | 6 | **35%** |
-| 5 | Robustness analysis (Top 10) | 5 | 3 | 2 | **65%** |
+| 2 | Domain modeling | 10 | 0 | 0 | **100%** |
+| 3 | Use case modeling | 7 | 2 | 1 | **80%** |
+| 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
+| 5 | Robustness analysis (Top 10) | 6 | 2 | 2 | **70%** |
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
 | 7 | Technical architecture | 4 | 1 | 5 | **45%** |
 | 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
@@ -361,31 +359,31 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 10 | Implementation | 7 | 0 | 3 | **70%** |
 | 11 | Code review + model update | 7 | 0 | 3 | **70%** |
 | 12 | Design-driven testing | 6 | 1 | 3 | **65%** |
-| 13 | Requirements traceability | 6 | 1 | 3 | **65%** |
+| 13 | Requirements traceability | 7 | 0 | 3 | **70%** |
 
 ---
 
 ## Top Gap Areas (Prioritized)
 
-### Priority 1 — High impact, small effort
+### Closed in v0.6.0
 
-1. **Two-paragraph rule** (Ch3): Add to `iconix-product-owner.md` — UC text must fit in two paragraphs.
-2. **Passive voice guard** (Ch3/4/13): Add M1 check for "shall" statements in UC text; these belong in REQ files, not UC flows.
-3. **Boundary object per screen** (Ch5): Add to Analyst — one named boundary object per distinct UI screen.
-4. **Domain model rules** (Ch2): Add `# Domain model rules` to Analyst with the Top 10 constraints (no GUI classes, no data-model thinking, etc.).
-5. **Eight easy steps** (Ch4): Align M1 checklist in Product Owner to the book's eight steps.
+- ~~Two-paragraph rule~~ (Ch3) — `iconix-product-owner.md` rule 3 + M1 checklist
+- ~~Passive voice / "shall" guard~~ (Ch3/4/13) — `iconix-product-owner.md` rule 6 + M1 checklist
+- ~~Boundary object per screen~~ (Ch5) — `iconix-analyst.md` `# Boundary object naming`
+- ~~Domain model rules~~ (Ch2) — `iconix-analyst.md` `# Domain model rules`
+- ~~Eight easy steps~~ (Ch4) — M1 checklist expanded and aligned
 
-### Priority 2 — Medium impact
+### Priority 1 — Medium impact, moderate effort
 
-6. **CDR test plan review** (Ch9 #1): Tester should produce a test plan summary before CDR that the Orchestrator links to the M3 gate.
-7. **NFR requirements in trace chain** (Ch9 #5): Traceability should explicitly validate NFRs → UCs, not just functional REQs.
-8. **Integration and acceptance test types** (Ch12 V-model): Add a test type table to Tester showing when each type of test applies.
-9. **Invoked use cases on RB** (Ch5 #4): Analyst should note when a controller represents an invoked use case and show it on the diagram.
+1. **CDR test plan review** (Ch9 #1): Tester should produce a test plan summary before CDR that the Orchestrator links to the M3 gate.
+2. **NFR requirements in trace chain** (Ch9 #5): Traceability should explicitly validate NFRs → UCs, not just functional REQs.
+3. **Integration and acceptance test types** (Ch12 V-model): Add a test type table to Tester showing when each type of test applies.
+4. **Invoked use cases on RB** (Ch5 #4): Analyst should note when a controller represents an invoked use case and show it on the diagram.
 
-### Priority 3 — Out of kit scope (human-process items)
+### Priority 2 — Out of kit scope (human-process items)
 
-10. **Human review participants** (Ch4, Ch6): Requirements Review and PDR should include customers, end users, and marketing. Kit cannot model this but README could document it.
-11. **UI storyboards** (Ch3 #6, Ch4 #3): Kit does not produce UI prototypes — document this gap in README as a recommended human step.
-12. **Estimation from UC scenarios** (Ch13 #3): Out of scope for AI agents.
-13. **Code headers generation** (Ch9 #2): Tool-specific; out of kit scope.
-14. **Persona analysis** (Ch1): Would require a new `iconix-persona.md` agent.
+5. **Human review participants** (Ch4, Ch6): Requirements Review and PDR should include customers, end users, and marketing. Kit cannot model this but README could document it.
+6. **UI storyboards** (Ch3 #6, Ch4 #3): Kit does not produce UI prototypes — document this gap in README as a recommended human step.
+7. **Estimation from UC scenarios** (Ch13 #3): Out of scope for AI agents.
+8. **Code headers generation** (Ch9 #2): Tool-specific; out of kit scope.
+9. **Persona analysis** (Ch1): Would require a new `iconix-persona.md` agent.

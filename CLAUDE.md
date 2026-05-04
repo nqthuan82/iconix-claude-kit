@@ -98,3 +98,12 @@ bash iconix-init --source . --global
 ```
 
 After install: edit `.claude/iconix.config.yaml` to add containers and NFR catalog path, then open Claude Code and run `/iconix-next`.
+
+## Commit workflow
+
+Before committing any changes to this repo:
+1. Update `CHANGELOG.md` with a new version entry describing what changed and why.
+2. Show the user the planned commit message and wait for explicit acceptance.
+3. Only then run `git commit`.
+
+Never commit without completing both steps first.

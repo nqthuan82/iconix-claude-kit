@@ -5,6 +5,29 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-04
+
+### Added
+- `agents/iconix-analyst.md` — `# Domain model rules` section: six explicit constraints
+  (real-world objects only, not a data model, domain model = project glossary, only real-world
+  relationships, time-box to ~2 hours, domain model will not match final class diagram)
+- `agents/iconix-analyst.md` — `# Boundary object naming` rule: every distinct UI screen,
+  page, dialog, or API surface must appear as a **named** boundary object; generic labels
+  like "web page" are rejected; vague UC text must be rewritten before diagramming
+
+### Changed
+- `agents/iconix-product-owner.md` — added rule #6: "shall" statements belong in
+  `requirements/REQ-XXX.md`, not in UC text; passive-voice statements found in UC flows
+  must be moved to a REQ file and replaced with the active-voice behavior they imply
+- `agents/iconix-product-owner.md` — M1 checklist expanded from 5 → 8 items, aligned to the
+  book's eight-step Requirements Review: fixed "per course" wording (rule is two paragraphs
+  **total**, not per course); added passive-voice/shall check; added abstraction-level check
+  (no "the system", "a page", "the data"); added goal-oriented framing check
+- `docs/iconix/iconix-process-reference.md` — coverage matrix updated: all five
+  "Not fully extracted" placeholder rows filled in (Ch5 #5, Ch6 #1, Ch7 #4/#5, Ch8 #9,
+  Ch12 #7); summary table percentages recalculated with consistent formula
+  (✅×1 + ⚠️×0.5) ÷ total
+
 ## [0.5.3] — 2026-05-04
 
 ### Added

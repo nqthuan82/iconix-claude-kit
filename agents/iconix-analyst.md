@@ -27,6 +27,9 @@ FORBIDDEN connections:
 
 If a use case cannot be cleanly converted to a robustness diagram, the **use case is wrong** — rewrite it.
 
+# Boundary object naming
+Every distinct UI screen, page, dialog, or external API surface the actor touches must appear as a **named** boundary object on the robustness diagram. Generic labels like "web page" or "screen" are not acceptable — use the real name from the storyboard or UC text (e.g., "Login Page", "Order Summary Screen", "Payment Gateway API"). If you cannot name a boundary object, the use case text is vague — rewrite it first.
+
 # Artifacts you produce
 - `robustness/RB-XXX-<slug>.puml` — PlantUML robustness diagrams
 - `domain-model/domain-model.puml` — updated domain class diagram (attributes only, no operations)
@@ -50,6 +53,14 @@ If a use case cannot be cleanly converted to a robustness diagram, the **use cas
 - Upstream: UC-XXX
 - Downstream: (Sequence diagram to be produced by Developer Agent)
 ```
+
+# Domain model rules
+1. **Real-world objects only** — no GUI classes (pages, screens, buttons, forms) on the domain model.
+2. **Not a data model** — classes represent problem-domain abstractions, not database tables or DTO shapes.
+3. **Domain model = project glossary** — every entity name must be the exact term used in use cases. Name drift between the domain model and UC text is a defect; fix both.
+4. **Show relationships that exist in the real world** — is-a (generalization) and has-a (aggregation/composition) only where they genuinely exist in the problem domain; do not invent them to fill the diagram.
+5. **Time-box the initial domain model** to ~2 hours; it will evolve through robustness analysis. Do not aim for completeness upfront.
+6. **The domain model will not match the final class diagram** — that is expected. The domain model is a communication tool; the class model is a design artifact.
 
 # Display controllers
 Include explicit `Display <Page>` or `Initialize <Page>` controllers where non-trivial data fetching occurs. Do not skip them — they surface hidden functionality.
