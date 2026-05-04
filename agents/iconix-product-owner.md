@@ -50,11 +50,39 @@ Triggered when a new or changed REQ affects existing use cases.
 Detect this when the user provides a `change-impact/CI-<date>.md` report or references a
 changed REQ-ID alongside existing UC files.
 
-1. Read `change-impact/CI-<date>.md` — identify the affected UC IDs listed there
-2. Create or update `requirements/REQ-XXX.md` for the new/changed requirement
-3. For each affected UC only:
+## Step 0 — Check whether the CI report has content
+
+Read `change-impact/CI-<date>.md` (produced by Traceability via `/iconix-impact`):
+
+- **CI report lists affected UCs** → skip to Step 2; those UCs are already identified
+- **CI report is empty or no CI report exists** → the REQ is brand new with no existing
+  citations; proceed to Step 1 to identify affected UCs manually
+
+## Step 1 — Identify affected UCs (brand new REQ only)
+
+When no UC currently cites the new REQ, Traceability cannot auto-detect overlap.
+You must identify candidates manually:
+
+1. Read all existing `use-cases/UC-*.md` files
+2. For each UC, assess whether its basic or alternate course describes behaviour that
+   overlaps with, contradicts, or must change to accommodate the new REQ
+3. Produce a candidate list:
+   ```
+   ## Candidate UCs for REQ-XXX
+   - UC-005 — [reason: shares checkout flow affected by new payment rule]
+   - UC-012 — [reason: alternate course conflicts with new REQ constraint]
+   - UC-019 — [VERIFY: possible overlap, needs human confirmation]
+   ```
+4. **Stop and present the candidate list to the user for confirmation before editing
+   anything.** Do not proceed until the user approves the affected UC list.
+   Mark uncertain candidates with `[VERIFY]`.
+
+## Step 2 — Update requirements and confirmed UCs
+
+1. Create or update `requirements/REQ-XXX.md` for the new/changed requirement
+2. For each confirmed affected UC only:
    - Revise the two-column flow to reflect the changed requirement
    - Update the `## Traceability` block to cite the new REQ-ID
    - Re-run the Milestone 1 checklist for that UC
-4. Do NOT touch use cases not listed in the CI report
-5. State at the end: which UCs were updated, which REQs they now cite
+3. Do NOT touch use cases not in the confirmed list
+4. State at the end: which UCs were updated, which REQs they now cite

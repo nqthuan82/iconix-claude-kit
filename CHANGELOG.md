@@ -5,6 +5,16 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] — 2026-05-04
+
+### Fixed
+- **Product Owner change mode — brand new REQ detection**: when a new REQ has no
+  existing UC citations, Traceability's CI report is empty and the change mode previously
+  skipped straight to editing with no affected UCs identified. Added Step 0 (check CI
+  report content) and Step 1 (manual candidate identification with human confirmation)
+  before any UC edits are made. Uncertain candidates are flagged with `[VERIFY]` and
+  require explicit user approval before proceeding.
+
 ## [0.5.0] — 2026-05-03
 
 ### Added

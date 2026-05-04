@@ -145,9 +145,9 @@ incomplete. It never produces artifacts itself.
 Traceability runs **at every gate**, not just at the end. If a link is missing or an ID is
 reused, it freezes downstream work until resolved.
 
-### Handling a new REQ that affects existing use cases
+### Handling a new REQ that affects existing use cases (Change mode)
 
-When a new or changed requirement touches use cases that already have downstream artifacts
+When a `new` or `changed` requirement touches use cases that already have downstream artifacts
 (robustness diagrams, sequence diagrams, test cases), the pipeline does **not** restart
 from scratch — only the affected slice is updated.
 
@@ -199,6 +199,11 @@ re-validated and do not block the gate.
 > sequence automatically via `/iconix-next`. Product Owner, Analyst, and Tester each have
 > a `# Change mode` section — the Orchestrator passes the CI report path in its dispatch
 > plan so each agent self-scopes to the blast radius only.
+>
+> **Brand new REQ (empty CI report):** If no UC currently cites the new REQ, Traceability
+> produces an empty CI report. The Product Owner's change mode detects this, reads all
+> existing UCs to identify candidates with semantic overlap, and presents a confirmed list
+> to the user before editing anything. Uncertain candidates are flagged `[VERIFY]`.
 
 ### Handling a bug that affects existing use cases
 
