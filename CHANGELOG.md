@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.4] — 2026-05-04
+
+### Changed
+- `templates/test-case-template.md` — added `## Type` field
+  (unit | integration | system | acceptance | regression) with inline
+  guidance on which traceability fields apply per type: `Robustness
+  controller` for unit only; `Sequence diagram` for unit/integration only;
+  `Supersedes TC` for regression only; angle-bracket placeholders wrapped
+  in backticks for correct VS Code preview rendering
+- `agents/iconix-tester.md` — test case template reference now instructs
+  agent to set `## Type` and omit non-applicable traceability fields
+
 ## [0.7.3] — 2026-05-04
 
 ### Added

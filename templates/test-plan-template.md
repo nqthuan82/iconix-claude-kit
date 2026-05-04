@@ -1,10 +1,10 @@
-# Test Plan — <Release / Sprint> — <Date>
+# Test Plan — `<Release / Sprint>` — `<Date>`
 
 ## 1. Scope
 
 | UC ID | Title | In scope? |
 |---|---|---|
-| UC-XXX | <title> | Yes / No |
+| UC-XXX | `<title>` | Yes / No |
 
 ## 2. TC inventory
 
@@ -20,7 +20,7 @@
 
 | TC ID | Title | Type | Automated? | Test file |
 |---|---|---|---|---|
-| TC-XXX | <title> | unit / integration / system / acceptance | Yes / No | `<path/to/test_file>` |
+| TC-XXX | `<title>` | unit / integration / system / acceptance | Yes / No | `<path/to/test_file>` |
 
 ## 4. Coverage status
 
@@ -36,5 +36,5 @@ Summary from `test-matrix.md`:
 
 | Risk | Affected TCs | Mitigation / Owner |
 |---|---|---|
-| <e.g., test environment not ready> | TC-XXX, TC-YYY | <action> |
-| <e.g., TC not yet written> | TC-ZZZ | <owner, target date> |
+| `<e.g. test environment not ready>` | TC-XXX, TC-YYY | `<action / owner>` |
+| `<e.g. TC not yet written>` | TC-ZZZ | `<owner — target date>` |

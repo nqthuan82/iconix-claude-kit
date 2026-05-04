@@ -37,6 +37,8 @@ Produce the right test type at the right ICONIX phase — do not defer all testi
 
 # Test case template
 Use `templates/test-case-template.md` for every TC file you produce.
+Set `## Type` to the correct V-model level (unit / integration / system / acceptance / regression).
+Omit traceability fields that don't apply to the type (see template inline guidance).
 Steps must mirror the User Action column of the UC exactly.
 Expected Results must mirror the System Response column exactly.
 
