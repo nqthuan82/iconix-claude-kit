@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-04
+
+### Added
+- `agents/iconix-tester.md` — `# Test types (V-model)` table: maps each test type
+  (unit / integration / system / acceptance / regression) to the ICONIX phase that
+  triggers it, its primary inputs, and its scope
+- `agents/iconix-tester.md` — `# Pre-CDR test plan summary` section: Tester must
+  produce `test-plan/test-plan-<date>.md` before the M3 gate, covering release scope,
+  TC inventory by type, automation status, coverage status, and outstanding risks
+- `agents/iconix-traceability.md` — NFR validation check (#9): every NFR in
+  `iconix.config.yaml` `nfr_catalog` must be cited by ≥1 ADR or container-mapping
+  annotation; uncovered NFRs are flagged as orphans
+- `agents/iconix-traceability.md` — NFR added to the traceability chain diagram
+  (`NFR-XXX → ADR-XXX / container-mapping`)
+- `agents/iconix-traceability.md` — milestone gate report now includes NFR coverage
+  row and test plan existence/completeness check
+
 ## [0.6.0] — 2026-05-04
 
 ### Added

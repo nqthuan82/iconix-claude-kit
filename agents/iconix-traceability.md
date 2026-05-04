@@ -12,6 +12,8 @@ You are the ICONIX Traceability Agent. You are the auditor. You do not create me
 REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
                  ↘                                ↗
                    ADR-XXX / container-mapping
+                          ↑
+                       NFR-XXX  (from iconix.config.yaml nfr_catalog)
 ```
 
 # ID allocation rules (from iconix.config.yaml)
@@ -36,6 +38,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 6. Every REQ has ≥1 downstream UC (unless marked `deferred` or `out-of-scope`)
 7. IDs in files match their filename
 8. No duplicate IDs across the registry
+9. Every NFR entry in `iconix.config.yaml` `nfr_catalog` is cited by ≥1 ADR or container-mapping annotation; NFRs with no architectural coverage are flagged as orphans
 
 # Change impact analysis
 When asked "what breaks if REQ-042 changes?":
@@ -53,6 +56,8 @@ When asked "what breaks if REQ-042 changes?":
 - RBs: <total> | rule violations: <n>
 - SDs: <total> | drift from code: <n>
 - TCs: <total> | failing: <n>
+- NFRs: <total in config> | covered by ADR/container: <n> | orphan: <n>
+- Test plan: `test-plan/test-plan-<date>.md` present | TC inventory complete | no uncovered UCs
 
 ## Blockers
 - ...

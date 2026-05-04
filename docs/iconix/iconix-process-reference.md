@@ -220,11 +220,11 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 8 | Operations allocated to classes appropriately | ✅ | Developer + Reviewer |
 | 7 | All classes have appropriate attributes and operations | ⚠️ | M3 checks SD→CLS links; attribute completeness not checked |
 | 6 | Patterns/implementation constructs reflected on SD | ❌ | Not covered |
-| 5 | Functional and NFR requirements traced to UCs and classes | ✅ | Traceability agent — full chain validation |
+| 5 | Functional and NFR requirements traced to UCs and classes | ✅ | Traceability agent — full chain + NFR→ADR validation check #9 |
 | 4 | Programmers "sanity check" — confident they can build it | ❌ | No human sanity-check step |
 | 3 | Attributes typed correctly; return values and parameter lists complete | ❌ | Not in kit |
 | 2 | Generate code headers and inspect them | ❌ | Not in kit |
-| 1 | Review the test plan for the release | ⚠️ | Tester produces test matrix; no explicit CDR link to test plan |
+| 1 | Review the test plan for the release | ✅ | `iconix-tester.md` `# Pre-CDR test plan summary` — `test-plan/test-plan-<date>.md` checked at M3 gate |
 
 ---
 
@@ -283,7 +283,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
 | 10 | "Testing mind-set": every bug found is a victory | ❌ | Philosophy; not in agent |
-| 9 | Understand different kinds of testing (V-model) | ❌ | No test-type taxonomy in Tester |
+| 9 | Understand different kinds of testing (V-model) | ✅ | `iconix-tester.md` `# Test types (V-model)` table |
 | 8 | Create one or more TCs for each controller on each RB | ✅ | `iconix-tester.md` — one TC per controller |
 | 7 | Don't leave testing until after the code has been written (test-first thinking) | ❌ | Kit creates TCs from RBs before coding but does not explicitly enforce test-first order |
 | 6 | Requirement-level verification: each REQ is implemented | ✅ | Traceability validates REQ→UC→TC chain |
@@ -306,11 +306,11 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | Test type | ICONIX stage | Status |
 |---|---|---|
-| Unit testing | After detailed design | ✅ |
-| Integration testing | After PDR | ⚠️ Partial — no explicit integration test guidance |
-| System testing | After CDR | ⚠️ |
-| Acceptance testing | After system testing | ❌ |
-| Regression testing | After each release | ⚠️ Reviewer has regression check for bug fixes |
+| Unit testing | After detailed design | ✅ | `iconix-tester.md` `# Test types` |
+| Integration testing | After PDR | ✅ | `iconix-tester.md` `# Test types` |
+| System testing | After CDR | ✅ | `iconix-tester.md` `# Test types` |
+| Acceptance testing | After system testing | ✅ | `iconix-tester.md` `# Test types` |
+| Regression testing | After each release | ✅ | `iconix-tester.md` `# Test types` + Reviewer regression check |
 
 ---
 
@@ -355,10 +355,10 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
 | 7 | Technical architecture | 4 | 1 | 5 | **45%** |
 | 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
-| 9 | CDR (M3) | 4 | 2 | 4 | **50%** |
+| 9 | CDR (M3) | 5 | 1 | 4 | **55%** |
 | 10 | Implementation | 7 | 0 | 3 | **70%** |
 | 11 | Code review + model update | 7 | 0 | 3 | **70%** |
-| 12 | Design-driven testing | 6 | 1 | 3 | **65%** |
+| 12 | Design-driven testing | 7 | 1 | 2 | **75%** |
 | 13 | Requirements traceability | 7 | 0 | 3 | **70%** |
 
 ---
@@ -373,12 +373,15 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 - ~~Domain model rules~~ (Ch2) — `iconix-analyst.md` `# Domain model rules`
 - ~~Eight easy steps~~ (Ch4) — M1 checklist expanded and aligned
 
-### Priority 1 — Medium impact, moderate effort
+### Closed in v0.7.0
 
-1. **CDR test plan review** (Ch9 #1): Tester should produce a test plan summary before CDR that the Orchestrator links to the M3 gate.
-2. **NFR requirements in trace chain** (Ch9 #5): Traceability should explicitly validate NFRs → UCs, not just functional REQs.
-3. **Integration and acceptance test types** (Ch12 V-model): Add a test type table to Tester showing when each type of test applies.
-4. **Invoked use cases on RB** (Ch5 #4): Analyst should note when a controller represents an invoked use case and show it on the diagram.
+- ~~CDR test plan review~~ (Ch9 #1) — `iconix-tester.md` `# Pre-CDR test plan summary` + M3 gate check
+- ~~NFR requirements in trace chain~~ (Ch9 #5) — `iconix-traceability.md` validation check #9 + chain diagram
+- ~~Integration and acceptance test types~~ (Ch12 V-model) — `iconix-tester.md` `# Test types (V-model)` table
+
+### Priority 1 — Small effort, self-contained
+
+1. **Invoked use cases on RB** (Ch5 #4): `iconix-analyst.md` — when a UC invokes another UC, show the invoked UC as a node on the robustness diagram.
 
 ### Priority 2 — Out of kit scope (human-process items)
 
