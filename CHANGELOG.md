@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.3] — 2026-05-04
+
+### Added
+- `templates/adr-template.md` — Architecture Decision Record template with Status,
+  Context (REQ/NFR/UC refs), Options considered, Decision with rationale, Consequences
+  table (positive/negative/risks/follow-ups), and Traceability block
+
+### Changed
+- `agents/iconix-architect.md` — replaced inline ADR template block with reference to
+  `templates/adr-template.md`; artifact declaration updated to reference the file
+- `iconix-init` + `iconix-init.ps1` — both installers now copy `adr-template.md`
+  to `docs/iconix/templates/`
+
 ## [0.5.2] — 2026-05-04
 
 ### Added
