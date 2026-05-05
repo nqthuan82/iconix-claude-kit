@@ -9,6 +9,7 @@ software-development process (Rosenberg & Stephens) to any project.
 iconix-kit/
 ├── iconix-init              # installer CLI (bash)
 ├── iconix-init.ps1          # installer CLI (PowerShell)
+├── iconix-state-machine.puml  # PlantUML state machine of the full kit workflow
 ├── agents/                  # Claude Code sub-agent definitions
 │   ├── iconix-orchestrator.md
 │   ├── iconix-product-owner.md
@@ -110,7 +111,7 @@ issue is resolved.
 | Command | Dispatches to | Purpose |
 |---|---|---|
 | `/iconix-next` | Orchestrator → current phase agent | Advance the pipeline one step |
-| `/iconix-status` | Traceability (read-only) | Milestone readiness report |
+| `/iconix-status` | Traceability (read-only) | Artifact inventory, NFR coverage, test matrix, open CI reports, milestone readiness, next action |
 | `/iconix-impact <ID>` | Traceability | Downstream blast-radius of a change |
 | `/iconix-review` | Reviewer | Code ↔ design drift on current git diff |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
@@ -135,15 +136,17 @@ incomplete. It never produces artifacts itself.
           │
           ├─► Analyst          — robustness diagrams, domain model
           │
-          ├─► Architect        — container mapping, NFRs, ADRs
+          ├─► Architect        — container mapping, NFRs, ADRs, testability seams
           │        │
-          │    [M2 gate] ── Traceability ── validates UC→RB→container links
+          │    [M2 gate] ── Traceability ── validates UC→RB→container links;
+          │                                 checks every NFR cited by ≥1 ADR
           │
           ├─► Developer        — sequence diagrams, class model, code skeletons
           │
-          ├─► Tester           — test cases, Gherkin, coverage matrix
+          ├─► Tester           — test cases, Gherkin, coverage matrix, test plan
           │        │
-          │    [M3 gate] ── Traceability ── validates SD→CLS→TC links
+          │    [M3 gate] ── Traceability ── validates SD→CLS→TC links;
+          │                                 checks test-plan exists and is complete
           │
           └─► (done — all phases complete)
 ```
@@ -250,6 +253,10 @@ Reviewer (triage → Type 2)
 > **Bug modes:** Reviewer has a `# Bug triage` section; Developer has `# Bug fix mode`;
 > Tester has `# Bug verification mode`. The Orchestrator's `# Bug flow` drives the full
 > sequence automatically via `/iconix-next` when a bug is reported.
+>
+> **Review checklist:** After each review the Reviewer appends recurring defect patterns
+> to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
+> of the most common drift types, used to front-load future reviews.
 
 ### `/iconix-migrate` — code-walking vs. graph-assisted mode
 
@@ -417,5 +424,5 @@ These gaps are by design — they require human judgment, physical meetings, or 
 
 ## Philosophy
 
-Faithful to ICONIX's minimalism: six primary agents, three commands,
-one pipeline. No ceremony beyond what drives the work from use case to code.
+Faithful to ICONIX's minimalism: ten agents, seven commands, one pipeline.
+No ceremony beyond what drives the work from use case to code.

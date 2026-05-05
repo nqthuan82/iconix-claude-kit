@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.8] — 2026-05-05
+
+### Changed
+- `README.md` — updated to reflect all changes since v0.7.2:
+  - Added `iconix-state-machine.puml` to the kit tree listing
+  - `/iconix-status` description updated to reflect 6-section output (artifact inventory,
+    NFR coverage, test matrix, open CI reports, milestone readiness, next action)
+  - Pipeline diagram: Architect now shows "testability seams"; M2 gate notes NFR→ADR
+    validation; M3 gate notes test plan existence and completeness check
+  - Bug triage section: added note on `reviews/review-checklist.md` accumulation
+  - Philosophy footer: corrected "six primary agents" → "ten agents, seven commands"
+
 ## [0.8.7] — 2026-05-05
 
 ### Added
