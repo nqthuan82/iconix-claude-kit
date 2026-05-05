@@ -99,4 +99,9 @@ jobs:
           test -f docs/iconix/templates/graphify-setup.md || { echo "graphify-setup.md missing"; exit 1; }
           # v0.3.0: migration agent must mention graphify
           grep -q -i 'graphify' .claude/agents/iconix-migration.md || { echo "migration agent missing graphify integration"; exit 1; }
+          # v0.8.9: intake templates must be copied to templates
+          test -f docs/iconix/templates/intake-transcript-template.md || { echo "intake-transcript-template.md missing"; exit 1; }
+          test -f docs/iconix/templates/intake-brd-template.md || { echo "intake-brd-template.md missing"; exit 1; }
+          test -f docs/iconix/templates/intake-email-template.md || { echo "intake-email-template.md missing"; exit 1; }
+          test -f docs/iconix/templates/intake-feature-request-template.md || { echo "intake-feature-request-template.md missing"; exit 1; }
           echo "OK — installation validated"
