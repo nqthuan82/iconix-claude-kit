@@ -109,6 +109,10 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\test-plan-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\change-impact-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\graphify-setup.md")         "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\intake-transcript-template.md")      "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\intake-brd-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\intake-email-template.md")           "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\intake-feature-request-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
     }
 
     Write-Host ""

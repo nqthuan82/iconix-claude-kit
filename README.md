@@ -39,7 +39,11 @@ iconix-kit/
     ├── test-plan-template.md
     ├── adr-template.md          # architecture decision record
     ├── change-impact-template.md
-    └── graphify-setup.md        # Graphify integration setup guide
+    ├── graphify-setup.md        # Graphify integration setup guide
+    ├── intake-transcript-template.md   # stakeholder interview / meeting notes
+    ├── intake-brd-template.md          # Business Requirements Document
+    ├── intake-email-template.md        # email or written request
+    └── intake-feature-request-template.md  # feature request / ticket / user story
 ```
 
 ## Install into a project
@@ -94,7 +98,9 @@ In Claude Code:
 
 Or invoke agents explicitly:
 
-> "Use the iconix-product-owner agent to draft use cases from stakeholder-notes.md"
+> "Use the iconix-product-owner agent to process this stakeholder transcript: [paste text]"
+> "Use the iconix-product-owner agent to process this feature request: [paste ticket]"
+> "Use the iconix-product-owner agent to draft use cases from the intake form in docs/iconix/templates/"
 > "Use the iconix-analyst agent to produce robustness diagrams for UC-017 and UC-018"
 
 ## How agents hand off
@@ -130,7 +136,7 @@ incomplete. It never produces artifacts itself.
           ▼
    [phase detection]
           │
-          ├─► Product Owner    — draft REQs, UCs, glossary
+          ├─► Product Owner    — intake checklist → draft REQs, UCs, glossary
           │        │
           │    [M1 gate] ── Traceability ── validates REQ→UC links; freezes on failure
           │

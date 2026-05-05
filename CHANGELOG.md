@@ -5,6 +5,35 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.9] — 2026-05-05
+
+### Added
+- `templates/intake-transcript-template.md` — structured template for stakeholder
+  interviews and meeting notes: metadata, stakeholder profile, current-state narrative,
+  pain points, desired future state, scenario walkthrough table (Who/Action/Response),
+  what-if-fails probes, NFR seeds, open questions, and analyst summary with candidate
+  actors, UC stubs, and REQ stubs
+- `templates/intake-brd-template.md` — 13-section Business Requirements Document template:
+  executive summary, business objectives, explicit scope (in/out), stakeholders/actors,
+  current state, future state, functional requirements table (observable behaviour, no tech
+  names), NFR table (5 categories with measurable targets), business rules, assumptions /
+  constraints / dependencies, glossary, per-requirement acceptance criteria, and approvals
+- `templates/intake-email-template.md` — email/written-request intake template: source
+  metadata, verbatim text block, PO restatement layer (stated request, inferred goal
+  `[VERIFY]`, inferred actors, scope, NFR seeds, ambiguity questions), candidate artifacts
+  section, and Blocked / Ready status
+- `templates/intake-feature-request-template.md` — Connextra story + Gherkin acceptance
+  criteria template with inline comments mapping Given/When/Then to two-column UC format;
+  includes out-of-scope section, NFR notes table (separate from Gherkin), UI/screens,
+  INVEST self-check, priority, and linked artifacts
+- `agents/iconix-product-owner.md` — `# Intake checklist` section: maps each input type
+  to its template, defines six cross-cutting quality checks (named actor, goal vs solution,
+  alternate path, quantified constraints, named screens/domain objects, scope boundary),
+  enforces `[VERIFY]` for all inferences, and requires multi-UC decomposition before
+  drafting any artifacts
+- `iconix-init` / `iconix-init.ps1` — both installers updated to copy the four new intake
+  templates into `docs/iconix/templates/` during project-scope installation
+
 ## [0.8.8] — 2026-05-05
 
 ### Changed

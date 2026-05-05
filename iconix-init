@@ -131,7 +131,11 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/test-case-template.md"     "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/test-plan-template.md"     "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/change-impact-template.md" "docs/iconix/templates/" 2>/dev/null || true
-  cp "${WORKDIR}/templates/graphify-setup.md"         "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/graphify-setup.md"                        "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/intake-transcript-template.md"            "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/intake-brd-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/intake-email-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
 fi
 
 cat <<'EOF'
