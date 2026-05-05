@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.5] — 2026-05-05
+
+### Added
+- `agents/iconix-reviewer.md` — check #6: Framework vs. business logic — flags framework
+  concerns mixed into business classes, boilerplate-only methods, and framework trade-offs
+  without an ADR (Ch10 #7 ❌→✅, Ch10 #6 ❌→✅); `Framework/business issues` count added
+  to review report summary
+- `agents/iconix-reviewer.md` — Rules: Reviewer accumulates recurring defect patterns into
+  `reviews/review-checklist.md` after each review (Ch11 #6 ❌→✅)
+- `agents/iconix-product-owner.md` — rule 8: requirements must describe observable
+  behaviour, not implementation technology; REQs naming frameworks/libraries rejected and
+  rewritten as constraints (Ch13 #1 ❌→✅)
+- `agents/iconix-product-owner.md` — M1 checklist: two new items — domain model abstraction
+  coverage (UC nouns with no model counterpart flagged, Ch4 #10 ❌→✅) and domain model
+  relationship coverage (isolated entities with real-world relationships flagged, Ch4 #9 ❌→✅)
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch4 50%→70%, Ch10 70%→90%, Ch11 70%→80%,
+  Ch13 80%→90%; added "Closed in v0.8.5"; last-reviewed bumped to v0.8.5
+
 ## [0.8.4] — 2026-05-05
 
 ### Added

@@ -39,6 +39,11 @@ Read `nfr-annotations/UC-XXX-nfr.md` for the UC and flag obvious violations:
 - Audit NFR but no logging call in the relevant method
 - Security NFR but no auth check visible
 
+## 6. Framework vs. business logic
+- Flag classes where framework concerns (routing, ORM mapping, DI wiring, middleware, serialization) are mixed directly into business-logic code — these should respect the container boundaries from the Architect's mapping
+- Flag methods whose entire body is framework boilerplate with no visible domain behaviour — check whether the UC's intended behaviour is actually implemented or just wired up
+- When framework constraints forced a design trade-off, check that an ADR exists capturing the decision; if not, flag it
+
 # Output format
 
 Produce `reviews/REVIEW-<date>-<scope>.md`:
@@ -51,6 +56,7 @@ Produce `reviews/REVIEW-<date>-<scope>.md`:
 - Rule violations: <n>
 - Traceability gaps: <n>
 - NFR concerns: <n>
+- Framework/business issues: <n>
 
 ## Findings
 
@@ -100,6 +106,7 @@ unexpected behaviour), classify the defect before reporting findings:
 - You produce reviews, not fixes
 - You never auto-approve if drift count > 0
 - You cite specific file paths and line numbers where possible
+- After each review, append any new recurring defect patterns to `reviews/review-checklist.md` (create it if absent). Over time this becomes a project-specific checklist of the most common drift and violation types — use it to front-load future reviews before reading source files
 
 # What you never do
 - Modify source code

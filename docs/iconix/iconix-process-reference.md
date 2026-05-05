@@ -76,8 +76,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
-| 10 | Domain model describes ≥80% of key problem-domain abstractions | ❌ | M1 gate checks REQ→UC links; does not audit domain model coverage |
-| 9 | Domain model shows is-a and has-a relationships | ❌ | Not checked at M1 |
+| 10 | Domain model describes ≥80% of key problem-domain abstractions | ✅ | `iconix-product-owner.md` M1 checklist — UC nouns with no domain model counterpart flagged for Analyst |
+| 9 | Domain model shows is-a and has-a relationships | ✅ | `iconix-product-owner.md` M1 checklist — isolated floating entities with obvious real-world relationships flagged |
 | 8 | Use cases describe both basic and alternate courses, in active voice | ✅ | M1 checklist in Product Owner |
 | 7 | Passive-voice "shall" requirements are NOT mixed into active-voice UC text | ✅ | `iconix-product-owner.md` rule 6 + M1 checklist item 4 |
 | 6 | Use cases organized into packages with at least one UC diagram per package | ❌ | No UC diagram artifact |
@@ -237,8 +237,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 10 | Drive code directly from the design | ✅ | Developer agent core principle |
 | 9 | If coding reveals design is wrong, change it and review the process | ✅ | Reviewer detects drift; bug Type 2 flow triggers design update |
 | 8 | Hold regular code inspections | ✅ | `iconix-reviewer.md` — drift detection = code inspection |
-| 7 | Always question the framework's design choices | ❌ | Not covered |
-| 6 | Don't let framework issues take over business issues | ❌ | Not covered |
+| 7 | Always question the framework's design choices | ✅ | `iconix-reviewer.md` check #6 — flags framework concerns mixed into business logic; no-ADR framework trade-offs flagged |
+| 6 | Don't let framework issues take over business issues | ✅ | `iconix-reviewer.md` check #6 — flags methods with framework boilerplate but no visible domain behaviour |
 | 5 | If code gets out of control, revisit the design | ✅ | Bug Type 2 flow re-runs Traceability → full change pipeline |
 | 4 | Keep design and code in sync | ✅ | Reviewer + M3 gate |
 | 3 | Focus on unit testing while implementing code | ✅ | Developer is expected to write unit tests |
@@ -257,7 +257,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Create high-level review list based on use case titles | ✅ | `iconix-reviewer.md` — checklist per UC |
 | 8 | Break each UC item into a smaller checklist | ✅ | Reviewer walks RB controllers per UC |
 | 7 | Review code at several levels (conventions, design adherence, UC trace) | ✅ | Reviewer checks code vs SD vs UC |
-| 6 | Gather data; build boilerplate checklists for future reviews | ❌ | Reviewer produces one-shot report; no accumulation |
+| 6 | Gather data; build boilerplate checklists for future reviews | ✅ | `iconix-reviewer.md` Rules — recurring defect patterns appended to `reviews/review-checklist.md` after each review |
 | 5 | Follow up review with action points | ✅ | Reviewer produces BLOCK/CHANGES/APPROVE report with items |
 | 4 | Focus on error detection, not correction | ✅ | Reviewer identifies drift; Developer fixes |
 | 3 | Use integrated code/model browser | ❌ | Tooling choice; not in kit scope |
@@ -329,7 +329,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 4 | Avoid the "big monolithic document" syndrome | ✅ | One file per REQ/UC/RB/SD/TC |
 | 3 | Create estimates from UC scenarios, not functional requirements | ❌ | No estimation guidance in kit |
 | 2 | Don't be afraid of examples in functional requirements | ✅ | `templates/req-template.md` `## Examples` section — optional but encouraged; example + counter-example |
-| 1 | Don't make requirements a technical fashion statement | ❌ | Not covered |
+| 1 | Don't make requirements a technical fashion statement | ✅ | `iconix-product-owner.md` rule 8 — REQs naming frameworks/libraries rejected; rewritten as behaviour/constraint; technology in ADRs |
 
 **Dysfunctional requirements detection:**
 
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.4_
+_Last reviewed: v0.8.5_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -352,16 +352,16 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 1 | ICONIX pipeline + milestones | 6 | 0 | 2 | **75%** |
 | 2 | Domain modeling | 10 | 0 | 0 | **100%** |
 | 3 | Use case modeling | 8 | 1 | 1 | **85%** |
-| 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
+| 4 | Requirements Review (M1) | 6 | 2 | 2 | **70%** |
 | 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
 | 6 | PDR (M2) | 8 | 1 | 1 | **85%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
 | 8 | Sequence diagrams | 10 | 0 | 0 | **100%** |
 | 9 | CDR (M3) | 6 | 0 | 4 | **60%** |
-| 10 | Implementation | 7 | 0 | 3 | **70%** |
-| 11 | Code review + model update | 7 | 0 | 3 | **70%** |
+| 10 | Implementation | 9 | 0 | 1 | **90%** |
+| 11 | Code review + model update | 8 | 0 | 2 | **80%** |
 | 12 | Design-driven testing | 8 | 0 | 2 | **80%** |
-| 13 | Requirements traceability | 8 | 0 | 2 | **80%** |
+| 13 | Requirements traceability | 9 | 0 | 1 | **90%** |
 
 ---
 
@@ -384,6 +384,15 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.5
+
+- ~~Domain model abstraction coverage~~ (Ch4 #10) — `iconix-product-owner.md` M1 checklist — UC nouns with no domain model counterpart flagged
+- ~~Domain model shows is-a/has-a relationships~~ (Ch4 #9) — `iconix-product-owner.md` M1 checklist — isolated entities with real-world relationships flagged
+- ~~Always question framework design choices~~ (Ch10 #7) — `iconix-reviewer.md` check #6
+- ~~Don't let framework issues dominate business issues~~ (Ch10 #6) — `iconix-reviewer.md` check #6
+- ~~Gather data; build boilerplate checklists~~ (Ch11 #6) — `iconix-reviewer.md` Rules — findings accumulated in `reviews/review-checklist.md`
+- ~~Requirements not a technical fashion statement~~ (Ch13 #1) — `iconix-product-owner.md` rule 8
 
 ### Closed in v0.8.4
 
