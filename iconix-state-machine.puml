@@ -1,0 +1,110 @@
+@startuml ICONIX-Kit-State-Machine
+
+skinparam state {
+  BackgroundColor<<gate>>    #FFD580
+  BackgroundColor<<agent>>   #AED6F1
+  BackgroundColor<<bug>>     #F1948A
+  BackgroundColor<<change>>  #A9DFBF
+  BorderColor                #2C3E50
+  FontSize                   12
+}
+skinparam ArrowColor #2C3E50
+
+' ── Entry ──────────────────────────────────────────────────────────────
+[*] --> Idle
+
+state "Idle" as Idle
+Idle --> Requirements : raw input\n(BRD / transcript / feature request)
+
+' ── Phase 1 : Requirements ─────────────────────────────────────────────
+state "Product Owner" as Requirements <<agent>> {
+  [*] --> DraftREQs
+  DraftREQs --> DraftUCs    : REQ-XXX files written
+  DraftUCs  --> M1Checklist : UC two-column flows written
+  M1Checklist --> [*]       : 8-item checklist passed
+}
+
+Requirements --> M1Gate : UCs + REQs ready
+
+' ── Gate M1 ────────────────────────────────────────────────────────────
+state "M1 Gate\n(Traceability)" as M1Gate <<gate>>
+M1Gate --> Requirements : [REQ→UC links broken\nor M1 checklist fails]
+M1Gate --> PrelimDesign  : [all REQ→UC links valid]
+
+' ── Phase 2 : Preliminary Design (Analyst ∥ Architect) ─────────────────
+state "Preliminary Design" as PrelimDesign {
+  state "Analyst" as Analyst <<agent>>
+  state "Architect" as Architect <<agent>>
+
+  note "Analyst and Architect\nrun in parallel" as N1
+
+  [*]       --> Analyst
+  Analyst   --> Architect : RBs + domain model ready\n(Architect may start once\nfirst RBs exist)
+  Architect --> [*]       : container mapping\n+ ADRs ready
+}
+
+PrelimDesign --> M2Gate : RBs + domain model\n+ container mapping done
+
+' ── Gate M2 ────────────────────────────────────────────────────────────
+state "M2 Gate / PDR\n(Traceability)" as M2Gate <<gate>>
+M2Gate --> PrelimDesign : [RB rule violations\nor UC→RB links invalid]
+M2Gate --> CDRPhase     : [M2 passed — all RBs valid]
+
+' ── Phase 3 : Detailed Design + Testing (Developer ∥ Tester) ───────────
+state "CDR Phase" as CDRPhase {
+  state "Developer" as Developer <<agent>>
+  state "Tester" as Tester <<agent>>
+
+  note "Developer and Tester\nrun in parallel" as N2
+
+  [*]       --> Developer
+  Developer --> Tester    : SDs + class model ready\n(Tester starts once\nfirst SDs exist)
+  Tester    --> [*]       : TCs + test plan ready
+}
+
+CDRPhase --> M3Gate : SDs + class model\n+ TCs + test plan done
+
+' ── Gate M3 ────────────────────────────────────────────────────────────
+state "M3 Gate / CDR\n(Traceability)" as M3Gate <<gate>>
+M3Gate --> CDRPhase       : [SD→CLS→TC links broken\nor test plan missing]
+M3Gate --> Implementation : [M3 passed]
+
+' ── Phase 4 : Implementation ───────────────────────────────────────────
+state "Implementation\n(Developer + Tester iterate)" as Implementation <<agent>>
+Implementation --> Done : release
+
+' ── Done ───────────────────────────────────────────────────────────────
+state "Done" as Done
+Done --> [*]
+
+' ── Bug Flow ────────────────────────────────────────────────────────────
+state "Bug Triage\n(Reviewer)" as BugTriage <<bug>>
+state "Bug Fix\n(Developer)" as BugFix <<bug>>
+state "Bug Verify\n(Tester)" as BugVerify <<bug>>
+
+note left of BugTriage
+  Triggered at any time
+  by the Orchestrator
+  (see # Bug flow in
+  iconix-orchestrator.md)
+end note
+
+BugTriage --> BugFix        : Type 1 — code diverges\nfrom correct SD
+BugTriage --> REQChange     : Type 2 — design is wrong\n→ full REQ change flow
+BugFix    --> BugVerify     : fix applied
+BugVerify --> Implementation : TCs pass + no regressions
+BugVerify --> BugFix        : TCs still failing
+
+' ── REQ Change Flow ──────────────────────────────────────────────────────
+state "REQ Change\n(/iconix-impact → CI report)" as REQChange <<change>>
+
+note right of REQChange
+  Triggered at any time
+  by the Orchestrator
+  (see # REQ change flow in
+  iconix-orchestrator.md)
+end note
+
+REQChange --> Requirements : scoped pipeline\n(only affected artifacts updated)
+
+@enduml

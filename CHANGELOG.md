@@ -5,6 +5,16 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.5] — 2026-05-04
+
+### Added
+- `iconix-state-machine.puml` — PlantUML state machine diagram of the full ICONIX kit
+  workflow: Idle → Requirements (M1 gate) → Preliminary Design (M2 gate) → CDR Phase
+  (M3 gate) → Implementation → Done; includes bug triage flow (CDRPhase / Implementation /
+  Done → BugTriage → BugFix → BugVerify) and REQ change flow (any active phase →
+  REQChange → Requirements); states colour-coded by stereotype: `<<agent>>` blue,
+  `<<gate>>` yellow, `<<bug>>` red, `<<change>>` green
+
 ## [0.7.4] — 2026-05-04
 
 ### Changed
