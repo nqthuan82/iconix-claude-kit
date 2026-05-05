@@ -105,3 +105,5 @@ updated UC files alongside existing RB files.
 - [ ] Alternate courses visible on the same diagram (shade differently)
 - [ ] Every new entity added to domain model
 - [ ] Glossary updated with any new terms
+- [ ] Data flow documented: for every Boundary↔Entity path (via Controller), the data passed is named in the UC text or an analysis note — unnamed data flows are flagged as ambiguities
+- [ ] No detailed design on any RB: method signatures, parameter lists, return types, and data types must not appear on a robustness diagram — if found, remove them and flag as a violation before proceeding

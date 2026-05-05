@@ -21,6 +21,7 @@ For each source file that carries a `Traceability: UC-XXX | RB-XXX | SD-XXX` com
 - Every operation in the class model exists as a method in code
 - Attribute types in code match the class model
 - Renamed classes/methods are flagged as "rename or update model"
+- **Attribute completeness**: for every entity class (domain objects that own data), check that the class model declares appropriate attributes — not just operations. Flag any entity class with ≥2 operations and 0 attributes as "attribute-sparse": it likely has hidden state that should be explicit in the model.
 
 ## 3. Robustness rule compliance (indirect)
 - Every controller on the robustness diagram maps to ≥1 method in code

@@ -5,6 +5,20 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.4] — 2026-05-05
+
+### Added
+- `agents/iconix-analyst.md` — PDR readiness check: two new gate items: data flow
+  documentation (Boundary↔Entity paths must have named data in UC text or analysis notes,
+  Ch6 #8 ⚠️→✅) and no-detailed-design guard (method signatures/types on RB are a blocker,
+  Ch6 #2 ⚠️→✅)
+- `agents/iconix-reviewer.md` — check #2 attribute completeness: entity classes with ≥2
+  operations and 0 attributes flagged as "attribute-sparse" (Ch9 #7 ⚠️→✅)
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch6 75%→85%, Ch9 55%→60%; added "Closed in
+  v0.8.4"; last-reviewed bumped to v0.8.4
+
 ## [0.8.3] — 2026-05-05
 
 ### Added

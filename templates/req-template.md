@@ -12,8 +12,8 @@ The system shall <observable behaviour — active voice, present tense, one sent
 
 ## Examples
 <!-- Optional but encouraged — concrete scenarios make the requirement unambiguous -->
-- **Example 1:** <brief scenario that satisfies the requirement>
-- **Counter-example:** <brief scenario that violates or is out of scope>
+- **Example 1:** `<brief scenario that satisfies the requirement>`
+- **Counter-example:** `<brief scenario that violates or is out of scope>`
 
 ## Priority
 P0 — must have | P1 — should have | P2 — nice to have

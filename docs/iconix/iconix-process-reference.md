@@ -142,13 +142,13 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 |---|---|---|---|
 | 10 | Highlighter test: UC text matches RB diagram, sentence by sentence | ✅ | M2 gate in `iconix-traceability.md` |
 | 9 | All entities on all RBs appear in the updated domain model | ✅ | Analyst adds new entities to domain model |
-| 8 | Trace data flow between entity classes and screens | ⚠️ | Not an explicit M2 check |
+| 8 | Trace data flow between entity classes and screens | ✅ | `iconix-analyst.md` PDR readiness check — unnamed Boundary↔Entity data flows flagged as ambiguities |
 | 7 | Don't forget alternate courses; write behavior for each one | ✅ | Analyst rule |
 | 6 | Each UC covers both sides of user/system dialogue | ✅ | Two-column format enforces this |
 | 5 | Syntax rules for robustness analysis not violated | ✅ | Analyst validates four connection rules |
 | 4 | Review includes both nontechnical (customer) and technical folks | ❌ | Human review step not modeled |
 | 3 | Use cases in context of both object model and GUI — "magic abstraction level" | ✅ | Product Owner + Analyst both enforce this |
-| 2 | Don't drift into detailed design territory on robustness diagrams | ⚠️ | Stated as conceptual design; no explicit guard |
+| 2 | Don't drift into detailed design territory on robustness diagrams | ✅ | `iconix-analyst.md` PDR readiness check — method signatures/types on RB are a blocker before handoff |
 | 1 | Follow "Six Easy Steps" to a better PDR (meta-checklist: match diagram to UC text, validate syntax rules, check domain model/GUI context, trace data flow, ensure both dialogue sides, include non-technical reviewers) | ⚠️ | Technical checks covered by M2 gate; human reviewer participation not modeled |
 
 ---
@@ -218,7 +218,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 10 | Sequence diagram matches use case text | ✅ | `iconix-reviewer.md` drift detection + M3 gate |
 | 9 | Each SD accounts for both basic and alternate courses of action | ✅ | Developer + Reviewer |
 | 8 | Operations allocated to classes appropriately | ✅ | Developer + Reviewer |
-| 7 | All classes have appropriate attributes and operations | ⚠️ | M3 checks SD→CLS links; attribute completeness not checked |
+| 7 | All classes have appropriate attributes and operations | ✅ | `iconix-reviewer.md` check #2 — attribute completeness: entity classes with ≥2 operations and 0 attributes flagged as "attribute-sparse" |
 | 6 | Patterns/implementation constructs reflected on SD | ❌ | Not covered |
 | 5 | Functional and NFR requirements traced to UCs and classes | ✅ | Traceability agent — full chain + NFR→ADR validation check #9 |
 | 4 | Programmers "sanity check" — confident they can build it | ❌ | No human sanity-check step |
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.3_
+_Last reviewed: v0.8.4_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -354,10 +354,10 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 3 | Use case modeling | 8 | 1 | 1 | **85%** |
 | 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
 | 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
-| 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
+| 6 | PDR (M2) | 8 | 1 | 1 | **85%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
 | 8 | Sequence diagrams | 10 | 0 | 0 | **100%** |
-| 9 | CDR (M3) | 5 | 1 | 4 | **55%** |
+| 9 | CDR (M3) | 6 | 0 | 4 | **60%** |
 | 10 | Implementation | 7 | 0 | 3 | **70%** |
 | 11 | Code review + model update | 7 | 0 | 3 | **70%** |
 | 12 | Design-driven testing | 8 | 0 | 2 | **80%** |
@@ -384,6 +384,12 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.4
+
+- ~~Trace data flow between entity classes and screens~~ (Ch6 #8) — `iconix-analyst.md` PDR readiness check — unnamed Boundary↔Entity data flows flagged
+- ~~Don't drift into detailed design on RBs~~ (Ch6 #2) — `iconix-analyst.md` PDR readiness check — method signatures/types on RB are a pre-handoff blocker
+- ~~All classes have appropriate attributes and operations~~ (Ch9 #7) — `iconix-reviewer.md` check #2 — attribute-sparse entity classes flagged
 
 ### Closed in v0.8.3
 
