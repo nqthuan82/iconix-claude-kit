@@ -343,6 +343,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
+_Last reviewed: v0.7.5_
+
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
 | Chapter | Topic | ✅ | ⚠️ | ❌ | Coverage |
@@ -383,10 +385,27 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
 
-### Priority 2 — Out of kit scope (human-process items)
+### Documented as intentionally out-of-scope in v0.7.2
 
-5. **Human review participants** (Ch4, Ch6): Requirements Review and PDR should include customers, end users, and marketing. Kit cannot model this but README could document it.
-6. **UI storyboards** (Ch3 #6, Ch4 #3): Kit does not produce UI prototypes — document this gap in README as a recommended human step.
-7. **Estimation from UC scenarios** (Ch13 #3): Out of scope for AI agents.
-8. **Code headers generation** (Ch9 #2): Tool-specific; out of kit scope.
-9. **Persona analysis** (Ch1): Would require a new `iconix-persona.md` agent.
+`README.md` `## What the kit intentionally does not cover` explicitly acknowledges these items. They remain ❌ in the coverage tables above — the kit does not implement them — but they are not omissions; they are deliberate boundaries.
+
+| Item | Chapter(s) | Rationale |
+|---|---|---|
+| UI storyboards | Ch3 #6, Ch4 #3 | Requires a human designer; not an AI-agent deliverable |
+| Stakeholder review meetings | Ch4 #2, Ch6 #4 | Human governance step; kit routes work but cannot convene people |
+| Persona analysis | Ch1 | Pre-project marketing work; out of kit scope |
+| Effort estimation | Ch13 #3 | UC-point estimation requires team calibration data |
+| Code header generation | Ch9 #2 | IDE/toolchain concern; not an ICONIX artifact |
+| TDD red-green cycle | Ch1 | Kit derives TCs from RBs (design-first); TDD is a separate practice |
+
+### Added in v0.7.3
+
+- `templates/test-plan-template.md` — pre-CDR test plan template; `iconix-tester.md` and `iconix-traceability.md` now reference it at the M3 gate (supports Ch9 #1 ✅ and Ch12 V-model ✅)
+
+### Added in v0.7.4
+
+- `templates/test-case-template.md` `## Type` field — V-model classification (unit / integration / system / acceptance / regression) on every TC; aligns Ch12 #9 ✅
+
+### Added in v0.7.5
+
+- `iconix-state-machine.puml` — visual reference diagram of the full kit workflow; documentation only, no coverage impact

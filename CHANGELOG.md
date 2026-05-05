@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.6] — 2026-05-05
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — coverage matrix updated to v0.7.5:
+  - Added `_Last reviewed: v0.7.5_` to summary table
+  - Replaced "Priority 2 — Out of kit scope" list with a structured
+    "Documented as intentionally out-of-scope in v0.7.2" table (6 items with
+    rationale column: UI storyboards, stakeholder reviews, persona analysis,
+    effort estimation, code headers, TDD red-green cycle)
+  - Added "Added in v0.7.3/v0.7.4/v0.7.5" sections documenting
+    `test-plan-template.md`, TC `## Type` field, and state machine diagram
+
 ## [0.7.5] — 2026-05-04
 
 ### Added
