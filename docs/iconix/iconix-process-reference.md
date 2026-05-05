@@ -192,10 +192,10 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 8 | Start from robustness diagram — objects from RB become objects on SD | ✅ | Developer agent step 1 |
 | 7 | Show how UC behavior (all controllers from RB) is accomplished by objects | ✅ | Developer maps controllers to messages |
 | 6 | Map UC text to messages on the SD; line up text and arrows | ✅ | `iconix-developer.md` step 2 — UC steps as `group` blocks in PlantUML |
-| 5 | Don't spend too much time worrying about focus of control | ❌ | Not stated |
+| 5 | Don't spend too much time worrying about focus of control | ✅ | `iconix-developer.md` rule 7 — activation bars optional; SD purpose is operation allocation, not control timing |
 | 4 | Assign operations to classes while drawing messages | ✅ | Developer updates class model |
 | 3 | Review class diagrams frequently while assigning operations | ✅ | Developer updates `class-model.puml` in parallel |
-| 2 | Prefactor design on sequence diagrams before coding | ⚠️ | Implied; no explicit prefactoring instruction |
+| 2 | Prefactor design on sequence diagrams before coding | ✅ | `iconix-developer.md` rule 6 — SD must be complete before code skeletons are generated |
 | 1 | Clean up the static model before proceeding to CDR | ✅ | M3 gate requires class model complete |
 
 **Four Essential Steps (SD construction):**
@@ -291,7 +291,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 4 | Scenario-level acceptance testing for each UC | ✅ | Tester produces TCs covering basic + alternate courses |
 | 3 | Expand threads to cover complete path (basic + each alternate) | ✅ | Tester covers alternate courses |
 | 2 | Use a testing framework (JUnit/xUnit) to store and organize tests | ✅ | `iconix.config.yaml` `test_framework` configures this |
-| 1 | Keep unit tests fine-grained | ⚠️ | Implied; not stated as explicit Tester rule |
+| 1 | Keep unit tests fine-grained | ✅ | `iconix-tester.md` ICONIX rules — explicit fine-grained rule; one controller operation per unit TC |
 
 **Unit test derivation from RB controllers:**
 
@@ -300,7 +300,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | One unit test class per controller (test case) | ✅ | `iconix-tester.md` |
 | One test method per UC scenario (basic + alternate) | ✅ | Tester TC format: Steps mirror UC rows |
 | Test named after UC scenario of origin | ✅ | TC naming convention |
-| Tests written from point of view of object calling controller | ⚠️ | Not explicitly stated |
+| Tests written from point of view of object calling controller | ✅ | `iconix-tester.md` ICONIX rules — explicit caller-POV rule |
 
 ### V-Model: test types vs. ICONIX stages
 
@@ -328,7 +328,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 5 | Distinguish between different types of requirements (functional vs. NFR) | ✅ | `iconix.config.yaml` NFR catalog; separate NFR annotation files |
 | 4 | Avoid the "big monolithic document" syndrome | ✅ | One file per REQ/UC/RB/SD/TC |
 | 3 | Create estimates from UC scenarios, not functional requirements | ❌ | No estimation guidance in kit |
-| 2 | Don't be afraid of examples in functional requirements | ❌ | `req-template.md` has no examples guidance |
+| 2 | Don't be afraid of examples in functional requirements | ✅ | `templates/req-template.md` `## Examples` section — optional but encouraged; example + counter-example |
 | 1 | Don't make requirements a technical fashion statement | ❌ | Not covered |
 
 **Dysfunctional requirements detection:**
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.1_
+_Last reviewed: v0.8.3_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -356,12 +356,12 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
-| 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
+| 8 | Sequence diagrams | 10 | 0 | 0 | **100%** |
 | 9 | CDR (M3) | 5 | 1 | 4 | **55%** |
 | 10 | Implementation | 7 | 0 | 3 | **70%** |
 | 11 | Code review + model update | 7 | 0 | 3 | **70%** |
-| 12 | Design-driven testing | 7 | 1 | 2 | **75%** |
-| 13 | Requirements traceability | 7 | 0 | 3 | **70%** |
+| 12 | Design-driven testing | 8 | 0 | 2 | **80%** |
+| 13 | Requirements traceability | 8 | 0 | 2 | **80%** |
 
 ---
 
@@ -384,6 +384,14 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.3
+
+- ~~Prefactor design on SD before coding~~ (Ch8 #2) — `iconix-developer.md` rule 6
+- ~~Don't worry about focus of control~~ (Ch8 #5) — `iconix-developer.md` rule 7
+- ~~Keep unit tests fine-grained~~ (Ch12 #1) — `iconix-tester.md` ICONIX rules
+- ~~Tests from point of view of calling controller~~ (Ch12 unit test sub-table) — `iconix-tester.md` ICONIX rules
+- ~~Examples in functional requirements~~ (Ch13 #2) — `templates/req-template.md` `## Examples` section
 
 ### Closed in v0.8.1
 

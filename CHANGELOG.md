@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.3] — 2026-05-05
+
+### Added
+- `agents/iconix-developer.md` — rule 6: prefactor on SD before writing code; SD is
+  complete when every RB controller has a message and every message has an allocated
+  operation (Ch8 #2 ⚠️→✅)
+- `agents/iconix-developer.md` — rule 7: don't worry about focus of control; activation
+  bars are optional detail; SD purpose is operation allocation (Ch8 #5 ❌→✅)
+- `agents/iconix-tester.md` — ICONIX rules expanded: explicit fine-grained unit test rule
+  (one controller operation per TC, Ch12 #1 ⚠️→✅) and caller-POV unit test rule (test the
+  contract the controller exposes to its caller, Ch12 unit test sub-table ⚠️→✅)
+- `templates/req-template.md` — `## Examples` section: optional but encouraged; concrete
+  example + counter-example per requirement (Ch13 #2 ❌→✅)
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch8 85%→100%, Ch12 75%→80%, Ch13 70%→80%;
+  added "Closed in v0.8.3" section; last-reviewed bumped to v0.8.3
+
 ## [0.8.2] — 2026-05-05
 
 ### Changed
