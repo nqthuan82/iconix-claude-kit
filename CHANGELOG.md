@@ -5,6 +5,15 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.2] — 2026-05-05
+
+### Changed
+- `commands/iconix-status.md` — expanded from a 4-line stub to a structured 6-section
+  report template: artifact inventory (REQ/UC/RB/SD/CLS/TC/ADR + test plan + open CI
+  reports), NFR coverage from `nfr_catalog`, test coverage summary from `test-matrix.md`
+  (automated vs manual, UC coverage gaps), open change impact reports with blast-radius
+  and pipeline re-run status, milestone readiness (M1/PDR/CDR), and next recommended action
+
 ## [0.8.1] — 2026-05-05
 
 ### Added
