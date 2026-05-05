@@ -98,7 +98,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 5. Name participating domain objects | ✅ | Explicitly in Product Owner |
 | 6. Make sure you have all the alternate courses | ✅ | M1 checklist |
 | 7. Trace each requirement to its use cases | ✅ | Traceability agent — REQ→UC allocation |
-| 8. Make each use case describe what the users are trying to do | ⚠️ | Active voice rule covers this partially |
+| 8. Make each use case describe what the users are trying to do | ✅ | `iconix-product-owner.md` M1 checklist item 8 — goal-oriented framing check (added v0.6.0) |
 
 ---
 
@@ -219,10 +219,10 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Each SD accounts for both basic and alternate courses of action | ✅ | Developer + Reviewer |
 | 8 | Operations allocated to classes appropriately | ✅ | Developer + Reviewer |
 | 7 | All classes have appropriate attributes and operations | ✅ | `iconix-reviewer.md` check #2 — attribute completeness: entity classes with ≥2 operations and 0 attributes flagged as "attribute-sparse" |
-| 6 | Patterns/implementation constructs reflected on SD | ❌ | Not covered |
+| 6 | Patterns/implementation constructs reflected on SD | ✅ | `iconix-developer.md` rule 8 — design patterns shown on SD as lifelines; pattern hidden in code but absent from SD is drift |
 | 5 | Functional and NFR requirements traced to UCs and classes | ✅ | Traceability agent — full chain + NFR→ADR validation check #9 |
 | 4 | Programmers "sanity check" — confident they can build it | ❌ | No human sanity-check step |
-| 3 | Attributes typed correctly; return values and parameter lists complete | ❌ | Not in kit |
+| 3 | Attributes typed correctly; return values and parameter lists complete | ✅ | `iconix-reviewer.md` check #2 — untyped attributes flagged as "attribute untyped" |
 | 2 | Generate code headers and inspect them | ❌ | Not in kit |
 | 1 | Review the test plan for the release | ✅ | `iconix-tester.md` `# Pre-CDR test plan summary` — `test-plan/test-plan-<date>.md` checked at M3 gate |
 
@@ -285,7 +285,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 10 | "Testing mind-set": every bug found is a victory | ❌ | Philosophy; not in agent |
 | 9 | Understand different kinds of testing (V-model) | ✅ | `iconix-tester.md` `# Test types (V-model)` table |
 | 8 | Create one or more TCs for each controller on each RB | ✅ | `iconix-tester.md` — one TC per controller |
-| 7 | Don't leave testing until after the code has been written (test-first thinking) | ❌ | Kit creates TCs from RBs before coding but does not explicitly enforce test-first order |
+| 7 | Don't leave testing until after the code has been written (test-first thinking) | ⚠️ | `iconix-tester.md` ICONIX rules — TCs exist before code skeletons; kit cannot enforce developer discipline but the rule is explicit |
 | 6 | Requirement-level verification: each REQ is implemented | ✅ | Traceability validates REQ→UC→TC chain |
 | 5 | Use a traceability matrix | ✅ | `iconix-traceability.md` + `test-matrix.md` |
 | 4 | Scenario-level acceptance testing for each UC | ✅ | Tester produces TCs covering basic + alternate courses |
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.5_
+_Last reviewed: v0.8.6_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -357,10 +357,10 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 6 | PDR (M2) | 8 | 1 | 1 | **85%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
 | 8 | Sequence diagrams | 10 | 0 | 0 | **100%** |
-| 9 | CDR (M3) | 6 | 0 | 4 | **60%** |
+| 9 | CDR (M3) | 8 | 0 | 2 | **80%** |
 | 10 | Implementation | 9 | 0 | 1 | **90%** |
 | 11 | Code review + model update | 8 | 0 | 2 | **80%** |
-| 12 | Design-driven testing | 8 | 0 | 2 | **80%** |
+| 12 | Design-driven testing | 8 | 1 | 1 | **85%** |
 | 13 | Requirements traceability | 9 | 0 | 1 | **90%** |
 
 ---
@@ -384,6 +384,13 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.6
+
+- ~~Matrix inconsistency fixed~~ — Ch4 Eight-steps #8 "goal-oriented framing" corrected ⚠️→✅ (was already implemented in v0.6.0 M1 checklist)
+- ~~Patterns/implementation constructs on SD~~ (Ch9 #6) — `iconix-developer.md` rule 8 — design patterns shown as SD lifelines
+- ~~Attribute types in class model~~ (Ch9 #3) — `iconix-reviewer.md` check #2 — untyped attributes flagged
+- ~~Don't defer testing until after code~~ (Ch12 #7) — `iconix-tester.md` ICONIX rules — TCs exist before code skeletons (❌→⚠️; cannot enforce developer discipline beyond stating the rule)
 
 ### Closed in v0.8.5
 

@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.6] — 2026-05-05
+
+### Added
+- `agents/iconix-developer.md` — rule 8: show design patterns on the SD as lifelines;
+  a pattern hidden in code but absent from SD is flagged as drift (Ch9 #6 ❌→✅)
+- `agents/iconix-reviewer.md` — check #2: untyped attributes in class model flagged as
+  "attribute untyped" (Ch9 #3 ❌→✅)
+- `agents/iconix-tester.md` — ICONIX rules: TCs are authored before code skeletons;
+  deferring TC authoring until after implementation defeats design-first intent (Ch12 #7 ❌→⚠️)
+
+### Fixed
+- `docs/iconix/iconix-process-reference.md` — Ch4 Eight-steps #8 corrected ⚠️→✅; rule was
+  already implemented in v0.6.0 M1 checklist item 8 but matrix was not updated
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch9 60%→80%, Ch12 80%→85%; added "Closed in
+  v0.8.6"; last-reviewed bumped to v0.8.6
+
 ## [0.8.5] — 2026-05-05
 
 ### Added
