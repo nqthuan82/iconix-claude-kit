@@ -5,6 +5,15 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.7] — 2026-05-05
+
+### Added
+- `agents/iconix-product-owner.md` — `# When to split a use case` section: five split
+  signals (basic course >~6 rows, >~4 alternate courses, alternate courses cover different
+  goals, "and" in UC title, unreadable RB), step-by-step split procedure with invoked UC
+  reference guidance, and three "do NOT split" counter-examples; rule 3 updated to
+  reference the new section
+
 ## [0.8.6] — 2026-05-05
 
 ### Added
