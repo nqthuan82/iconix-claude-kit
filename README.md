@@ -388,6 +388,7 @@ Treat this kit like any other dependency:
 | `SD` | Sequence Diagram | Detailed interaction diagram showing message flow between objects |
 | `CLS` | Class | Class model element (used in traceability chain SD → CLS) |
 | `TC` | Test Case | Verifiable test derived from a UC or SD |
+| `CI` | Change Impact report | Blast-radius report produced by Traceability via `/iconix-impact`; filed as `change-impact/CI-<date>.md` |
 
 ### Process & methodology terms
 
