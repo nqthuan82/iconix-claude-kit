@@ -164,9 +164,9 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 8 | Not considering scalability | ✅ | NFR catalog in `iconix.config.yaml` includes scalability |
 | 7 | Not considering security | ✅ | NFR catalog includes security |
 | 6 | Picking new technology without sufficient experience/evidence | ❌ | Not covered |
-| 5 | Failing to formulate the TA objectively based on the project's requirements | ❌ | Not covered; Architect agent has no requirement-driven TA validation |
-| 4 | Spending too long on the architecture before delving into design (architectural paralysis) | ❌ | Not covered |
-| 3 | Forgetting how the system will be tested | ⚠️ | Tester agent is part of pipeline but not integrated with Architect |
+| 5 | Failing to formulate the TA objectively based on the project's requirements | ✅ | `iconix-architect.md` rule 6 — every ADR must cite ≥1 REQ/NFR/UC; uncited ADRs flagged |
+| 4 | Spending too long on the architecture before delving into design (architectural paralysis) | ✅ | `iconix-architect.md` rule 5 — time-box rule; unresolved decisions become `Proposed` ADRs, pipeline unblocked |
+| 3 | Forgetting how the system will be tested | ✅ | `iconix-architect.md` `# Testability annotations` — every container must have ≥1 test seam; no-seam containers flagged at M2 gate |
 | 2 | Defining TA before understanding what users need to do | ✅ | Orchestrator enforces: Product Owner → Analyst → Architect order |
 | 1 | Failing to do an architecture at all | ✅ | Architect is a required pipeline phase |
 
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.7.5_
+_Last reviewed: v0.8.0_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -355,7 +355,7 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 | 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
 | 5 | Robustness analysis (Top 10) | 7 | 2 | 1 | **75%** |
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
-| 7 | Technical architecture | 4 | 1 | 5 | **45%** |
+| 7 | Technical architecture | 7 | 1 | 2 | **75%** |
 | 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
 | 9 | CDR (M3) | 5 | 1 | 4 | **55%** |
 | 10 | Implementation | 7 | 0 | 3 | **70%** |
@@ -384,6 +384,12 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.0
+
+- ~~Architectural paralysis guard~~ (Ch7 #4) — `iconix-architect.md` rule 5 — time-box rule; unresolved decisions become `Proposed` ADRs
+- ~~Requirement-driven TA validation~~ (Ch7 #5) — `iconix-architect.md` rule 6 — every ADR must cite ≥1 REQ/NFR/UC
+- ~~Testability integration with Architect~~ (Ch7 #3) — `iconix-architect.md` `# Testability annotations` — container test seams required; no-seam flagged at M2
 
 ### Documented as intentionally out-of-scope in v0.7.2
 

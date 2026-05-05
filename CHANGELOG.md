@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-05
+
+### Added
+- `agents/iconix-architect.md` — rule 5: time-box architecture work; unresolved decisions
+  become `Proposed` ADRs so the pipeline is not blocked (guards against architectural
+  paralysis, Ch7 #4)
+- `agents/iconix-architect.md` — rule 6: every ADR must cite ≥1 REQ-ID, NFR ID, or UC-ID
+  in its Context section; uncited ADRs are flagged (requirement-driven TA validation, Ch7 #5)
+- `agents/iconix-architect.md` — `# Testability annotations` section: every container with
+  significant business logic must have ≥1 test seam (unit / integration / system) noted in
+  the container mapping; no-seam containers flagged as testability risks at M2 gate (Ch7 #3)
+- `agents/iconix-architect.md` — PDR readiness checklist expanded with two new items:
+  ADR upstream traceability check and container testability seam check
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch7 coverage updated: #3 ⚠️→✅, #4 ❌→✅,
+  #5 ❌→✅; summary table Ch7 45%→75%; added "Closed in v0.8.0" section to gap list;
+  last-reviewed version bumped to v0.8.0
+
 ## [0.7.6] — 2026-05-05
 
 ### Changed
