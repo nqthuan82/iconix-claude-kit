@@ -5,6 +5,20 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] — 2026-05-05
+
+### Added
+- `agents/iconix-analyst.md` — `# Robustness diagram principles` section with three explicit rules:
+  arrow direction is irrelevant (Ch5 #5 ❌→✅); RB is conceptual design only — no method names
+  or types (Ch5 #3 ⚠️→✅); controllers are logical functions, not control classes — map to
+  messages on SD, not instantiated classes (Ch5 #6 ⚠️→✅)
+- `agents/iconix-product-owner.md` — rule 7: noun-verb-noun sentence structure with rewrite
+  instruction (Ch3 #3 ⚠️→✅)
+
+### Changed
+- `docs/iconix/iconix-process-reference.md` — Ch3 80%→85%, Ch5 75%→100%; added "Closed in
+  v0.8.1" section; last-reviewed bumped to v0.8.1
+
 ## [0.8.0] — 2026-05-05
 
 ### Added

@@ -62,7 +62,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 6 | Use UI storyboards and attach them to use cases | ❌ | No storyboard template or guidance |
 | 5 | Use case is a runtime behavior specification — drive design from it | ✅ | Full pipeline is UC-driven |
 | 4 | Write use case in context of the object model (reference domain classes by name) | ✅ | Product Owner rule: "reference domain objects by name" |
-| 3 | Write use cases using noun-verb-noun sentence structure | ⚠️ | Implied by robustness rules; not stated in Product Owner |
+| 3 | Write use cases using noun-verb-noun sentence structure | ✅ | `iconix-product-owner.md` rule 7 — explicit noun-verb-noun rule with rewrite instruction |
 | 2 | Reference domain classes by name | ✅ | Product Owner |
 | 1 | Reference boundary classes (screens) by name | ✅ | Product Owner and Analyst both enforce named screens |
 
@@ -112,10 +112,10 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Take entity classes from the domain model; add any missing ones | ✅ | Analyst rule |
 | 8 | Expect to rewrite the use case while drawing the robustness diagram | ✅ | Analyst updates UC in parallel with RB |
 | 7 | Make a boundary object for each screen (unambiguous names) | ✅ | `iconix-analyst.md` `# Boundary object naming` — generic labels rejected, real name required |
-| 6 | Controllers are typically logical software functions, not control classes | ⚠️ | Mentioned implicitly; no explicit anti-controller-class rule |
-| 5 | Don't worry about the direction of the arrows on a robustness diagram | ❌ | Not stated; arrow direction is irrelevant to the two RB goals |
+| 6 | Controllers are typically logical software functions, not control classes | ✅ | `iconix-analyst.md` `# Robustness diagram principles` — explicit anti-controller-class rule; maps to message on SD, not a class |
+| 5 | Don't worry about the direction of the arrows on a robustness diagram | ✅ | `iconix-analyst.md` `# Robustness diagram principles` — arrow direction irrelevant; validate connection pair, not arrowhead |
 | 4 | Show invoked use cases on the robustness diagram | ✅ | `iconix-analyst.md` `# Invoked use cases on robustness diagrams` |
-| 3 | Robustness diagram = conceptual design, not literal detailed design | ⚠️ | Implied; not stated |
+| 3 | Robustness diagram = conceptual design, not literal detailed design | ✅ | `iconix-analyst.md` `# Robustness diagram principles` — explicit conceptual-only rule; method names/types forbidden |
 | 2 | Boundary/entity → object instances on SD; controllers → messages on SD | ✅ | Developer agent explicitly converts controllers to messages |
 | 1 | RB is an "object picture" of a UC — forces refinement of UC text and object model | ✅ | Core purpose stated in Analyst |
 
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.0_
+_Last reviewed: v0.8.1_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -351,9 +351,9 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 |---|---|---|---|---|---|
 | 1 | ICONIX pipeline + milestones | 6 | 0 | 2 | **75%** |
 | 2 | Domain modeling | 10 | 0 | 0 | **100%** |
-| 3 | Use case modeling | 7 | 2 | 1 | **80%** |
+| 3 | Use case modeling | 8 | 1 | 1 | **85%** |
 | 4 | Requirements Review (M1) | 4 | 2 | 4 | **50%** |
-| 5 | Robustness analysis (Top 10) | 7 | 2 | 1 | **75%** |
+| 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
 | 6 | PDR (M2) | 6 | 3 | 1 | **75%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
 | 8 | Sequence diagrams | 8 | 1 | 1 | **85%** |
@@ -384,6 +384,13 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ### Closed in v0.7.1
 
 - ~~Invoked use cases on RB~~ (Ch5 #4) — `iconix-analyst.md` `# Invoked use cases on robustness diagrams`
+
+### Closed in v0.8.1
+
+- ~~Noun-verb-noun sentence structure~~ (Ch3 #3) — `iconix-product-owner.md` rule 7
+- ~~RB = conceptual design, not detailed design~~ (Ch5 #3) — `iconix-analyst.md` `# Robustness diagram principles`
+- ~~Arrow direction is irrelevant~~ (Ch5 #5) — `iconix-analyst.md` `# Robustness diagram principles`
+- ~~Controllers = logical functions, not control classes~~ (Ch5 #6) — `iconix-analyst.md` `# Robustness diagram principles`
 
 ### Closed in v0.8.0
 

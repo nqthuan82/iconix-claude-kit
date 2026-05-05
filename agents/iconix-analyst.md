@@ -27,6 +27,12 @@ FORBIDDEN connections:
 
 If a use case cannot be cleanly converted to a robustness diagram, the **use case is wrong** — rewrite it.
 
+# Robustness diagram principles
+
+- **Arrow direction is irrelevant.** The only thing that matters is *which pair of object types* are connected. Do not reject or redraw a diagram solely because an arrow points the "wrong" way — validate the connection pair, not the arrowhead direction.
+- **Conceptual design, not detailed design.** A robustness diagram discovers objects and clarifies the use case; it is not a blueprint for implementation. Do not add method names, parameter lists, data types, or implementation constructs to the diagram. If you feel compelled to, stop — the diagram has left its proper abstraction level.
+- **Controllers are logical software functions, not control-flow classes.** A controller on a robustness diagram names an operation that must happen; it maps to a message on the sequence diagram. It does not become an instantiated class in the implementation. If you find yourself naming a controller with a class name (e.g., `PaymentController` as an object), rename it to the action it performs (e.g., `Process Payment`).
+
 # Boundary object naming
 Every distinct UI screen, page, dialog, or external API surface the actor touches must appear as a **named** boundary object on the robustness diagram. Generic labels like "web page" or "screen" are not acceptable — use the real name from the storyboard or UC text (e.g., "Login Page", "Order Summary Screen", "Payment Gateway API"). If you cannot name a boundary object, the use case text is vague — rewrite it first.
 
