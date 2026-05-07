@@ -401,7 +401,7 @@ Treat this kit like any other dependency:
 | Abbreviation | Full name | Description |
 |---|---|---|
 | ICONIX | ICONIX Process | Lightweight OO software development methodology by Rosenberg & Stephens |
-| NFR | Non-Functional Requirement | Quality attribute or constraint (performance[], availability[], security[], scalability[], compliance[], observability[]) |
+| NFR | Non-Functional Requirement | Quality attribute or constraint: **performance** (i.e. API response time < 200ms at p99), **availability** (i.e. 99.9% uptime SLA), **security** (i.e. All PII encrypted at rest (AES-256)], **scalability** (i.e.  Handle 10,000 concurrent sessions), **compliance** (i.e. GDPR data retention ≤ 90 days), **observability** (i.e. All errors logged with correlation IDs) |
 | ADR | Architecture Decision Record | Documented architectural decision with context and consequences |
 | M1 | Milestone 1 — Requirements Review | Gate: Traceability validates all REQ → UC links before analysis begins |
 | M2 | Milestone 2 — Preliminary Design Review (PDR) | Gate: Traceability validates UC → RB → container links before detailed design |
@@ -428,6 +428,48 @@ These gaps are by design — they require human judgment, physical meetings, or 
 | **Effort estimation** | ICONIX recommends estimating from UC scenarios, not functional requirements — this requires team velocity data the kit cannot access | Count controllers per RB as a proxy for complexity; map to story points manually |
 | **Code header / stub generation** | Generating compilable code skeletons from class diagrams is language- and framework-specific | Use IDE code-generation features seeded from `class-model.puml` |
 | **TDD red-green-refactor cycle** | The kit derives TCs from RBs before coding, which sets up test-first thinking, but it does not drive the red-green loop | Write the generated TC stubs as failing tests before implementing the corresponding SD operations |
+
+## AI agent patterns
+
+The kit applies four patterns from Anthropic's agent design taxonomy:
+
+### Orchestrator → subagents
+
+`iconix-orchestrator` inspects current artifact state and dispatches to whichever
+specialist is needed. It never produces artifacts itself — it only routes and enforces
+phase gates.
+
+```
+/iconix-next → Orchestrator → [detect phase] → Product Owner | Analyst | Architect | …
+```
+
+### Prompt chaining
+
+Each agent's output is the next agent's input. The `## Traceability` block at the end
+of every artifact is the explicit handoff contract — it carries upstream IDs forward
+through the full chain:
+
+```
+REQ → UC → RB → SD → CLS → TC
+```
+
+### Parallelization
+
+Two parallel lanes are built into the pipeline:
+
+- **M1 → M2**: Analyst (robustness diagrams) ∥ Architect (containers, ADRs)
+- **M2 → M3**: Developer (sequence diagrams, code) ∥ Tester (test cases, coverage matrix)
+
+### Evaluator / gate
+
+Traceability acts as an evaluator at every milestone gate — it validates the traceability
+chain before downstream work is allowed to proceed. If validation fails it freezes the
+pipeline. The Reviewer plays a secondary evaluator role (code ↔ design drift detection).
+
+**What the kit does not use:** tool-use loops, self-reflection cycles, or
+retrieval-augmented generation — those are deferred to the optional Graphify integration,
+where the Migration agent queries a pre-built knowledge graph instead of walking source
+code directly.
 
 ## Philosophy
 

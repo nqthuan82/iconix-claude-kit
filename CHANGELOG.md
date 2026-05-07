@@ -5,6 +5,13 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.11] — 2026-05-07
+
+### Added
+- `README.md` — `## AI agent patterns` section documenting the four Anthropic
+  agent design patterns the kit applies: orchestrator → subagents, prompt
+  chaining, parallelization, and evaluator / gate
+
 ## [0.8.10] — 2026-05-05
 
 ### Changed
