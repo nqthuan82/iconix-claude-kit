@@ -5,6 +5,87 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.2] — 2026-05-07
+
+Closes a gap left in v0.9.0: the migration agent now reverse-engineers all
+project-wide ICONIX artifacts, not just the per-feature ones. Without this,
+human reviewers had to author the domain model and UC package overviews on
+a second pass — even though the migration agent already had the information
+needed.
+
+### Changed
+- `agents/iconix-migration.md` — two new phases added to both workflows
+  (graph-assisted and code-walking fallback):
+  - **Phase 4b — Domain model synthesis.** Filters the Phase 2 class model
+    down to entity classes (drops Boundary / Controller classes from RBs,
+    drops framework-typed fields, drops methods); maps inheritance and
+    field references to is-a / has-a relationships; emits
+    `domain-model/domain-model-DRAFT.puml` with provenance per class.
+  - **Phase 5b — Use case package overview synthesis.** Clusters UC drafts
+    by source directory / namespace (or graph community-detection in
+    graph-assisted mode); emits one
+    `use-case-packages/<package-slug>-DRAFT.puml` per cluster; flags any
+    UC that does not fit a cluster as an orphan in the handoff report.
+- `agents/iconix-migration.md` — pre-run idempotency check (Step 3) now
+  detects human-edited DRAFTs of the two new artifacts; agent description
+  in YAML frontmatter mentions them.
+- `agents/iconix-migration.md` — *Output structure* section updated.
+- `agents/iconix-migration.md` — non-HTTP entry points are now recognised
+  as first-class boundaries: `BackgroundService` / `IHostedService`,
+  message-bus consumers (`IConsumer<T>`, MassTransit / Azure Service Bus
+  handlers), Azure Functions, AWS Lambda handlers. Phase 1 entry-point
+  detection (graph-assisted + code-walking) and Phase 4 boundary mapping
+  both updated. New mixed-responsibility check in Phase 4: when a
+  background-service node also has direct outbound edges to entity / DB
+  nodes, the agent flags the class `[VERIFY]` and recommends extracting
+  a controller so the boundary stays thin.
+
+### Fixed
+- `agents/iconix-migration.md` — Phase 3 (sequence diagram extraction)
+  was overpromising in graph-assisted mode. The previous wording told
+  the agent to use `shortest_path` and treat the result as a sequence
+  diagram, but `shortest_path` returns *one* topological route and is
+  blind to branching, loops, async semantics (`await` vs
+  `Task.WhenAll`), exception flow, fire-and-forget patterns, and
+  polymorphic dispatch — all of which a sequence diagram must capture.
+  Phase 3 now mandates a two-step extraction in both modes:
+  (a) bound the call graph by enumerating **all simple paths** to leaf
+  operations; (b) recover behaviour by reading the source at each
+  visited node (the graph already gives `file_path` + `line_range`),
+  mapping `if` / `try-catch` / loops / `await` / `Task.WhenAll` to
+  PlantUML `alt` / `loop` / `par` groups. Provenance discipline
+  extended: every group is marked `INFERRED (control-flow: <kw>)`
+  with the source file:line cited. The agent now states the
+  topology-vs-behaviour disclaimer to the user at the start of Phase 3.
+- `agents/iconix-migration.md` — entry-point detection (Phase 1, both
+  modes) and stereotype mapping (Phase 4 graph-assisted) were leaning
+  on .NET-flavoured class-name lists. Restructured to be tech-stack
+  neutral: detection is now by **responsibility shape** (universal
+  signals: inbound dispatch, outbound infrastructure imports,
+  conditional logic over domain values), with cross-stack reference
+  tables covering C#/.NET, Java, Python, Node.js/TypeScript, Go, and
+  Ruby. The agent reads `iconix.config.yaml` `stack.language` to
+  weight the most likely patterns first.
+- `agents/iconix-migration.md` — added explicit **Outbound Boundary**
+  classification for repositories, SDK / API clients, message
+  publishers, file/blob writers, and email/SMS senders. Previously
+  the Phase 4 mapping recognised only inbound boundaries (controllers
+  / hubs / consumers / hosted services); outbound adapters were
+  silently miscategorised as Controllers because of their
+  `*Service` / `*Repository` names. Outbound boundaries now render
+  on the right side of their controller on the SD and carry an
+  `<<outbound>>` stereotype on the RB.
+- `agents/iconix-migration.md` — added a **disambiguation rule**:
+  when a node's name suggests one stereotype but its imports suggest
+  another, trust the imports. (A class named `OrderService` that
+  imports a Stripe SDK and a DbContext is an outbound boundary's
+  worth of work, not a controller.)
+- `agents/iconix-migration.md` — broadened the Phase 4
+  mixed-responsibility check beyond background-service-with-DB-edges:
+  it now triggers on **any** boundary node (inbound or outbound) that
+  carries domain conditionals in its body, recommending a Controller
+  extraction so the boundary stays thin.
+
 ## [0.9.1] — 2026-05-07
 
 ### Added
