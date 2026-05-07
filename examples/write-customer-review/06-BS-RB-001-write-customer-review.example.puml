@@ -1,0 +1,123 @@
+@startuml BS-RB-001
+' ============================================================
+' BS-UC-001: Write Customer Review
+' Source: derived directly from BS-UC-001 use case text.
+' ICONIX rule: each numbered controller below corresponds to
+' a sentence in the use case and will become a method on the
+' sequence diagram (BS-SD-001) and a test case in the test plan.
+'
+' Basic Course (mirrors BS-UC-001):
+'   1 | Customer clicks Write Review on Book Detail page
+'     | System retrieves CustomerSession, confirms login
+'   2 | (system) System displays Write Review page
+'   3 | Customer enters review text + rating, clicks Send
+'     | System validates review length and rating range
+'   4 | System creates CustomerReview, queues it for moderation
+'   5 | System displays Confirmation page
+'
+' Alternate A: Customer not logged in -> invoke Login UC
+' Alternate B: Review too short       -> reject, redisplay form
+' Alternate C: Review too long        -> reject, redisplay form
+' Alternate D: Rating out of range    -> reject, redisplay form
+' Alternate E: Book ID not found      -> show Book Not Found page
+'
+' ICONIX connection rules:
+'   Actor    <-> Boundary             OK
+'   Boundary <-> Controller           OK
+'   Controller <-> Controller         OK
+'   Controller <-> Entity             OK
+' FORBIDDEN:
+'   Actor      -> Controller/Entity   (must go via Boundary)
+'   Boundary   -> Boundary            (must go via Controller)
+'   Boundary   -> Entity              (must go via Controller)
+'   Entity     -> Entity              (must go via Controller)
+' ============================================================
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam ArrowColor #444444
+
+' --- Actors ---
+actor "Customer"  as Cust
+actor "Moderator" as Mod
+
+' --- Boundaries (screens / pages) ---
+boundary "Book Detail page"      as BDPage
+boundary "Write Review page"     as WRPage
+boundary "Confirmation page"     as ConfPage
+boundary "Book Not Found page"   as BNFPage
+boundary "Login page"            as LoginPage
+
+' --- Entities (domain objects from BS-UC-001) ---
+entity "CustomerSession"      as CS
+entity "Book"                 as Book
+entity "CustomerReview"       as CR
+entity "PendingReviewsQueue"  as Queue
+
+' --- Controllers (one per logical system step in the UC) ---
+control "Is user logged in?"        as IsLoggedIn
+control "Display Write Review page" as DisplayWR
+control "Load Book"                 as LoadBook
+control "Is Book Review length OK?" as IsLengthOk
+control "Is Rating in range?"       as IsRatingOk
+control "Save CustomerReview"       as SaveReview
+control "Add to Pending Queue"      as AddToQueue
+control "Display Confirmation page" as DisplayConf
+
+' --- Alternate-course controllers (highlighted pink) ---
+control "Invoke Login"                  as InvokeLogin           #Pink
+control "Display length error"          as DisplayLengthErr      #Pink
+control "Display rating error"          as DisplayRatingErr      #Pink
+control "Display Book Not Found page"   as DisplayBNF            #Pink
+
+' ── Basic course wiring ──────────────────────────────────────
+Cust         --> BDPage              : click Write Review
+BDPage       --> IsLoggedIn
+IsLoggedIn   --> CS                  : isLoggedIn?
+IsLoggedIn   --> DisplayWR           : yes
+DisplayWR    --> WRPage
+WRPage       --> LoadBook
+LoadBook     --> Book
+
+Cust         --> WRPage              : enter text + rating, click Send
+WRPage       --> IsLengthOk
+IsLengthOk   --> IsRatingOk          : ok
+IsRatingOk   --> SaveReview          : ok
+SaveReview   --> CR                  : new(book, customer, text, rating)
+SaveReview   --> AddToQueue
+AddToQueue   --> Queue               : enqueue(review)
+AddToQueue   --> DisplayConf
+DisplayConf  --> ConfPage
+ConfPage     --> Cust
+
+' ── Alternate A: not logged in ──────────────────────────────
+IsLoggedIn   --> InvokeLogin         : no
+InvokeLogin  --> LoginPage
+LoginPage    --> DisplayWR           : on success, return here
+
+' ── Alternate B/C: review length out of bounds ─────────────
+IsLengthOk         --> DisplayLengthErr  : too short / too long
+DisplayLengthErr   --> WRPage            : redisplay with error
+
+' ── Alternate D: rating out of range ───────────────────────
+IsRatingOk         --> DisplayRatingErr  : not in [1..5]
+DisplayRatingErr   --> WRPage            : redisplay with error
+
+' ── Alternate E: book not found ────────────────────────────
+LoadBook           --> DisplayBNF        : NotFoundException
+DisplayBNF         --> BNFPage
+BNFPage            --> Cust
+
+' ── Downstream link to moderation ──────────────────────────
+Queue              --> Mod               : (read by Moderate Customer Reviews UC)
+
+note bottom
+  Traceability:
+    REQ:        BS-REQ-001
+    UC:         BS-UC-001
+    SD:         BS-SD-001 (each controller above becomes one or more messages)
+    Test cases: BS-TC-001..BS-TC-004
+end note
+
+@enduml

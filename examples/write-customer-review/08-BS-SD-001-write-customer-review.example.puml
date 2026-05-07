@@ -1,0 +1,164 @@
+@startuml BS-SD-001
+' Traceability: BS-REQ-001 | BS-UC-001 | BS-RB-001 | BS-ADR-001
+' BS-UC-001: Write Customer Review
+' Stack: .NET 9 / ASP.NET Core 9 (MVC) + EF Core 9 + cookie auth + xUnit
+'
+' Each numbered group below corresponds to a controller in BS-RB-001
+' and to a sentence in BS-UC-001. Each message becomes a method on a
+' class in the static model (see CLS section at the bottom).
+'
+' Per BS-ADR-001, validation methods live on the CustomerReview entity
+' via DataAnnotations + IValidatableObject. ASP.NET Core's MVC pipeline
+' invokes them automatically; the controller checks ModelState.IsValid.
+
+' ── Lifelines ───────────────────────────────────────────────
+actor    "Customer (browser)"                       as Cust
+boundary "Razor View\nViews/Books/Detail.cshtml"    as BDView
+boundary "Razor View\nViews/Reviews/Write.cshtml"   as WRView
+boundary "Razor View\nViews/Reviews/Confirm.cshtml" as ConfView
+boundary "Razor View\nViews/Shared/NotFound.cshtml" as BNFView
+boundary "Login redirect\n(cookie auth challenge)"  as LoginRedir
+control  "WriteCustomerReview\nController"          as Ctrl
+control  "ASP.NET Core\nModelBinder + ModelState"   as MVC
+control  "ICurrentUserService"                      as CurUser
+entity   "CustomerSession"                          as CS
+entity   "Book\n(EF Core entity)"                   as Book
+entity   "CustomerReview\n: IValidatableObject"     as CR
+entity   "IBookRepository\n(EfBookRepository)"      as BookRepo
+entity   "ICustomerReviewRepository\n(EfCustomerReviewRepository)" as CRRepo
+entity   "IPendingReviewsQueue\n(BusPendingReviewsQueue)" as Queue
+
+' ── Step 1 — UC §1: Customer clicks Write Review on Book Detail ──
+group Step 1 — Customer clicks Write Review (RB controllers: IsUserLoggedIn, LoadBook)
+  Cust    -> BDView : GET /books/{bookId}/review
+  BDView  -> Ctrl   : WriteAsync(bookId) [HttpGet]
+  Ctrl    -> CurUser : GetSession(HttpContext)
+  CurUser -> CS     : new CustomerSession(User.Claims)
+  CS      --> CurUser : session
+  CurUser --> Ctrl  : session
+  Ctrl    -> CS     : IsLoggedIn
+  CS      --> Ctrl  : true
+  Ctrl    -> BookRepo : GetByIdAsync(bookId)
+  BookRepo -> Book  : query EF Core
+  Book    --> BookRepo : entity
+  BookRepo --> Ctrl : Book? (non-null)
+  Ctrl    -> CR     : new CustomerReview { BookId = book.Id, CustomerId = session.CustomerId }
+  CR      --> Ctrl  : review (empty Review/Rating)
+end
+
+' ── Step 2 — UC §2: System displays Write Review page ──────
+group Step 2 — Display Write Review page (RB controller: DisplayWriteReviewPage)
+  Ctrl   --> WRView : View("Write", review)
+  WRView --> Cust   : 200 OK + form HTML (book title, text area, 1–5 selector)
+end
+
+' ── Step 3 — UC §3: Customer submits the form; system validates ──
+group Step 3 — Customer enters review and clicks Send (RB controllers: IsBookReviewLengthOk, IsRatingInRange)
+  Cust   -> WRView : POST /books/{bookId}/review (anti-forgery + form data)
+  WRView -> MVC    : model-bind to CustomerReview
+  MVC    -> CR     : DataAnnotations validation\n(Required / StringLength(10..1MB) / Range(1..5))
+  CR     --> MVC   : ValidationResult[]
+  MVC    -> CR     : Validate(ValidationContext)\n— calls CheckBookExists(...)
+  CR     -> BookRepo : Exists(BookId)
+  BookRepo --> CR  : true
+  CR     --> MVC   : ValidationResult[] (empty if valid)
+  MVC    --> Ctrl  : SubmitAsync(review) [HttpPost]; ModelState populated
+  Ctrl   -> Ctrl   : if (!ModelState.IsValid) → re-render Write view with errors
+end
+
+' ── Step 4 — UC §4: System enqueues for moderation ─────────
+group Step 4 — Save & enqueue (RB controllers: SaveCustomerReview, AddToPendingReviewsQueue)
+  Ctrl   -> CRRepo : AddAsync(review)
+  CRRepo -> CR     : EF tracks insert
+  CRRepo --> Ctrl  : CustomerReview (with new Id)
+  Ctrl   -> Queue  : EnqueueAsync(review.Id)
+  Queue  --> Ctrl  : ack
+end
+
+' ── Step 5 — UC §5: Confirmation page ──────────────────────
+group Step 5 — Confirmation (RB controller: DisplayConfirmationPage)
+  Ctrl     --> ConfView : View("Confirm")
+  ConfView --> Cust     : 200 OK + confirmation HTML
+end
+
+' ── Alternate A — UC alt A: not logged in ─────────────────
+group Alternate A — Customer not logged in #Pink
+  Cust    -> BDView : GET /books/{bookId}/review
+  BDView  -> Ctrl   : WriteAsync(bookId) [HttpGet]
+  Ctrl    -> CurUser : GetSession(HttpContext)
+  CurUser --> Ctrl  : session
+  Ctrl    -> CS     : IsLoggedIn
+  CS      --> Ctrl  : false
+  Ctrl    --> LoginRedir : Challenge() — 302 to /login?ReturnUrl=...
+  LoginRedir --> Cust    : 302 redirect
+  note right of Ctrl
+    With [Authorize] on WriteAsync, ASP.NET Core's
+    cookie-auth handler issues the 302 automatically.
+    On successful login, the user is redirected back
+    and Step 1 re-executes.
+  end note
+end
+
+' ── Alternate B/C — UC alt B & C: review length out of bounds ─
+group Alternate B/C — review too short / too long #Pink
+  Cust   -> WRView : POST with too-short / too-long Review
+  WRView -> MVC    : model-bind to CustomerReview
+  MVC    -> CR     : DataAnnotations: StringLength fails
+  CR     --> MVC   : ValidationResult("Review must be between 10 and 1,000,000 characters.")
+  MVC    --> Ctrl  : SubmitAsync(review); ModelState invalid
+  Ctrl   --> WRView : View("Write", review) — re-render with ModelState errors
+  WRView --> Cust   : 200 OK + form HTML with validation summary
+end
+
+' ── Alternate D — UC alt D: rating out of range ───────────
+group Alternate D — rating out of range #Pink
+  Cust   -> WRView : POST with Rating outside [1..5]
+  WRView -> MVC    : model-bind
+  MVC    -> CR     : DataAnnotations: Range(1,5) fails
+  CR     --> MVC   : ValidationResult("Rating must be between 1 and 5.")
+  MVC    --> Ctrl  : SubmitAsync(review); ModelState invalid
+  Ctrl   --> WRView : View("Write", review)
+  WRView --> Cust   : 200 OK with validation summary
+end
+
+' ── Alternate E — UC alt E: book not found ────────────────
+group Alternate E — Book ID does not exist #Pink
+  Cust    -> BDView : GET /books/{bookId}/review with unknown id
+  BDView  -> Ctrl   : WriteAsync(bookId) [HttpGet]
+  Ctrl    -> BookRepo : GetByIdAsync(bookId)
+  BookRepo --> Ctrl : null
+  Ctrl    --> BNFView : View("NotFound") — 404
+  BNFView --> Cust    : 404 + "Book Not Found" HTML
+end
+
+note over Cust, Queue
+  Class model derived from this diagram (BS-CLS-*):
+    BS-CLS-WriteCustomerReviewController : ControllerBase
+       - WriteAsync(int bookId)            [HttpGet, Authorize]
+       - SubmitAsync(CustomerReview review) [HttpPost, Authorize, ValidateAntiForgeryToken]
+    BS-CLS-CustomerReview : IValidatableObject
+       - [Required]/[StringLength]/[Range] attributes on properties
+       - Validate(ValidationContext) → CheckBookExists [+ CheckTitleLength after BS-CI-001]
+    BS-CLS-CustomerSession                  (record built from ClaimsPrincipal)
+    BS-CLS-ICurrentUserService              (interface)
+       BS-CLS-CookieCurrentUserService      (implementation, scoped DI)
+    BS-CLS-Book                             (EF Core entity)
+    BS-CLS-IBookRepository                  (interface) + EfBookRepository
+    BS-CLS-ICustomerReviewRepository        (interface) + EfCustomerReviewRepository
+    BS-CLS-IPendingReviewsQueue             (interface) + BusPendingReviewsQueue
+
+  Project layout (under src/):
+    Bookstore.Web/Controllers/WriteCustomerReviewController.cs
+    Bookstore.Domain/CustomerReview.cs
+    Bookstore.Domain/Book.cs
+    Bookstore.Domain/CustomerSession.cs
+    Bookstore.Application/ICurrentUserService.cs
+    Bookstore.Infrastructure/Repositories/EfCustomerReviewRepository.cs
+    Bookstore.Infrastructure/Repositories/EfBookRepository.cs
+    Bookstore.Infrastructure/Queue/BusPendingReviewsQueue.cs
+
+  Traceability:
+    BS-REQ-001 → BS-UC-001 → BS-RB-001 → BS-SD-001 (this) → CLS-* → BS-TC-001..004
+end note
+
+@enduml

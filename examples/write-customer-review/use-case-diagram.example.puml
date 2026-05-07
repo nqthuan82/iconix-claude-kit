@@ -1,0 +1,65 @@
+@startuml use-case-diagram-reviews-and-ratings
+' ============================================================
+' Use Case Package — "Reviews & Ratings"
+'
+' Owned by: Product Owner.
+' Updated whenever a UC is added to / removed from / renamed in this package.
+' Validated at M1: every UC-XXX file in this package must appear here exactly once,
+'                  and every UC on this diagram must have a matching UC-XXX file.
+'
+' One overview per UC package. Use cases appearing on this diagram should fit
+' the package's name. If a UC drifts outside the package theme, move it (or
+' split the package).
+' ============================================================
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFEFE
+  BorderColor #444444
+}
+skinparam shadowing false
+
+' ── Actors ────────────────────────────────────────────────
+actor "Customer"  as Cust
+actor "Moderator" as Mod
+actor "Editor"    as Ed
+
+' ── Package boundary ──────────────────────────────────────
+rectangle "Reviews & Ratings package" as Pkg {
+  usecase "Write Customer Review\n(BS-UC-001)"        as UC001
+  usecase "Moderate Customer Reviews\n(BS-UC-002)"    as UC002
+  usecase "Show Book Reviews\n(BS-UC-003)"            as UC003
+  usecase "Reject Customer Review\n(BS-UC-004)"       as UC004
+  usecase "Write Editorial Review\n(BS-UC-005)"       as UC005
+}
+
+' Cross-package use case invoked from UC-001 alt-A
+usecase "Login\n(BS-UC-100, Auth package)" as UC100
+
+' ── Actor associations ────────────────────────────────────
+Cust  --> UC001
+Cust  --> UC003
+Mod   --> UC002
+Mod   --> UC004
+Ed    --> UC005
+
+' ── Use-case relationships ────────────────────────────────
+UC001 ..> UC100 : <<include>>\n(when not logged in)
+UC002 <.. UC004 : <<extend>>\n(when review is unacceptable)
+UC003 ..> UC002 : <<requires>>\n(only published reviews shown)
+
+note bottom of Pkg
+  This thread's worked example details only BS-UC-001.
+  BS-UC-002..005 are placeholders shown here so you can
+  see how a package overview is meant to look once the
+  package fills out.
+end note
+
+note right of UC100
+  UC-100 lives in the Authentication
+  package, not this one. It appears
+  here only because BS-UC-001 invokes it.
+end note
+
+@enduml

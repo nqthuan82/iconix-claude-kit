@@ -1,0 +1,62 @@
+# ICONIX project configuration — Internet Bookstore worked example
+# This is the configuration the worked example assumes. Drop a file like this
+# at the root of any project to parameterise the agent kit.
+
+project:
+  name: "InternetBookstore"
+  prefix: "BS"             # All IDs in the worked example use BS- (BS-REQ-001, BS-UC-001, …)
+
+stack:
+  language: "csharp"        # csharp | java | python | typescript | go
+  test_framework: "xunit"   # xunit | nunit | junit | pytest | jest
+  bdd: false                # plain xUnit; Gherkin lives in the feature-request template
+  bdd_framework: ""
+  # Tech specifics for this worked example:
+  #   - .NET 9 / ASP.NET Core 9 (MVC controllers + Razor views)
+  #   - EF Core 9 for repositories
+  #   - System.ComponentModel.DataAnnotations + IValidatableObject for entity validation (see BS-ADR-001)
+  #   - Cookie authentication for CustomerSession
+  #   - xUnit + NSubstitute for unit tests; WebApplicationFactory<Program> for integration tests
+
+diagrams:
+  format: "plantuml"        # plantuml | mermaid — the .puml files in this example use plantuml
+  output_dir: "docs/iconix"
+
+architecture:
+  canonical_doc: "docs/architecture/system-architecture.md"
+  containers:
+    - name: "Bookstore.Web"             # ASP.NET Core 9 host, controllers, Razor views, auth pipeline
+    - name: "Bookstore.Domain"          # CustomerReview, Book, CustomerSession, IValidatableObject impls
+    - name: "Bookstore.Application"     # ICurrentUserService, command handlers, DTOs
+    - name: "Bookstore.Infrastructure"  # EF Core 9 DbContext + repository implementations
+    - name: "Database"                  # SQL Server / PostgreSQL via EF Core provider
+    - name: "PendingReviewsQueue"       # delivered by INFRA-88 (out-of-process queue)
+
+nfr_catalog: "docs/nfr-catalog.md"
+# In this example the NFR catalogue contains:
+#   BS-NFR-001 Performance     — Confirmation page within 2 s p95
+#   BS-NFR-002 Compliance      — no review visible without moderation
+#   BS-NFR-003 Scalability     — 50 review submissions/s peak
+#   BS-NFR-004 Maintainability — validation lives with the data it validates (see BS-ADR-001)
+
+# Custom test families this domain wants to track separately
+domain_test_families:
+  - "moderation-bypass"      # any test that asserts a review never reaches the public page without moderation
+  - "input-tampering"        # any test that submits values outside the legal range via tampered forms
+
+milestones:
+  require_traceability_pass: true
+  require_rule_validation: true
+  max_revisions_per_artifact: 3   # anti-analysis-paralysis guardrail
+
+# Knowledge graph integration — disabled in this worked example.
+# Turn on after running `graphify .` on the project repo. See templates/graphify-setup.md.
+knowledge_graph:
+  enabled: false
+  tool: "graphify"
+  graph_path: "graphify-out/graph.json"
+  report_path: "graphify-out/GRAPH_REPORT.md"
+  mcp_server: true
+  min_confidence: 0.7
+  max_age_warn_days: 7
+  max_age_fail_days: 30

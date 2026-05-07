@@ -5,6 +5,37 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] — 2026-05-07
+
+### Added
+- `examples/write-customer-review/` — end-to-end worked example replaying
+  the canonical *Internet Bookstore / Write Customer Review* use case from
+  Rosenberg & Stephens (2007), adapted to this kit's templates and the
+  C# / ASP.NET Core 9 / EF Core 9 / xUnit + NSubstitute stack. 21 files
+  threading one feature through every ICONIX phase:
+  - 3 intake artifacts (email, transcript, feature request)
+  - 1 requirement (BS-REQ-001)
+  - 1 use case (BS-UC-001) with basic + 5 alternate courses
+  - 1 domain model (project-wide, continuously updated)
+  - 1 UC package overview (Reviews & Ratings package)
+  - 1 robustness diagram (BS-RB-001)
+  - 1 ADR (BS-ADR-001 — IValidatableObject vs FluentValidation vs service-layer)
+  - 1 sequence diagram (BS-SD-001) with full class model
+  - 1 test plan + 7 test cases covering all five V-model levels:
+    - unit (BS-TC-002 rating, BS-TC-003 review length)
+    - system (BS-TC-001 basic course via WebApplicationFactory, BS-TC-004 not-logged-in)
+    - integration (BS-TC-007 — Testcontainers SQL Server + Service Bus emulator)
+    - acceptance (BS-TC-101 — Reqnroll Gherkin, stakeholder-signed by Doug, Sarah, Linda)
+    - regression (BS-TC-021 — supersedes BS-TC-003 after BS-CI-001 lands)
+  - 1 change-impact report (BS-CI-001 — adding a title-length rule)
+  - 1 project config (`iconix.config.example.yaml`)
+- Worked-example `README.md` documents the thread map, file index, and
+  traceability chain (`grep -r BS-REQ-001 examples/write-customer-review/`
+  recovers the full chain).
+- Demonstrates the v0.9.0 UC-package-overview methodology in context, plus
+  the test-case template's `Type` field (unit | integration | system |
+  acceptance | regression) and `Supersedes TC` field for regression tests.
+
 ## [0.9.0] — 2026-05-07
 
 Closes the methodology gaps tracked in `iconix-process-reference.md` as

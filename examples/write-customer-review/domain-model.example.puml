@@ -1,0 +1,119 @@
+@startuml domain-model
+' ============================================================
+' Internet Bookstore — Domain Model
+'
+' Single project-wide diagram. Continuously updated:
+'   - Initial pass: Product Owner + Analyst, time-boxed ~2 h, BEFORE any UC text.
+'   - Updated by Analyst whenever robustness analysis discovers a new entity.
+'   - Re-validated at every M1 (REQ↔UC↔domain) and M2 (UC↔RB↔domain) gate.
+'
+' ICONIX domain model rules:
+'   1. Real-world objects only — no GUI classes (pages, screens, buttons).
+'   2. Not a data model — no database tables, no DTOs.
+'   3. = project glossary — every entity name must match the term in UC text.
+'   4. Show only is-a / has-a relationships that exist in the real world.
+'   5. Time-boxed and incomplete by design — it evolves through robustness analysis.
+'   6. Will not match the final class diagram — that is expected.
+'
+' Attributes only (no operations).
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam DefaultFontName "Helvetica"
+
+' ── Actors of the bookstore (people in the real world) ─────
+class Customer {
+  + name : String
+  + emailAddress : String
+}
+
+class Moderator {
+  + staffId : String
+  + name : String
+}
+
+class Editor {
+  + staffId : String
+}
+
+' ── Catalogue ─────────────────────────────────────────────
+class Book {
+  + isbn : String
+  + title : String
+  + author : String
+  + publisher : String
+  + price : Money
+}
+
+class Catalog {
+  + name : String
+}
+
+' ── Reviews (the part this thread is about) ───────────────
+abstract class Review {
+  + body : String
+  + rating : Integer    ' 1..5 stars
+  + submittedAt : Date
+  + state : ReviewState ' Pending | Published | Rejected
+}
+
+class CustomerReview {
+  ' Reader-submitted review.
+  ' Title length and review length rules live on this class
+  ' (validation enforced via DataAnnotations + IValidatableObject — see BS-ADR-001).
+  + title : String
+}
+
+class EditorialReview {
+  ' Staff-written review. Out of scope for BS-UC-001 but kept here
+  ' to make the is-a relationship visible in the domain.
+  + headline : String
+}
+
+' ── Sessions and queues ───────────────────────────────────
+class CustomerSession {
+  + isLoggedIn : Boolean
+  + lastActivity : Timestamp
+}
+
+class PendingReviewsQueue {
+  + size : Integer
+}
+
+' ── Relationships ─────────────────────────────────────────
+
+' Generalisation (is-a)
+CustomerReview  --|> Review
+EditorialReview --|> Review
+
+' Aggregation / association (has-a)
+Customer "1"   --o "0..*" CustomerReview     : "writes"
+Book     "1"   --o "0..*" Review             : "is reviewed by"
+Catalog  "1"   --o "0..*" Book               : "lists"
+Editor   "1"   --o "0..*" EditorialReview    : "writes"
+Customer "0..1" --o "0..1" CustomerSession   : "is bound to"
+PendingReviewsQueue "1" --o "0..*" CustomerReview : "holds"
+Moderator "1" --o "0..*" CustomerReview      : "approves / rejects"
+
+note bottom of Review
+  Note: Review is the abstract glossary term.
+  Concrete types (CustomerReview, EditorialReview)
+  exist because the bookstore domain treats reader
+  reviews and editorial reviews as the same thing
+  on the book detail page but different things in
+  the moderation pipeline.
+end note
+
+note bottom of CustomerReview
+  Discovered during robustness analysis of BS-UC-001:
+    - "title" attribute added by BS-CI-001 (2026-05-04).
+    - All other attributes were present in the
+      Sarah-Patel intake interview (2026-04-16).
+
+  Validation rules (BS-BR-001..003) are documented on
+  the requirement and exercised by BS-TC-002, BS-TC-003,
+  BS-TC-005, BS-TC-020.
+end note
+
+@enduml
