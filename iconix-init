@@ -115,7 +115,7 @@ if [[ "${SCOPE}" == "project" ]]; then
 
   # Seed folder structure
   mkdir -p \
-    requirements use-cases robustness domain-model \
+    requirements use-cases use-case-packages robustness domain-model \
     class-model sequence container-mapping nfr-annotations \
     adrs test-cases features test-matrices milestone-reports \
     docs/architecture docs/iconix
@@ -125,8 +125,9 @@ if [[ "${SCOPE}" == "project" ]]; then
   mkdir -p "docs/iconix/templates"
   cp "${WORKDIR}/templates/req-template.md"            "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/adr-template.md"           "docs/iconix/templates/" 2>/dev/null || true
-  cp "${WORKDIR}/templates/use-case-template.md"      "docs/iconix/templates/" 2>/dev/null || true
-  cp "${WORKDIR}/templates/robustness-template.puml"  "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/use-case-template.md"        "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/use-case-diagram-template.puml" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/robustness-template.puml"    "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/sequence-template.puml"    "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/test-case-template.md"     "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/test-plan-template.md"     "docs/iconix/templates/" 2>/dev/null || true

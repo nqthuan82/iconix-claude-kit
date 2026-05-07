@@ -92,7 +92,7 @@ try {
         }
 
         $folders = @(
-            "requirements","use-cases","robustness","domain-model",
+            "requirements","use-cases","use-case-packages","robustness","domain-model",
             "class-model","sequence","container-mapping","nfr-annotations",
             "adrs","test-cases","features","test-matrices","milestone-reports",
             "docs\architecture","docs\iconix","docs\iconix\templates"
@@ -102,8 +102,9 @@ try {
 
         Copy-Item (Join-Path $WorkDir "templates\req-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\adr-template.md")           "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
-        Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")      "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
-        Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml")  "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\use-case-diagram-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\robustness-template.puml")    "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\sequence-template.puml")    "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\test-case-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\test-plan-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue

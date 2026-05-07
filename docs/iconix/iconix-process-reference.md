@@ -56,7 +56,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
 | 10 | Two-paragraph rule — UC must fit in two paragraphs (basic + alternate courses) | ✅ | `iconix-product-owner.md` rule 3 + M1 checklist item 3 |
-| 9 | Organize use cases with actors and use case diagrams (packages) | ⚠️ | Product Owner groups UCs but no use case diagram artifact |
+| 9 | Organize use cases with actors and use case diagrams (packages) | ✅ | `iconix-product-owner.md` `# Use case packaging rules` + M1 checklist; one `use-case-packages/<package-slug>.puml` per package; template at `templates/use-case-diagram-template.puml` (added v0.9.0) |
 | 8 | Write use cases in active voice | ✅ | `iconix-product-owner.md` — "active voice" stated |
 | 7 | Write use case using event/response flow (user action → system response) | ✅ | Two-column UC format (User Action / System Response) |
 | 6 | Use UI storyboards and attach them to use cases | ❌ | No storyboard template or guidance |
@@ -66,7 +66,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 2 | Reference domain classes by name | ✅ | Product Owner |
 | 1 | Reference boundary classes (screens) by name | ✅ | Product Owner and Analyst both enforce named screens |
 
-**Gap summary:** Two-paragraph rule (#10) closed in v0.6.0. UI storyboard guidance (#6) remains absent (out of kit scope).
+**Gap summary:** Two-paragraph rule (#10) closed in v0.6.0. UC package overview diagram (#9) closed in v0.9.0. UI storyboard guidance (#6) remains absent (out of kit scope).
 
 ---
 
@@ -80,7 +80,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Domain model shows is-a and has-a relationships | ✅ | `iconix-product-owner.md` M1 checklist — isolated floating entities with obvious real-world relationships flagged |
 | 8 | Use cases describe both basic and alternate courses, in active voice | ✅ | M1 checklist in Product Owner |
 | 7 | Passive-voice "shall" requirements are NOT mixed into active-voice UC text | ✅ | `iconix-product-owner.md` rule 6 + M1 checklist item 4 |
-| 6 | Use cases organized into packages with at least one UC diagram per package | ❌ | No UC diagram artifact |
+| 6 | Use cases organized into packages with at least one UC diagram per package | ✅ | `iconix-product-owner.md` `# Use case packaging rules`; M1 checklist enforces every UC belongs to one package; Traceability validates UC↔package overview links (added v0.9.0) |
 | 5 | Use cases written in context of the object model | ✅ | Product Owner rule |
 | 4 | Use cases written in context of the user interface (screens named) | ✅ | Product Owner + Analyst rule |
 | 3 | UCs supplemented with storyboard / screen mock-up / GUI prototype | ❌ | No storyboard step |
@@ -343,7 +343,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.8.6_
+_Last reviewed: v0.9.0_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 
@@ -351,8 +351,8 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 |---|---|---|---|---|---|
 | 1 | ICONIX pipeline + milestones | 6 | 0 | 2 | **75%** |
 | 2 | Domain modeling | 10 | 0 | 0 | **100%** |
-| 3 | Use case modeling | 8 | 1 | 1 | **85%** |
-| 4 | Requirements Review (M1) | 6 | 2 | 2 | **70%** |
+| 3 | Use case modeling | 9 | 0 | 1 | **90%** |
+| 4 | Requirements Review (M1) | 7 | 2 | 1 | **80%** |
 | 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
 | 6 | PDR (M2) | 8 | 1 | 1 | **85%** |
 | 7 | Technical architecture | 7 | 1 | 2 | **75%** |
@@ -366,6 +366,10 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
 ---
 
 ## Top Gap Areas (Prioritized)
+
+### Closed in v0.9.0
+
+- ~~UC packages with one diagram per package~~ (Ch3 #9, Ch4 #6) — `templates/use-case-diagram-template.puml` + `agents/iconix-product-owner.md` `# Use case packaging rules` + `agents/iconix-traceability.md` validation checks 10–13 (orphan / ghost / title-drift / dangling cross-package link)
 
 ### Closed in v0.6.0
 

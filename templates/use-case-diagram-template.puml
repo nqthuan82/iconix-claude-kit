@@ -1,0 +1,64 @@
+@startuml use-case-diagram-<package-slug>
+' ============================================================
+' UC-PACKAGE-<package-slug> — Use Case Package overview
+'
+' One overview diagram per UC package. The Product Owner owns this file
+' and updates it whenever a UC is added, removed, or renamed in the package.
+'
+' ICONIX rules for use case package diagrams:
+'   1. One package per diagram. The package boundary is explicit.
+'   2. Every UC-XXX file in this package MUST appear here exactly once.
+'   3. Every UC drawn here MUST have a matching `use-cases/UC-XXX-<slug>.md` file.
+'   4. Cross-package use cases (those invoked from another package) appear OUTSIDE
+'      the package rectangle, dashed, with a `<<include>>` or `<<extend>>` arrow.
+'   5. Use case titles use noun-verb-noun and match the UC file title exactly.
+'   6. Validated at M1: orphan UCs (file with no diagram entry) and ghost UCs
+'      (diagram entry with no file) are M1-gate blockers.
+'
+' Relationship cheatsheet:
+'   Actor   -->  UseCase                 association  (the actor participates)
+'   UC-A    ..>  UC-B  : <<include>>     UC-A always invokes UC-B as part of itself
+'   UC-A    <..  UC-B  : <<extend>>      UC-B is an optional extension of UC-A
+'                                         (extends arrow points FROM the extension TO the base)
+'   UC-A   --|>  UC-B                    generalisation (UC-A is a kind of UC-B)
+' ============================================================
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFEFE
+  BorderColor #444444
+}
+skinparam shadowing false
+
+' ── Actors ────────────────────────────────────────────────
+actor "<Primary actor>"   as Actor1
+actor "<Secondary actor>" as Actor2
+
+' ── Package boundary (one and only one rectangle) ─────────
+rectangle "<Package name> package" as Pkg {
+  usecase "<UC title>\n(<PREFIX>-UC-XXX)" as UC1
+  usecase "<UC title>\n(<PREFIX>-UC-YYY)" as UC2
+  usecase "<UC title>\n(<PREFIX>-UC-ZZZ)" as UC3
+}
+
+' ── Cross-package use cases (outside the rectangle) ──────
+usecase "<UC title>\n(<PREFIX>-UC-NNN, <other-package> package)" as UCExt
+
+' ── Actor associations ────────────────────────────────────
+Actor1 --> UC1
+Actor1 --> UC2
+Actor2 --> UC3
+
+' ── Use-case relationships ────────────────────────────────
+UC1 ..> UCExt : <<include>>
+UC2 <.. UC3   : <<extend>>
+
+note bottom of Pkg
+  Maintenance reminder:
+  - When you add a new UC-XXX file to this package, add a `usecase` line above.
+  - When you rename a UC, rename it both here and in the file (M1 will reject mismatches).
+  - When you split a UC, replace its line with the new UC-IDs.
+end note
+
+@enduml

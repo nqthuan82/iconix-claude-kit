@@ -104,4 +104,7 @@ jobs:
           test -f docs/iconix/templates/intake-brd-template.md || { echo "intake-brd-template.md missing"; exit 1; }
           test -f docs/iconix/templates/intake-email-template.md || { echo "intake-email-template.md missing"; exit 1; }
           test -f docs/iconix/templates/intake-feature-request-template.md || { echo "intake-feature-request-template.md missing"; exit 1; }
+          # v0.9.0: use case package overview template + folder
+          test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
+          test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }
           echo "OK — installation validated"

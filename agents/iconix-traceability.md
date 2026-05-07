@@ -25,7 +25,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 # Artifacts you produce
 - `ids.registry.md` — master ID ledger
 - `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table
-- `orphan-report.md` — artifacts with no parent or no children
+- `orphan-report.md` — artifacts with no parent or no children, including orphan UCs (no package entry), ghost UCs (no file), title-drifted UCs, and dangling cross-package links
 - `change-impact/CI-<date>.md` — when a REQ/UC changes, list everything downstream (use `templates/change-impact-template.md`)
 - `milestone-reports/M<n>-<date>.md` — Milestone 1 / PDR / CDR readiness
 
@@ -39,6 +39,10 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 7. IDs in files match their filename
 8. No duplicate IDs across the registry
 9. Every NFR entry in `iconix.config.yaml` `nfr_catalog` is cited by ≥1 ADR or container-mapping annotation; NFRs with no architectural coverage are flagged as orphans
+10. Every UC file is referenced by exactly one `use-case-packages/<package-slug>.puml`; UC files with no package entry are flagged as **orphan UCs** (M1 blocker)
+11. Every `usecase` entry on a package overview diagram has a matching `use-cases/UC-XXX-<slug>.md` file; entries with no matching file are flagged as **ghost UCs** (M1 blocker)
+12. The `usecase` label text on a package overview matches the `# <PREFIX>-UC-XXX: <title>` heading of its UC file; mismatches are flagged as **title drift** (M1 blocker)
+13. Every cross-package `<<include>>` / `<<extend>>` arrow on a package overview points to a UC-ID that exists in another package's overview; broken references are flagged as **dangling cross-package links** (M1 blocker)
 
 # Change impact analysis
 When asked "what breaks if REQ-042 changes?":

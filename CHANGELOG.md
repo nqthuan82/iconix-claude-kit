@@ -5,6 +5,48 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-05-07
+
+Closes the methodology gaps tracked in `iconix-process-reference.md` as
+Ch3 #9 (use cases organised with actors and use case diagrams / packages)
+and Ch4 #6 (use cases organised into packages with at least one UC diagram
+per package).
+
+### Added
+- `templates/use-case-diagram-template.puml` — PlantUML template for the
+  per-package UC overview diagram. Actors, package boundary as a labelled
+  rectangle, in-package use cases, cross-package use cases shown outside,
+  `<<include>>` / `<<extend>>` arrow guidance, and a maintenance reminder
+  note
+- `use-case-packages/` — new ICONIX folder seeded by both installers; one
+  `<package-slug>.puml` file per UC package
+- `agents/iconix-product-owner.md` — new section `# Use case packaging rules`
+  with five rules covering one-package-per-UC, one-overview-per-package, how
+  to draw cross-package invocations, when to update the diagram, and the
+  exact-title-match rule
+- `agents/iconix-product-owner.md` — three new M1 checklist items: every UC
+  belongs to one package and appears on its overview, every overview entry
+  has a matching UC file, no dangling cross-package `<<include>>` /
+  `<<extend>>` links
+- `agents/iconix-traceability.md` — four new validation checks (#10–13):
+  orphan UCs (file with no package entry), ghost UCs (overview entry with
+  no file), title drift (overview label mismatched against UC heading),
+  dangling cross-package links
+
+### Changed
+- `iconix-init` and `iconix-init.ps1` — both create `use-case-packages/`
+  during folder seeding and copy `use-case-diagram-template.puml` into
+  `docs/iconix/templates/`
+- `.github/workflows/validate.yml` — smoke test now asserts the new
+  template and folder are present after install
+- `.gitignore` — adds `/use-case-packages/` so installed projects don't
+  ship their UC packages back into the kit
+- `agents/iconix-traceability.md` — orphan report scope expanded to cover
+  the four new UC-overview check types
+- `docs/iconix/iconix-process-reference.md` — Ch3 #9 (UC packages) moved
+  ⚠️ → ✅; Ch4 #6 (one UC diagram per package) moved ❌ → ✅; Ch3 coverage
+  85% → 90%, Ch4 coverage 70% → 80%; "Closed in v0.9.0" entry added
+
 ## [0.8.11] — 2026-05-07
 
 ### Added

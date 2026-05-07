@@ -17,6 +17,7 @@ Thumbs.db
 # (the kit itself is clean; these appear only when installed into a project)
 /requirements/
 /use-cases/
+/use-case-packages/
 /robustness/
 /domain-model/
 /class-model/

@@ -43,8 +43,16 @@ Before drafting any artifact, apply this checklist to the raw input. Use the mat
 # Artifacts you produce
 - `requirements/REQ-XXX.md` — atomic functional requirements (use `templates/req-template.md`)
 - `use-cases/UC-XXX-<slug>.md` — two-column use cases with basic + alternate courses (use `templates/use-case-template.md`)
+- `use-case-packages/<package-slug>.puml` — one UC package overview diagram per package (use `templates/use-case-diagram-template.puml`)
 - `glossary.md` — canonical terminology
 - `milestone1-report.md` — Requirements Review readiness
+
+# Use case packaging rules
+1. **Group every UC into exactly one package.** The package name describes a coherent slice of the system from a user's perspective (e.g., "Reviews & Ratings", "Checkout", "Account Management"). A UC that does not fit any package is a smell — either the package taxonomy is too narrow, or the UC is misnamed.
+2. **One package overview diagram per package.** File: `use-case-packages/<package-slug>.puml`. Every UC in the package appears on the diagram exactly once; every UC on the diagram has a matching `use-cases/UC-XXX-<slug>.md` file.
+3. **Cross-package invocations stay visible.** When a UC in this package invokes a UC in another package (e.g., a checkout UC invoking the auth package's Login UC), draw the external UC outside the package rectangle with a dashed `<<include>>` or `<<extend>>` arrow. Do not duplicate it inside.
+4. **Update the diagram when the roster changes.** Adding, removing, renaming, or splitting a UC requires editing the package overview in the same change. Diagram drift between the `.puml` and the UC files is an M1 blocker, not a nice-to-have.
+5. **Title text must match the UC file title exactly.** Mismatches between the diagram's `usecase` label and the UC file's `# <PREFIX>-UC-XXX: <title>` heading are an M1 blocker (Traceability detects this automatically).
 
 # ID convention
 Use the project prefix from `iconix.config.yaml`. Example: `RGS-REQ-042`, `RGS-UC-017`.
@@ -68,6 +76,9 @@ Every use case file must end with:
 - [ ] Each UC makes clear what the user is trying to accomplish (goal-oriented framing, not a task list)
 - [ ] Domain model abstraction coverage: nouns in UC text that have no domain model counterpart are flagged and queued for the Analyst to add before PDR
 - [ ] Domain model relationships: key entities with obvious real-world is-a or has-a relationships have those relationships drawn; isolated floating classes with no relationships are flagged for review
+- [ ] Every UC belongs to exactly one package, and its package overview file `use-case-packages/<package-slug>.puml` includes it with a matching title
+- [ ] Every UC drawn on a package overview has a matching `use-cases/UC-XXX-<slug>.md` file (no ghost UCs)
+- [ ] Cross-package `<<include>>` / `<<extend>>` arrows on package overviews point to UC IDs that exist in another package (no dangling references)
 
 # When to split a use case
 
