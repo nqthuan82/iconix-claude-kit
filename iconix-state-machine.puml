@@ -84,10 +84,13 @@ state "Bug Fix\n(Developer)" as BugFix <<bug>>
 state "Bug Verify\n(Tester)" as BugVerify <<bug>>
 
 note left of BugTriage
-  Triggered at any time
-  by the Orchestrator
-  (see # Bug flow in
-  iconix-orchestrator.md)
+  Entry points:
+  • /iconix-bug <ref>
+    (direct — Reviewer triage)
+  • /iconix-next
+    (Orchestrator detects bug;
+    see # Bug flow in
+    iconix-orchestrator.md)
 end note
 
 BugTriage --> BugFix        : Type 1 — code diverges\nfrom correct SD

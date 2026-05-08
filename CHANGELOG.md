@@ -5,6 +5,85 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.4] — 2026-05-08
+
+Two changes that travel together: (1) a procedural rule in `CLAUDE.md`
+forcing Claude to audit every methodology-surface kit change against the
+process-reference matrix and the book before treating it complete — this
+is the upstream check that prevents kit drift from accumulating one
+well-intentioned edit at a time. (2) `/iconix-bug` exposes the Reviewer's
+existing bug-triage workflow as a first-class slash command. The
+workflow itself was already in `iconix-reviewer.md` `# Bug triage` and
+already credited ✅ in the matrix (Ch10 #9, Ch10 #5, Ch11 #1,
+Drift-detection sub-table); previously users had to invoke it
+conversationally or wait for the Orchestrator to detect the input. Now
+they can route directly. This v0.9.4 work was itself the first
+methodology-surface change to follow the new audit rule from (1) — book
+Ch11 cited inline in the new command for traceability.
+
+### Added
+- `commands/iconix-bug.md` — new slash command. Direct entry point to the
+  Reviewer's `# Bug triage` workflow. Accepts a bug description, source
+  path, or UC-ID; produces the standard `## Bug triage` block (Type 1
+  implementation defect vs Type 2 design defect) and recommends the next
+  step (Developer bug-fix mode for Type 1; `/iconix-impact` → REQ change
+  flow for Type 2). Reviewer-only — no fixes made by this command.
+- `templates/bug-report-template.md` — optional structured input for
+  `/iconix-bug`, mirroring the existing intake-template pattern for the
+  Product Owner. Sections: affected artifact, observed behaviour,
+  **exception / stack trace** (top application frame is the Reviewer's
+  direct anchor against SD methods; exception type often pre-classifies
+  Type 1 vs Type 2), expected behaviour, reproduction, optional triage
+  hint, Reviewer-filled traceability block. Installer (bash + PowerShell)
+  copies it to `docs/iconix/templates/` alongside the intake templates;
+  CI smoke test asserts it exists.
+- `CLAUDE.md` — new section **Auditing kit changes against ICONIX
+  Theory**. Defines what counts as a methodology-surface change (agent
+  rules, templates, gates, pipeline order, the matrix itself,
+  methodology-bearing commands) and what does not (installer scripts,
+  CI, version bumps, typos, methodology-neutral bug fixes). Specifies a
+  4-step audit procedure: cite the matrix row → verify against the book
+  PDF when the matrix doesn't resolve the question → update the matrix
+  in the same change if coverage shifted → surface contradictions
+  rather than silently introducing them. Requires Claude to state in
+  the response which rules were audited and what was cited.
+
+### Changed
+- `README.md` — `/iconix-bug` added to the directory listing and the
+  command-routing table; the bug-flow narrative (Step 1 — Always triage
+  first) gains a three-row **Input form** table (UC-ID / Source path /
+  Free-text) showing example invocations and what the Reviewer does
+  first for each; mentions both entry points (`/iconix-bug` direct and
+  `/iconix-next` via Orchestrator); points users at the new template
+  for larger bugs with stack traces. Templates listing in the directory
+  layout adds `bug-report-template.md`.
+- `iconix-state-machine.puml` — `BugTriage` state's note reframed from
+  single-trigger ("Triggered at any time by the Orchestrator") to
+  two-entry-point ("/iconix-bug" direct, "/iconix-next" via Orchestrator).
+- `agents/iconix-orchestrator.md` — `# Bug flow` Step 1 now acknowledges
+  the `/iconix-bug` direct entry point for users who already know it's
+  a bug (the Orchestrator's input-detection is bypassed in that case;
+  same triage workflow either way).
+- `docs/iconix/iconix-process-reference.md`:
+  - Drift-detection sub-table row "Bug type classification (Type 1 vs
+    Type 2)" kit-location cell now cites both `iconix-reviewer.md`
+    `# Bug triage` and `/iconix-bug <ref>`. Status unchanged (already ✅).
+  - **Ch11 #10** ("Prepare for review; participants read material in
+    advance") flips from ❌ to ⚠️ — `bug-report-template.md` forces the
+    bug reporter to surface affected artifact, observed-vs-expected,
+    exception trace, and reproduction *before* the Reviewer is invoked,
+    which partially covers "prepare review material in advance"; full
+    guideline still includes a human meeting the kit does not convene.
+  - Summary Coverage Matrix: Ch11 chapter row updated from `8|0|2|0`
+    (80%) to `8|1|1|0` (85%). "Last reviewed" bumped to v0.9.4 with
+    inline rationale.
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers now copy `bug-report-template.md` to
+  `docs/iconix/templates/` alongside the intake templates.
+- `.github/workflows/validate.yml` — smoke test asserts
+  `docs/iconix/templates/bug-report-template.md` exists after install,
+  mirroring the assertions for the four intake templates.
+
 ## [0.9.3] — 2026-05-08
 
 Two themes: (1) corrects a misattribution of book Ch2 rule #3 ("Draw the

@@ -110,6 +110,31 @@ bash iconix-init --source . --global
 
 After install: edit `.claude/iconix.config.yaml` to add containers and NFR catalog path, then open Claude Code and run `/iconix-next`.
 
+## Auditing kit changes against ICONIX Theory
+
+Whenever a change in this conversation touches the kit's **methodology surface** — anything that encodes an ICONIX rule, gate, or process step — audit it against the references in `## ICONIX Theory References` (above) before treating the change as complete. This is what keeps the kit faithful to the source methodology over time and prevents drift from accumulating one well-intentioned edit at a time.
+
+Treat the following as methodology-surface changes:
+- Agent system prompts (`agents/*.md`) — rules listed under headings like `# ICONIX rules`, `# Domain model rules`, milestone checklists, phase order, artifact responsibilities
+- Templates (`templates/*`) — section structure, mandatory fields, traceability blocks
+- Milestone gate criteria (M1 / M2 / M3) wherever defined
+- Pipeline order in `iconix-orchestrator.md` and `iconix-state-machine.puml`
+- The process reference matrix itself (`docs/iconix/iconix-process-reference.md`)
+- Commands that introduce methodology semantics (e.g., `/iconix-impact`, `/iconix-bug`)
+
+Tooling-only changes (installer scripts, CI workflow, version bumps, typo fixes, methodology-neutral bug fixes, formatting) do **not** require a theory audit.
+
+For each methodology-surface change, before treating it complete:
+
+1. **Cite the matrix row.** Find the rule in `docs/iconix/iconix-process-reference.md` that the change implements, modifies, or contradicts. Quote the chapter and rule number in the response (e.g., "Ch2 #3 — Draw the domain model before writing use cases").
+2. **Verify against the book** when the matrix does not fully resolve the question. Read `Use Case Driven Object Modeling with UML.pdf` with the `pages` parameter for the relevant chapter range — never the whole file. Quote the relevant passage. If the PDF is not present locally, say so explicitly and proceed using the matrix alone.
+3. **Update the matrix in the same change** if the kit's coverage status for any rule has shifted (✅ ⚠️ ❌ 🚫). Bump the "Last reviewed" version line. Re-check the chapter's ✅/⚠️/❌/🚫 counts in the Summary Coverage Matrix.
+4. **Surface contradictions.** If the proposed change conflicts with the book or matrix, do not silently introduce it. Flag the conflict and let the user decide whether to revise the change or revise the matrix row (with a justification).
+
+In the response, mention which rules were audited, what was cited, and whether the matrix was updated. If a change initially appeared methodology-relevant but turned out not to be, say so explicitly so the user knows the audit was considered and consciously skipped.
+
+Same applicability as the sync rule below: this fires while Claude is actively making or reviewing changes in Claude Code; it does not fire for edits made outside Claude Code.
+
 ## Keeping README and state machine in sync
 
 Whenever a change in this conversation touches the kit's user-facing surface — files under `agents/`, `commands/`, `templates/`, the installers (`iconix-init`, `iconix-init.ps1`), `templates/iconix.config.yaml`, the directory layout, or the agent pipeline / milestone gates — review both of these before treating the change as complete:

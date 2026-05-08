@@ -55,7 +55,9 @@ When a bug is reported against existing functionality, triage before routing.
 Never route straight to Developer — the design may be the defect, not the code.
 
 ## Step 1 — Triage (always first)
-Dispatch **Reviewer** against the affected UC or source file.
+Dispatch **Reviewer** against the affected UC or source file. (Users may also reach
+the Reviewer directly via `/iconix-bug <ref>` — same workflow, no Orchestrator
+involvement; either entry point produces the same `## Bug triage` verdict.)
 The Reviewer classifies the bug in its `## Bug triage` section as:
 - **Type 1 — Implementation bug**: code diverges from a correct design
 - **Type 2 — Design bug**: design is wrong; code faithfully implements the wrong thing

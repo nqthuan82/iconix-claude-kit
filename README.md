@@ -26,6 +26,7 @@ iconix-kit/
 │   ├── iconix-status.md
 │   ├── iconix-impact.md
 │   ├── iconix-review.md
+│   ├── iconix-bug.md          # bug triage entry point (Type 1 vs Type 2)
 │   ├── iconix-docs.md
 │   ├── iconix-migrate.md
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
@@ -44,7 +45,8 @@ iconix-kit/
     ├── intake-transcript-template.md   # stakeholder interview / meeting notes
     ├── intake-brd-template.md          # Business Requirements Document
     ├── intake-email-template.md        # email or written request
-    └── intake-feature-request-template.md  # feature request / ticket / user story
+    ├── intake-feature-request-template.md  # feature request / ticket / user story
+    └── bug-report-template.md          # optional structured input for /iconix-bug
 ```
 
 ## Install into a project
@@ -121,6 +123,7 @@ issue is resolved.
 | `/iconix-status` | Traceability (read-only) | Artifact inventory, NFR coverage, test matrix, open CI reports, milestone readiness, next action |
 | `/iconix-impact <ID>` | Traceability | Downstream blast-radius of a change |
 | `/iconix-review` | Reviewer | Code ↔ design drift on current git diff |
+| `/iconix-bug <ref>` | Reviewer (bug-triage mode) | Classify a bug as Type 1 (code defect) or Type 2 (design defect); recommend next step |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
@@ -230,8 +233,26 @@ Never go straight to Developer without a triage step.
 
 **Step 1 — Always triage first**
 
-Invoke the Reviewer against the affected UC or source file. It classifies the bug in
-a `## Bug triage` section of its report:
+Invoke the Reviewer against the affected UC or source file — either via the dedicated
+`/iconix-bug <ref>` command (direct entry point) or via `/iconix-next` (Orchestrator
+detects the bug input and dispatches the Reviewer in triage mode automatically).
+
+`/iconix-bug` accepts three argument forms, in increasing order of how much work the
+Reviewer has to do up front to find the affected artifacts:
+
+| Input form | Example | What the Reviewer does first |
+|---|---|---|
+| **UC-ID** | `/iconix-bug UC-017 customer says PlaceBet allows negative balance` | Reads the UC, then greps for source files with `Traceability: ... UC-017 ...` |
+| **Source path** | `/iconix-bug src/Bet/BetController.cs returns 200 on insufficient funds` | Reads the file's `Traceability:` comment to find UC-XXX and SD-XXX |
+| **Free-text only** | `/iconix-bug PlaceBet allows negative balance` | Asks the user for a file path or UC-ID — does not guess |
+
+For larger bugs (extended repro, stack traces, multiple affected files), fill in
+`docs/iconix/templates/bug-report-template.md`, save it as
+`bug-reports/BUG-<date>-<slug>.md`, and pass the saved path to `/iconix-bug`. The
+template has a dedicated section for exception / stack-trace input — the Reviewer
+uses the top application frame in the trace as a direct anchor against SD methods.
+
+It classifies the bug in a `## Bug triage` section of its report:
 
 | Type | Meaning | Indicator |
 |---|---|---|

@@ -254,7 +254,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
-| 10 | Prepare for review; participants read material in advance | ❌ | Not modeled (human process) |
+| 10 | Prepare for review; participants read material in advance | ⚠️ | `docs/iconix/templates/bug-report-template.md` (added v0.9.4) forces the bug reporter to surface the affected artifact, observed-vs-expected behaviour, exception trace, and reproduction *before* the Reviewer is invoked — partial coverage of "prepare review material in advance"; full guideline still includes a human meeting that the kit does not convene |
 | 9 | Create high-level review list based on use case titles | ✅ | `iconix-reviewer.md` — checklist per UC |
 | 8 | Break each UC item into a smaller checklist | ✅ | Reviewer walks RB controllers per UC |
 | 7 | Review code at several levels (conventions, design adherence, UC trace) | ✅ | Reviewer checks code vs SD vs UC |
@@ -273,7 +273,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | Code does not match class model | ✅ | Reviewer |
 | Code does not match NFRs | ✅ | Reviewer |
 | SD does not match UC text | ✅ | Reviewer |
-| Bug type classification (Type 1 vs Type 2) | ✅ | `iconix-reviewer.md` `# Bug triage` |
+| Bug type classification (Type 1 vs Type 2) | ✅ | `iconix-reviewer.md` `# Bug triage`; `/iconix-bug <ref>` direct entry point (added v0.9.4) |
 
 ---
 
@@ -344,7 +344,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.3 (post-audit — out-of-scope marker introduced; chapter counts re-verified)_
+_Last reviewed: v0.9.4 (`/iconix-bug` direct entry point added — Ch11 #1 / Drift "Bug type classification" row already ✅, kit-location updated; `bug-report-template.md` flips Ch11 #10 from ❌ to ⚠️, partial coverage of "prepare review material in advance"; Ch11 chapter coverage 80% → 85%)_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 
@@ -360,7 +360,7 @@ Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (o
 | 8 | Sequence diagrams | 10 | 0 | 0 | 0 | **100%** |
 | 9 | CDR (M3) | 8 | 0 | 1 | 1 | **89%** |
 | 10 | Implementation | 9 | 0 | 1 | 0 | **90%** |
-| 11 | Code review + model update | 8 | 0 | 2 | 0 | **80%** |
+| 11 | Code review + model update | 8 | 1 | 1 | 0 | **85%** |
 | 12 | Design-driven testing | 8 | 1 | 1 | 0 | **85%** |
 | 13 | Requirements traceability | 9 | 0 | 0 | 1 | **100%** |
 

@@ -137,6 +137,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/intake-brd-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/intake-email-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
 fi
 
 cat <<'EOF'
