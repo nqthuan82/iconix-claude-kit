@@ -259,7 +259,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 8 | Break each UC item into a smaller checklist | ✅ | Reviewer walks RB controllers per UC |
 | 7 | Review code at several levels (conventions, design adherence, UC trace) | ✅ | Reviewer checks code vs SD vs UC |
 | 6 | Gather data; build boilerplate checklists for future reviews | ✅ | `iconix-reviewer.md` Rules — recurring defect patterns appended to `reviews/review-checklist.md` after each review |
-| 5 | Follow up review with action points | ✅ | Reviewer produces BLOCK/CHANGES/APPROVE report with items |
+| 5 | Follow up review with action points | ✅ | Reviewer produces BLOCK/CHANGES/APPROVE report with items; Git agent posts the report as a structured PR comment when `git.provider` is set (added v0.9.5) |
 | 4 | Focus on error detection, not correction | ✅ | Reviewer identifies drift; Developer fixes |
 | 3 | Use integrated code/model browser | ❌ | Tooling choice; not in kit scope |
 | 2 | Keep it "just formal enough" | ✅ | Reviewer uses structured but lightweight format |
@@ -344,7 +344,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.4 (`/iconix-bug` direct entry point added — Ch11 #1 / Drift "Bug type classification" row already ✅, kit-location updated; `bug-report-template.md` flips Ch11 #10 from ❌ to ⚠️, partial coverage of "prepare review material in advance"; Ch11 chapter coverage 80% → 85%)_
+_Last reviewed: v0.9.5 (Git integration — `iconix-git` agent + `/iconix-pr` + `/iconix-trace-check` + GitHub/Azure DevOps adapters; Ch11 #5 kit-location updated to cite Reviewer-as-PR-bot; no status shifts — git/PR is a tooling integration over existing methodology, not new rules. Out-of-scope items unchanged: human review meeting remains 🚫 — a PR comment thread is async/asynchronous, not the in-person whiteboard session the book describes.)_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 

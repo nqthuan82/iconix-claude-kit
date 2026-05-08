@@ -115,6 +115,51 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\intake-email-template.md")           "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\intake-feature-request-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\bug-report-template.md")              "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+
+        # Git integration — branch + commit conventions (always)
+        New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null
+        Copy-Item (Join-Path $WorkDir "templates\git-integration\branch-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\git-integration\commit-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\git-integration\README.md")             "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
+
+        # Always seed the generic validator script
+        New-Item -ItemType Directory -Force -Path ".ci" | Out-Null
+        Copy-Item (Join-Path $WorkDir "templates\git-integration\generic\validate-traceability.sh") ".ci\" -Force -ErrorAction SilentlyContinue
+
+        # Provider-specific files based on git.provider in iconix.config.yaml
+        $gitProvider = "generic"
+        if (Test-Path $ConfigFile) {
+            $providerLine = (Get-Content $ConfigFile | Select-String -Pattern '^\s*provider:\s*"?([^"]*)"?' | Select-Object -First 1)
+            if ($providerLine -and $providerLine.Matches.Count -gt 0) {
+                $gitProvider = $providerLine.Matches[0].Groups[1].Value
+            }
+        }
+        switch ($gitProvider) {
+            "github" {
+                New-Item -ItemType Directory -Force -Path ".github\workflows", ".github\PULL_REQUEST_TEMPLATE" | Out-Null
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\workflows\iconix-validate.yml") ".github\workflows\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\pull_request_template.md")      ".github\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m1.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m2.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m3.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\implementation.md") ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
+                Write-Host "  installed git integration: github"
+            }
+            "azure-devops" {
+                New-Item -ItemType Directory -Force -Path ".azuredevops\pull_request_templates" | Out-Null
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\azure-pipelines-iconix-validate.yml") ".\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\default.md")        ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m1.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m2.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m3.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\implementation.md") ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Write-Host "  installed git integration: azure-devops"
+            }
+            default {
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\generic\README.md") ".ci\" -Force -ErrorAction SilentlyContinue
+                Write-Host "  installed git integration: generic (CI wiring left to the user)"
+            }
+        }
     }
 
     Write-Host ""

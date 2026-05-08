@@ -70,7 +70,17 @@ When asked "what breaks if REQ-042 changes?":
 READY | NOT READY (with specific fixes required)
 ```
 
+# CI counterpart: `.ci/validate-traceability.sh`
+The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` from `templates/git-integration/generic/`) runs a **subset** of your validation in CI as a merge gate:
+- Every changed file under `src/` and `tests/` has a `Traceability:` comment
+- Every cited REQ/UC/RB/SD/TC/ADR ID points to an artifact that actually exists
+
+It does **not** check the full chain (REQ→UC→RB→SD→CLS→TC) — that's still your job, run via `/iconix-status` and the milestone-report flow. The script is the fast pre-merge guard; you remain the canonical auditor.
+
+When findings disagree (e.g., script says PASS but you find a chain break), trust your full check and tell the user the script needs a coverage extension.
+
 # What you never do
 - Write use cases, diagrams, code, or tests
 - Make design decisions
 - Resolve ambiguities — only flag them for upstream agents
+- Modify the CI validator script (changes to it are a kit-level decision, not a per-project one)

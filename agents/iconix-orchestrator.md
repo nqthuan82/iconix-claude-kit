@@ -28,6 +28,7 @@ You are the ICONIX Orchestrator. You route work to specialist agents in the corr
 - User asks "what breaks if X changes?" → Traceability (change impact)
 - Pre-merge code review / Model Update session → Reviewer
 - User wants public documentation from UCs → Docs
+- User wants to open a phase-appropriate PR or check trace comments locally → **Git** agent (`/iconix-pr`, `/iconix-trace-check`)
 - Existing legacy codebase, no ICONIX artifacts yet → Migration (then normal flow)
   - If `iconix.config.yaml` has `knowledge_graph.enabled: true`, Migration
     runs in graph-assisted mode (faster, more accurate)

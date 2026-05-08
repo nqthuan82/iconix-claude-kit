@@ -19,6 +19,7 @@ iconix-kit/
 │   ├── iconix-tester.md
 │   ├── iconix-traceability.md
 │   ├── iconix-reviewer.md     # code ↔ design drift detection
+│   ├── iconix-git.md          # branch/PR/commit hygiene; provider-agnostic (v0.9.5+)
 │   ├── iconix-docs.md         # user / dev / API doc generation
 │   └── iconix-migration.md    # retrofit ICONIX onto legacy code (Graphify-aware in v0.3.0+)
 ├── commands/                # Claude Code slash commands
@@ -27,6 +28,8 @@ iconix-kit/
 │   ├── iconix-impact.md
 │   ├── iconix-review.md
 │   ├── iconix-bug.md          # bug triage entry point (Type 1 vs Type 2)
+│   ├── iconix-pr.md           # open phase-appropriate PR (v0.9.5+)
+│   ├── iconix-trace-check.md  # local trace validation, mirrors CI gate (v0.9.5+)
 │   ├── iconix-docs.md
 │   ├── iconix-migrate.md
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
@@ -46,7 +49,15 @@ iconix-kit/
     ├── intake-brd-template.md          # Business Requirements Document
     ├── intake-email-template.md        # email or written request
     ├── intake-feature-request-template.md  # feature request / ticket / user story
-    └── bug-report-template.md          # optional structured input for /iconix-bug
+    ├── bug-report-template.md          # optional structured input for /iconix-bug
+    └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
+        ├── README.md
+        ├── branch-conventions.md       # branch naming reference (any provider)
+        ├── commit-conventions.md       # commit message format (any provider)
+        ├── generic/
+        │   └── validate-traceability.sh   # core merge-gate validator
+        ├── github/                     # workflows + PR templates (per phase)
+        └── azure-devops/               # pipeline + PR templates (per phase)
 ```
 
 ## Install into a project
@@ -124,6 +135,8 @@ issue is resolved.
 | `/iconix-impact <ID>` | Traceability | Downstream blast-radius of a change |
 | `/iconix-review` | Reviewer | Code ↔ design drift on current git diff |
 | `/iconix-bug <ref>` | Reviewer (bug-triage mode) | Classify a bug as Type 1 (code defect) or Type 2 (design defect); recommend next step |
+| `/iconix-pr [draft\|ready] [--reviewers ...]` | Git | Open a phase-appropriate PR (M1/M2/M3/Impl) on the configured provider |
+| `/iconix-trace-check [<base>]` | Git | Run the traceability validator locally (same checks as the CI merge-gate) |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
@@ -287,6 +300,51 @@ Reviewer (triage → Type 2)
 > **Review checklist:** After each review the Reviewer appends recurring defect patterns
 > to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
 > of the most common drift types, used to front-load future reviews.
+
+### Git integration (v0.9.5+) — `iconix-git` agent
+
+The kit ships provider-agnostic branch + commit conventions plus first-class adapters for **GitHub** and **Azure DevOps**. Other providers (GitLab, Bitbucket, plain Jenkins, etc.) are supported via a generic shell-script merge-gate; see `templates/git-integration/generic/README.md`.
+
+**Configuration** — set in `iconix.config.yaml`:
+
+```yaml
+git:
+  provider: "github"           # github | azure-devops | generic
+  default_branch: "main"
+  branch_strategy: "trunk"     # trunk | gitflow
+  work_item_prefix: "AB#"      # "AB#" for Azure Boards, "#" for GitHub Issues, "" to disable
+  pr_cli: "gh"                 # gh | az | none
+```
+
+**Branch & commit convention** (provider-neutral):
+
+```
+feature/UC-017-place-bet
+arch/payment-provider-abstraction
+bugfix/T1-bet-controller-status-code         # Type 1 — code only
+bugfix/T2-UC-017-balance-validation          # Type 2 — rejoins REQ change flow
+
+[UC-017] M2: robustness diagram + container mapping
+[BUG-T1] Fix: BetController returns 400 on negative balance
+```
+
+Full reference at `templates/git-integration/branch-conventions.md` and `commit-conventions.md`.
+
+**What the installer drops in:**
+
+| Provider | Files | Where |
+|---|---|---|
+| Always | `validate-traceability.sh` | `.ci/` |
+| Always | `branch-conventions.md`, `commit-conventions.md`, `README.md` | `docs/iconix/templates/git-integration/` |
+| `github` | `iconix-validate.yml`, PR templates (default + M1/M2/M3/Impl) | `.github/workflows/`, `.github/`, `.github/PULL_REQUEST_TEMPLATE/` |
+| `azure-devops` | `azure-pipelines-iconix-validate.yml`, PR templates | repo root, `.azuredevops/pull_request_templates/` |
+| `generic` | (script only — user wires the script into their CI manually) | `.ci/` |
+
+**The merge-gate** — `.ci/validate-traceability.sh` runs in CI on every PR. It fails if any changed file under `src/` or `tests/` lacks a `Traceability:` comment, or if cited UC/RB/SD/REQ/TC/ADR IDs don't match an existing artifact. Run locally before pushing with `/iconix-trace-check`.
+
+**Opening PRs** — `/iconix-pr` detects the current phase from the diff, opens a draft PR using the matching template (M1/M2/M3/Impl), and (with `pr_cli` set) calls the right CLI (`gh` for GitHub, `az` for Azure DevOps). With `pr_cli: none` it prints the suggested URL and lets you create the PR manually.
+
+**Reviewer-as-PR-bot** — when `/iconix-review` runs against a branch with an open PR, the Git agent posts the review report as a structured PR comment. If the recommendation is `BLOCK MERGE` or `REQUEST CHANGES`, the PR is set to draft (when supported) so it can't be merged accidentally.
 
 ### `/iconix-migrate` — code-walking vs. graph-assisted mode
 

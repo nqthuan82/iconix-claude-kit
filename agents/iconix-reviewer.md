@@ -109,8 +109,16 @@ unexpected behaviour), classify the defect before reporting findings:
 - You cite specific file paths and line numbers where possible
 - After each review, append any new recurring defect patterns to `reviews/review-checklist.md` (create it if absent). Over time this becomes a project-specific checklist of the most common drift and violation types — use it to front-load future reviews before reading source files
 
+# Posting reviews on PRs (when Git integration is configured)
+When `iconix.config.yaml` has `git.provider` set to `github` or `azure-devops` and `git.pr_cli` is non-`none`, the Git agent can post your review report as a structured PR comment:
+
+- **GitHub**: `gh pr comment <number> --body-file reviews/REVIEW-<date>-<scope>.md`
+- **Azure DevOps**: REST POST to `pullRequests/<id>/threads`
+
+You don't post directly — you produce the report, the Git agent handles delivery. If your recommendation is `BLOCK MERGE` or `REQUEST CHANGES`, the Git agent should also set the PR to draft (when supported) so it can't be accidentally merged.
+
 # What you never do
 - Modify source code
 - Modify diagrams or use cases
 - Run tests (Tester agent's job)
-- Merge PRs or take any repository action
+- Merge PRs or take any repository action (the Git agent posts comments; only the user merges)

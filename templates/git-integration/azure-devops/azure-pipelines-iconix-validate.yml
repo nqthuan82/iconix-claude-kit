@@ -1,0 +1,72 @@
+# Azure Pipelines — ICONIX traceability merge-gate.
+# Copied to azure-pipelines-iconix-validate.yml at the project root by
+# iconix-init when git.provider = azure-devops in iconix.config.yaml.
+#
+# Wire this into your branch policy:
+#   Project Settings → Repositories → <repo> → Policies → Branch (main)
+#     → Build Validation → + Add → select this pipeline.
+#
+# Once added as a required build, PRs can't merge unless the validator
+# passes.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  System.Debug: false
+
+steps:
+  - checkout: self
+    fetchDepth: 0   # need full history for diff against base ref
+
+  - script: |
+      chmod +x .ci/validate-traceability.sh
+      # Azure Pipelines exposes target branch on PR builds via SYSTEM_PULLREQUEST_TARGETBRANCH
+      BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH:-refs/heads/main}"
+      BASE_REF="${BASE_REF#refs/heads/}"
+      .ci/validate-traceability.sh "origin/${BASE_REF}" HEAD
+    displayName: 'ICONIX traceability gate'
+
+  - task: PowerShell@2
+    condition: and(failed(), eq(variables['Build.Reason'], 'PullRequest'))
+    displayName: 'Comment on PR (failure)'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $headers = @{ 'Authorization' = "Bearer $(System.AccessToken)" }
+        $body = @{
+          comments = @(@{
+            parentCommentId = 0
+            content = @"
+### ICONIX Traceability Gate failed
+
+One or more changed files under ``src/`` or ``tests/`` are missing a
+``Traceability:`` comment, or cite an artifact ID that does not exist.
+
+See the build log for the file list. Fix locally with:
+
+``````bash
+.ci/validate-traceability.sh origin/main HEAD
+``````
+
+Or run ``/iconix-trace-check`` in Claude Code.
+"@
+            commentType = 1
+          })
+          status = 1
+        } | ConvertTo-Json -Depth 5
+
+        $url = "$(System.CollectionUri)$(System.TeamProject)/_apis/git/repositories/$(Build.Repository.ID)/pullRequests/$(System.PullRequest.PullRequestId)/threads?api-version=7.1"
+        Invoke-RestMethod -Uri $url -Method POST -Headers $headers -Body $body -ContentType 'application/json'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)

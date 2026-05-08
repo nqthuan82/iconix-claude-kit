@@ -1,0 +1,56 @@
+# GitHub Actions workflow — ICONIX traceability merge-gate.
+# Copied to .github/workflows/iconix-validate.yml by iconix-init when
+# git.provider = github in iconix.config.yaml.
+#
+# Fails any PR whose changed source/test files lack valid Traceability:
+# comments or cite non-existent artifact IDs.
+
+name: ICONIX Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  traceability:
+    name: Traceability gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history for git diff against base ref
+
+      - name: Run traceability validator
+        run: |
+          chmod +x .ci/validate-traceability.sh
+          .ci/validate-traceability.sh \
+            "origin/${{ github.base_ref || 'main' }}" \
+            HEAD
+
+      - name: Comment PR on failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '### ICONIX Traceability Gate failed',
+              '',
+              'One or more changed files under `src/` or `tests/` are missing a',
+              '`Traceability:` comment, or cite an artifact ID that does not exist.',
+              '',
+              'See the workflow log for the file list. Fix locally with:',
+              '',
+              '```bash',
+              '.ci/validate-traceability.sh origin/main HEAD',
+              '```',
+              '',
+              'Or run `/iconix-trace-check` in Claude Code.',
+            ].join('\n');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });

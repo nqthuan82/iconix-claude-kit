@@ -5,6 +5,117 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.5] — 2026-05-09
+
+Closes the largest gap identified in the v0.9.4-session kit assessment:
+**git integration**. Until now only the Reviewer was git-aware (it read
+`git diff`); no agent created branches, opened PRs, or enforced commit
+hygiene. The kit's careful artifact discipline could be undone at the
+merge stage by inconsistent git history. v0.9.5 adds a provider-agnostic
+core (branch + commit conventions + a shell-script merge-gate) plus
+first-class adapters for **GitHub** and **Azure DevOps** — chosen because
+they cover the vast majority of regulated/enterprise iGaming
+environments. GitLab and Bitbucket are deferred to a later version; the
+generic adapter (any CI that can run a shell script) keeps them usable
+in the meantime.
+
+### Added
+- `agents/iconix-git.md` — new agent. Owns branch creation/validation,
+  PR opening, commit-message format checking, posting Reviewer findings
+  as PR comments. Reads `git.provider` from `iconix.config.yaml`.
+  Read-only on ICONIX artifacts; never force-pushes; never bypasses
+  branch protection or required CI checks.
+- `commands/iconix-pr.md` — opens a phase-appropriate draft PR (M1 / M2
+  / M3 / Implementation) using the matching template. Detects phase
+  from the diff; refuses on mixed-phase commits. Routes through `gh`
+  (GitHub) or `az` (Azure DevOps) when configured; prints the suggested
+  URL when `pr_cli: none`.
+- `commands/iconix-trace-check.md` — runs the traceability validator
+  locally with the same checks the CI merge-gate runs. Pre-push guard.
+- `templates/git-integration/` — new top-level templates folder:
+  - `branch-conventions.md` — `feature/UC-XXX-<slug>`, `arch/<scope>`,
+    `bugfix/T1-<slug>`, `bugfix/T2-UC-XXX-<slug>`, `hotfix/T1-<slug>`,
+    `release/<version>`. Trunk vs. GitFlow strategies.
+  - `commit-conventions.md` — `[<artifact-id>] <phase>: <summary>`
+    format. Phases: M1 / M2 / M3 / Impl / Fix / Doc / Refactor / Chore.
+    Mixed-phase commits flagged. Optional work-item ref footer.
+  - `generic/validate-traceability.sh` — provider-agnostic merge-gate.
+    Checks every changed file under `src/` and `tests/` for a
+    `Traceability:` comment; checks every cited ID points to an
+    existing artifact. Self-contained POSIX shell; runs identically in
+    CI containers and on developer laptops.
+  - `generic/README.md` — how to wire the script into any CI provider
+    not covered by a first-class adapter.
+  - `github/workflows/iconix-validate.yml` — GitHub Actions workflow
+    that runs the validator on every PR and pushes comment with fix
+    instructions on failure.
+  - `github/pull_request_template.md` + `PULL_REQUEST_TEMPLATE/{m1,m2,m3,implementation}.md`
+    — default + phase-specific PR templates.
+  - `azure-devops/azure-pipelines-iconix-validate.yml` — Azure
+    Pipelines equivalent. Uses `SYSTEM_PULLREQUEST_TARGETBRANCH` for
+    base-ref detection; posts a PR comment via REST on failure.
+  - `azure-devops/pull_request_templates/{default,m1,m2,m3,implementation}.md`
+    — Azure DevOps PR templates (loaded from
+    `.azuredevops/pull_request_templates/`).
+- `templates/iconix.config.yaml` — new `git:` section: `provider`
+  (github / azure-devops / generic), `default_branch`,
+  `branch_strategy` (trunk / gitflow), `work_item_prefix` (optional;
+  `AB#` for Azure Boards, `#` for GitHub Issues, empty to disable),
+  `pr_cli` (gh / az / none), `impl_squash`. Default `provider:
+  generic`, `pr_cli: none` — the kit doesn't assume a provider until
+  configured.
+
+### Changed
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers now read `git.provider` from the just-seeded
+  `iconix.config.yaml` and copy the matching subtree:
+  - Always: `validate-traceability.sh` to `.ci/`; conventions docs to
+    `docs/iconix/templates/git-integration/`.
+  - `github`: workflow to `.github/workflows/`, PR templates to
+    `.github/` and `.github/PULL_REQUEST_TEMPLATE/`.
+  - `azure-devops`: pipeline to repo root, PR templates to
+    `.azuredevops/pull_request_templates/`.
+  - `generic`: just the script + a README explaining manual wiring.
+  - "Next steps" output now lists the new agents and commands.
+- `agents/iconix-orchestrator.md` — routing heuristics gain an entry
+  for the Git agent (`/iconix-pr`, `/iconix-trace-check`).
+- `agents/iconix-reviewer.md` — new section "Posting reviews on PRs"
+  explaining that when git integration is configured, the Git agent
+  posts the review report as a structured PR comment. Reviewer doesn't
+  post directly — produces the report; Git agent handles delivery.
+  When recommendation is BLOCK MERGE / REQUEST CHANGES, the Git agent
+  also sets the PR to draft (when supported).
+- `agents/iconix-traceability.md` — new section "CI counterpart"
+  acknowledging that `.ci/validate-traceability.sh` runs a subset of
+  the agent's validation as a fast pre-merge gate. The agent remains
+  the canonical auditor for the full chain.
+- `README.md` — `iconix-git.md` added to the agents listing;
+  `iconix-pr.md`, `iconix-trace-check.md` added to the commands
+  listing; `templates/git-integration/` added to the templates
+  listing; new full **Git integration** section explaining
+  configuration, conventions, what the installer drops in per
+  provider, the merge-gate, and the Reviewer-as-PR-bot flow.
+- `docs/iconix/iconix-process-reference.md` — Ch11 #5 row gains a
+  citation for Reviewer-as-PR-bot (already ✅; kit-location updated
+  only). "Last reviewed" bumped to v0.9.5.
+- `.github/workflows/validate.yml` — smoke test now asserts
+  `branch-conventions.md`, `commit-conventions.md`, and a working
+  executable `validate-traceability.sh` are installed.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- Cited rules: **Ch11 #5** (Follow up review with action points) — kit
+  location updated; **Ch11 #2** (Just formal enough) — PR templates
+  and check runs are "structured but lightweight"; **Ch11 #6** (Gather
+  data; build boilerplate checklists) — already ✅, no shift; **Ch1
+  milestones** — gates as PR boundaries doesn't change the methodology,
+  it just expresses it through git.
+- Status shifts: none. Git/PR is a tooling integration over existing
+  rules.
+- Out-of-scope unchanged: "Human review meeting" remains 🚫 — a PR
+  comment thread is async/asynchronous, not the in-person whiteboard
+  session the book describes.
+- No contradictions found.
+
 ## [0.9.4] — 2026-05-08
 
 Two changes that travel together: (1) a procedural rule in `CLAUDE.md`

@@ -37,6 +37,16 @@ milestones:
   require_rule_validation: true
   max_revisions_per_artifact: 3   # anti-analysis-paralysis guardrail
 
+# Git integration (optional, used by iconix-git in v0.9.5+)
+# See docs/iconix/templates/git-integration/ for the full reference.
+git:
+  provider: "generic"           # github | azure-devops | generic
+  default_branch: "main"
+  branch_strategy: "trunk"      # trunk | gitflow
+  work_item_prefix: ""          # e.g. "AB#" (Azure Boards), "#" (GitHub Issues), or "" to disable
+  pr_cli: "none"                # gh | az | none — must be on PATH if set
+  impl_squash: false            # squash Implementation-phase PRs to one commit (true) or preserve history (false)
+
 # Knowledge graph integration (optional, used by iconix-migration in v0.3.0+)
 # Enable when you have Graphify installed and have run `graphify .` on your repo.
 # See docs/iconix/templates/graphify-setup.md for setup.

@@ -138,6 +138,46 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/intake-email-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
+
+  # Seed git-integration: branch + commit conventions (always)
+  mkdir -p "docs/iconix/templates/git-integration"
+  cp "${WORKDIR}/templates/git-integration/branch-conventions.md" "docs/iconix/templates/git-integration/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/git-integration/commit-conventions.md" "docs/iconix/templates/git-integration/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/git-integration/README.md"             "docs/iconix/templates/git-integration/" 2>/dev/null || true
+
+  # Always seed the generic validator script — wrappers call it
+  mkdir -p ".ci"
+  cp "${WORKDIR}/templates/git-integration/generic/validate-traceability.sh" ".ci/" 2>/dev/null || true
+  chmod +x ".ci/validate-traceability.sh" 2>/dev/null || true
+
+  # Provider-specific files based on git.provider
+  GIT_PROVIDER="$(grep -E '^\s*provider:' "${CONFIG_FILE}" 2>/dev/null | head -1 | sed -E 's/.*provider:\s*"?([^"]*)"?.*/\1/' || echo "generic")"
+  case "${GIT_PROVIDER}" in
+    github)
+      mkdir -p ".github/workflows" ".github/PULL_REQUEST_TEMPLATE"
+      cp "${WORKDIR}/templates/git-integration/github/workflows/iconix-validate.yml" ".github/workflows/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/pull_request_template.md"      ".github/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m1.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m2.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m3.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/implementation.md" ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
+      echo "  installed git integration: github"
+      ;;
+    azure-devops)
+      mkdir -p ".azuredevops/pull_request_templates"
+      cp "${WORKDIR}/templates/git-integration/azure-devops/azure-pipelines-iconix-validate.yml" "./" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/default.md"        ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m1.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m2.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m3.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/implementation.md" ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      echo "  installed git integration: azure-devops"
+      ;;
+    generic|*)
+      cp "${WORKDIR}/templates/git-integration/generic/README.md" ".ci/" 2>/dev/null || true
+      echo "  installed git integration: generic (CI wiring left to the user — see .ci/README.md)"
+      ;;
+  esac
 fi
 
 cat <<'EOF'
@@ -154,23 +194,27 @@ Next steps:
 
 Agents installed:
   - iconix-orchestrator    (routing + phase enforcement)
-  - iconix-product-owner   (requirements, use cases, glossary)
-  - iconix-analyst         (robustness diagrams, domain model)
+  - iconix-product-owner   (requirements, use cases, glossary, initial domain model)
+  - iconix-analyst         (robustness diagrams, refined domain model)
   - iconix-architect       (packages, NFRs, ADRs)
   - iconix-developer       (sequence diagrams, code, unit tests)
   - iconix-tester          (test cases, Gherkin, regression matrix)
   - iconix-traceability    (ID ledger, milestone gates, change impact)
-  - iconix-reviewer        (code vs design drift detection)
+  - iconix-reviewer        (code vs design drift detection, bug triage)
+  - iconix-git             (branch/PR/commit hygiene; provider-agnostic)
   - iconix-docs            (user / dev / API docs generation)
   - iconix-migration       (reverse-engineer ICONIX onto legacy code)
 
 Commands installed:
-  /iconix-next     run next pipeline step
-  /iconix-status   milestone readiness report
-  /iconix-impact   change impact analysis
-  /iconix-review   ICONIX-style code review
-  /iconix-docs     generate user/dev/api docs
-  /iconix-migrate  reverse-engineer from existing code
-  /iconix-graphify bootstrap Graphify integration (optional, for migration)
+  /iconix-next        run next pipeline step
+  /iconix-status      milestone readiness report
+  /iconix-impact      change impact analysis
+  /iconix-review      ICONIX-style code review
+  /iconix-bug         triage a bug as Type 1 (code) or Type 2 (design)
+  /iconix-pr          open a phase-appropriate PR (GitHub / Azure DevOps)
+  /iconix-trace-check run the traceability validator locally
+  /iconix-docs        generate user/dev/api docs
+  /iconix-migrate     reverse-engineer from existing code
+  /iconix-graphify    bootstrap Graphify integration (optional, for migration)
 
 EOF
