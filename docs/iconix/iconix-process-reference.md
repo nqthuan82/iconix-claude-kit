@@ -9,7 +9,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 **Status legend**
 - ✅ Covered — rule is explicitly enforced in the kit
 - ⚠️ Partial — rule is implied or partially present
-- ❌ Missing — rule has no representation in the kit
+- ❌ Missing — rule has no representation in the kit (gap to close)
+- 🚫 Out of scope — deliberate boundary, see `README.md` `## What the kit intentionally does not cover`
 
 ---
 
@@ -24,8 +25,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | Milestone 2 (Preliminary Design Review) | ✅ | `iconix-traceability.md` M2 gate |
 | Milestone 3 (Critical Design Review) | ✅ | `iconix-traceability.md` M3 gate |
 | Traceability chain REQ → UC → RB → SD → CLS → TC | ✅ | All agents; `iconix-traceability.md` validates at every gate |
-| Persona analysis | ❌ | Not in kit — no persona template or agent step |
-| Test-Driven Development (TDD) integration | ❌ | Not in kit — Tester drives tests from RBs, not from failing code first |
+| Persona analysis | 🚫 | Out-of-scope — see README footnote (requires primary user research) |
+| TDD red-green-refactor cycle | 🚫 | Out-of-scope — kit derives TCs from RBs (design-driven test-first); see README footnote. **Distinct from "test-first thinking"** which IS in scope (Ch12 #7 ⚠️) |
 | Driving test cases from robustness diagrams | ✅ | `iconix-tester.md` — one TC per controller |
 
 ---
@@ -43,7 +44,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 6 | Don't mistake the domain model for a data model | ✅ | `iconix-analyst.md` `# Domain model rules` rule 2 |
 | 5 | Don't confuse a domain object with a database table | ✅ | `iconix-analyst.md` `# Domain model rules` rule 2 |
 | 4 | Use the domain model as the project glossary | ✅ | `iconix-analyst.md` `# Domain model rules` rule 3 — "domain model = project glossary" |
-| 3 | Draw the domain model before writing use cases | ✅ | Orchestrator enforces Product Owner → Analyst order (domain model first) |
+| 3 | Draw the domain model before writing use cases | ✅ | `iconix-product-owner.md` rule 9 — PO drafts initial domain model after REQs and **before** UC flows; Analyst refines through robustness analysis (corrected v0.9.3) |
 | 2 | Don't expect the domain model to match final class diagrams exactly | ✅ | `iconix-analyst.md` `# Domain model rules` rule 6 |
 | 1 | Don't put GUI classes on the domain model | ✅ | `iconix-analyst.md` `# Domain model rules` rule 1 |
 
@@ -59,7 +60,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Organize use cases with actors and use case diagrams (packages) | ✅ | `iconix-product-owner.md` `# Use case packaging rules` + M1 checklist; one `use-case-packages/<package-slug>.puml` per package; template at `templates/use-case-diagram-template.puml` (added v0.9.0) |
 | 8 | Write use cases in active voice | ✅ | `iconix-product-owner.md` — "active voice" stated |
 | 7 | Write use case using event/response flow (user action → system response) | ✅ | Two-column UC format (User Action / System Response) |
-| 6 | Use UI storyboards and attach them to use cases | ❌ | No storyboard template or guidance |
+| 6 | Use UI storyboards and attach them to use cases | 🚫 | Out-of-scope — UI design tools (Figma, Balsamiq) are external; see README footnote |
 | 5 | Use case is a runtime behavior specification — drive design from it | ✅ | Full pipeline is UC-driven |
 | 4 | Write use case in context of the object model (reference domain classes by name) | ✅ | Product Owner rule: "reference domain objects by name" |
 | 3 | Write use cases using noun-verb-noun sentence structure | ✅ | `iconix-product-owner.md` rule 7 — explicit noun-verb-noun rule with rewrite instruction |
@@ -83,8 +84,8 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 6 | Use cases organized into packages with at least one UC diagram per package | ✅ | `iconix-product-owner.md` `# Use case packaging rules`; M1 checklist enforces every UC belongs to one package; Traceability validates UC↔package overview links (added v0.9.0) |
 | 5 | Use cases written in context of the object model | ✅ | Product Owner rule |
 | 4 | Use cases written in context of the user interface (screens named) | ✅ | Product Owner + Analyst rule |
-| 3 | UCs supplemented with storyboard / screen mock-up / GUI prototype | ❌ | No storyboard step |
-| 2 | Review with end users, stakeholders, marketing, and technical staff | ❌ | Kit is AI-agent-driven; human review gating is not modeled |
+| 3 | UCs supplemented with storyboard / screen mock-up / GUI prototype | 🚫 | Out-of-scope — see README footnote |
+| 2 | Review with end users, stakeholders, marketing, and technical staff | 🚫 | Out-of-scope — kit produces artifacts for human review meetings but does not convene them; see README footnote |
 | 1 | Structure review using eight easy steps | ⚠️ | M1 checklist now has 8 items aligned to these steps; human review participation still not modeled |
 
 **Eight easy steps to a better use case (M1 sub-checklist):**
@@ -146,7 +147,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 7 | Don't forget alternate courses; write behavior for each one | ✅ | Analyst rule |
 | 6 | Each UC covers both sides of user/system dialogue | ✅ | Two-column format enforces this |
 | 5 | Syntax rules for robustness analysis not violated | ✅ | Analyst validates four connection rules |
-| 4 | Review includes both nontechnical (customer) and technical folks | ❌ | Human review step not modeled |
+| 4 | Review includes both nontechnical (customer) and technical folks | 🚫 | Out-of-scope — see README footnote (human review meeting) |
 | 3 | Use cases in context of both object model and GUI — "magic abstraction level" | ✅ | Product Owner + Analyst both enforce this |
 | 2 | Don't drift into detailed design territory on robustness diagrams | ✅ | `iconix-analyst.md` PDR readiness check — method signatures/types on RB are a blocker before handoff |
 | 1 | Follow "Six Easy Steps" to a better PDR (meta-checklist: match diagram to UC text, validate syntax rules, check domain model/GUI context, trace data flow, ensure both dialogue sides, include non-technical reviewers) | ⚠️ | Technical checks covered by M2 gate; human reviewer participation not modeled |
@@ -223,7 +224,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 5 | Functional and NFR requirements traced to UCs and classes | ✅ | Traceability agent — full chain + NFR→ADR validation check #9 |
 | 4 | Programmers "sanity check" — confident they can build it | ❌ | No human sanity-check step |
 | 3 | Attributes typed correctly; return values and parameter lists complete | ✅ | `iconix-reviewer.md` check #2 — untyped attributes flagged as "attribute untyped" |
-| 2 | Generate code headers and inspect them | ❌ | Not in kit |
+| 2 | Generate code headers and inspect them | 🚫 | Out-of-scope — IDE/toolchain concern; see README footnote |
 | 1 | Review the test plan for the release | ✅ | `iconix-tester.md` `# Pre-CDR test plan summary` — `test-plan/test-plan-<date>.md` checked at M3 gate |
 
 ---
@@ -327,7 +328,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 6 | Treat requirements as first-class citizens (explicit REQ files) | ✅ | `requirements/REQ-XXX.md` per requirement |
 | 5 | Distinguish between different types of requirements (functional vs. NFR) | ✅ | `iconix.config.yaml` NFR catalog; separate NFR annotation files |
 | 4 | Avoid the "big monolithic document" syndrome | ✅ | One file per REQ/UC/RB/SD/TC |
-| 3 | Create estimates from UC scenarios, not functional requirements | ❌ | No estimation guidance in kit |
+| 3 | Create estimates from UC scenarios, not functional requirements | 🚫 | Out-of-scope — UC-point estimation requires team calibration data; see README footnote |
 | 2 | Don't be afraid of examples in functional requirements | ✅ | `templates/req-template.md` `## Examples` section — optional but encouraged; example + counter-example |
 | 1 | Don't make requirements a technical fashion statement | ✅ | `iconix-product-owner.md` rule 8 — REQs naming frameworks/libraries rejected; rewritten as behaviour/constraint; technology in ADRs |
 
@@ -343,25 +344,29 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.0_
+_Last reviewed: v0.9.3 (post-audit — out-of-scope marker introduced; chapter counts re-verified)_
 
-Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ total items
+Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 
-| Chapter | Topic | ✅ | ⚠️ | ❌ | Coverage |
-|---|---|---|---|---|---|
-| 1 | ICONIX pipeline + milestones | 6 | 0 | 2 | **75%** |
-| 2 | Domain modeling | 10 | 0 | 0 | **100%** |
-| 3 | Use case modeling | 9 | 0 | 1 | **90%** |
-| 4 | Requirements Review (M1) | 7 | 2 | 1 | **80%** |
-| 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | **100%** |
-| 6 | PDR (M2) | 8 | 1 | 1 | **85%** |
-| 7 | Technical architecture | 7 | 1 | 2 | **75%** |
-| 8 | Sequence diagrams | 10 | 0 | 0 | **100%** |
-| 9 | CDR (M3) | 8 | 0 | 2 | **80%** |
-| 10 | Implementation | 9 | 0 | 1 | **90%** |
-| 11 | Code review + model update | 8 | 0 | 2 | **80%** |
-| 12 | Design-driven testing | 8 | 1 | 1 | **85%** |
-| 13 | Requirements traceability | 9 | 0 | 1 | **90%** |
+| Chapter | Topic | ✅ | ⚠️ | ❌ | 🚫 | Coverage |
+|---|---|---|---|---|---|---|
+| 1 | ICONIX pipeline + milestones | 6 | 0 | 0 | 2 | **100%** |
+| 2 | Domain modeling | 10 | 0 | 0 | 0 | **100%** |
+| 3 | Use case modeling | 9 | 0 | 0 | 1 | **100%** |
+| 4 | Requirements Review (M1) | 7 | 1 | 0 | 2 | **94%** |
+| 5 | Robustness analysis (Top 10) | 10 | 0 | 0 | 0 | **100%** |
+| 6 | PDR (M2) | 8 | 1 | 0 | 1 | **94%** |
+| 7 | Technical architecture | 7 | 0 | 3 | 0 | **70%** |
+| 8 | Sequence diagrams | 10 | 0 | 0 | 0 | **100%** |
+| 9 | CDR (M3) | 8 | 0 | 1 | 1 | **89%** |
+| 10 | Implementation | 9 | 0 | 1 | 0 | **90%** |
+| 11 | Code review + model update | 8 | 0 | 2 | 0 | **80%** |
+| 12 | Design-driven testing | 8 | 1 | 1 | 0 | **85%** |
+| 13 | Requirements traceability | 9 | 0 | 0 | 1 | **100%** |
+
+**Notes on count corrections (v0.9.3 audit):**
+- Ch4: prior summary read `7|2|1` — actual is `7|1|2` (one ⚠️, two ❌). After 🚫 reclassification: `7|1|0|2` → 94%.
+- Ch7: prior summary read `7|1|2` — actual is `7|0|3` (no ⚠️, three ❌). Coverage corrects from 75% to 70%; remaining ❌ items (#10 hardware cost, #9 legacy default, #6 unproven tech) are genuine gaps, not out-of-scope.
 
 ---
 

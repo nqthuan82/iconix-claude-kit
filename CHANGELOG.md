@@ -5,6 +5,79 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.3] — 2026-05-08
+
+Two themes: (1) corrects a misattribution of book Ch2 rule #3 ("Draw the
+domain model before writing use cases") — the matrix marked it ✅ because
+the Orchestrator forced PO → Analyst order, but in practice neither agent
+drew an initial domain model from REQs; the Analyst drew the only one
+*after* UC text was already written. v0.9.3 reassigns initial domain-model
+authorship to the Product Owner, as the book intends, and reframes the
+Analyst's role as "refine, not create." (2) post-v0.9.0 audit of the
+process-reference matrix introduces a 🚫 (Out of scope) marker so
+deliberate boundaries (persona research, TDD red-green, storyboards,
+human review meetings, code-header generation, UC-point estimation) stop
+appearing as ❌ gaps and inflating the apparent missing-coverage count.
+
+### Changed
+- `agents/iconix-product-owner.md` — role expanded to own the **initial
+  domain model**; new rule 9 mandates drawing it after REQs and before UC
+  flows (book Ch2 guideline #3); adds `domain-model/domain-model.puml` to
+  the artifact list; adds matching M1 checklist item.
+- `agents/iconix-analyst.md` — role reframed: Analyst now **refines** the
+  domain model started by the PO rather than creating it; step 7 and the
+  artifact-list comment updated accordingly.
+- `agents/iconix-orchestrator.md` — phase 1 description now states the
+  Product Owner produces "REQs, **initial domain model**, UCs, glossary".
+- `iconix-state-machine.puml` — Product Owner state machine now has an
+  explicit `DraftDomainModel` substate between `DraftREQs` and `DraftUCs`,
+  matching the new rule 9 ordering.
+- `examples/write-customer-review/README.md` — project-wide artifacts
+  callout corrected: domain model is "Product Owner drafts; Analyst
+  refines as entities are discovered" (was: "Analyst owns").
+- `README.md` — pipeline diagram adds the **Implementation** phase
+  (Developer + Tester iterate after M3); PO bullet mentions "initial
+  domain model"; templates listing adds `use-case-diagram-template.puml`
+  (already present in `templates/`, was missing from the doc).
+- `CLAUDE.md` — pipeline diagram adds **Implementation** as phase 9,
+  matching the orchestrator and state machine.
+- `docs/iconix/iconix-process-reference.md` — Ch2 rule #3 row rewritten
+  to credit the PO and note the v0.9.3 correction.
+
+### Added
+- `docs/iconix/iconix-process-reference.md` — new `🚫 Out of scope`
+  status marker. Six items reclassified from ❌ to 🚫 because they are
+  deliberate kit boundaries, not gaps:
+  - Ch1: Persona analysis (requires primary user research)
+  - Ch1: TDD red-green-refactor cycle (kit derives TCs from RBs;
+    "test-first thinking" is separately ⚠️ in scope per Ch12 #7)
+  - Ch3 #6 / Ch4 #3: UI storyboards (external tools — Figma, Balsamiq)
+  - Ch4 #2 / Ch6 #4: Human review meetings (kit produces artifacts
+    *for* meetings; doesn't convene them)
+  - Ch9 #2: Generate code headers (IDE/toolchain concern)
+  - Ch13 #3: Estimates from UC scenarios (UC-point estimation needs
+    team calibration data)
+- `docs/iconix/iconix-process-reference.md` — Summary Coverage Matrix
+  now shows a 🚫 column; coverage formula updated to exclude 🚫 from
+  the denominator (out-of-scope items don't penalize coverage).
+- `CLAUDE.md` — new **ICONIX Theory References** section pointing
+  Claude at `docs/iconix/iconix-process-reference.md` (committed) and
+  the gitignored `Use Case Driven Object Modeling with UML.pdf` for
+  resolving methodology questions, with guidance to always read the
+  PDF with the `pages` parameter.
+- `CLAUDE.md` — new **Keeping README and state machine in sync**
+  section instructing Claude to review `README.md` and
+  `iconix-state-machine.puml` whenever a change touches the kit's
+  user-facing surface.
+
+### Fixed
+- `docs/iconix/iconix-process-reference.md` — Summary Coverage Matrix
+  count errors corrected: Ch4 was listed `7|2|1`, actual was `7|1|2`
+  (one ⚠️, two ❌); Ch7 was listed `7|1|2`, actual was `7|0|3`. Ch7
+  coverage corrects from 75% to 70%; remaining ❌ items (#10 hardware
+  cost, #9 legacy default, #6 unproven tech) are genuine gaps, not
+  out-of-scope.
+
 ## [0.9.2] — 2026-05-07
 
 Closes a gap left in v0.9.0: the migration agent now reverse-engineers all

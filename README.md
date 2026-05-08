@@ -33,6 +33,7 @@ iconix-kit/
     ├── iconix.config.yaml
     ├── req-template.md          # atomic requirement
     ├── use-case-template.md
+    ├── use-case-diagram-template.puml   # one PlantUML diagram per UC package
     ├── robustness-template.puml # includes UC scenario text as comment block
     ├── sequence-template.puml   # UC steps as group blocks
     ├── test-case-template.md
@@ -136,7 +137,7 @@ incomplete. It never produces artifacts itself.
           ▼
    [phase detection]
           │
-          ├─► Product Owner    — intake checklist → draft REQs, UCs, glossary
+          ├─► Product Owner    — intake checklist → draft REQs, initial domain model, UCs, glossary
           │        │
           │    [M1 gate] ── Traceability ── validates REQ→UC links; freezes on failure
           │
@@ -154,7 +155,9 @@ incomplete. It never produces artifacts itself.
           │    [M3 gate] ── Traceability ── validates SD→CLS→TC links;
           │                                 checks test-plan exists and is complete
           │
-          └─► (done — all phases complete)
+          ├─► Implementation   — Developer + Tester iterate (build to design, fix drift)
+          │
+          └─► (done — release)
 ```
 
 Traceability runs **at every gate**, not just at the end. If a link is missing or an ID is

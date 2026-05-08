@@ -19,9 +19,10 @@ Idle --> Requirements : raw input\n(BRD / transcript / feature request)
 ' ── Phase 1 : Requirements ─────────────────────────────────────────────
 state "Product Owner" as Requirements <<agent>> {
   [*] --> DraftREQs
-  DraftREQs --> DraftUCs    : REQ-XXX files written
-  DraftUCs  --> M1Checklist : UC two-column flows written
-  M1Checklist --> [*]       : 8-item checklist passed
+  DraftREQs        --> DraftDomainModel : REQ-XXX files written
+  DraftDomainModel --> DraftUCs         : initial domain model drawn\n(real-world entities + is-a/has-a)
+  DraftUCs         --> M1Checklist      : UC two-column flows written
+  M1Checklist      --> [*]              : checklist passed
 }
 
 Requirements --> M1Gate : UCs + REQs ready

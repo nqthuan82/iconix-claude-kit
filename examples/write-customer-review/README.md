@@ -29,7 +29,7 @@ Two artifacts span the whole project rather than belonging to a single phase: th
 
 ```
 project-wide artifacts (continuously updated)
-  ├─► domain-model.example.puml          (Analyst owns; updated when entities are discovered)
+  ├─► domain-model.example.puml          (Product Owner drafts; Analyst refines as entities are discovered)
   └─► use-case-diagram.example.puml      (Product Owner owns; updated when UC roster changes)
 
 per-feature thread for "Write Customer Review"

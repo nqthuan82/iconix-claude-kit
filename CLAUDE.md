@@ -38,10 +38,12 @@ For Windows:
 Agents are not standalone — the Orchestrator enforces phase gates:
 
 ```
-Product Owner → (M1 gate) → Analyst → Architect → (M2 gate) → Developer → Tester → (M3 gate)
+Product Owner → (M1 gate) → Analyst → Architect → (M2 gate) → Developer → Tester → (M3 gate) → Implementation
                                                                       ↑
                                                           Traceability runs at every gate
 ```
+
+Implementation is phase 9 in `iconix-orchestrator.md` — Developer + Tester iterate after M3 to build to the approved design and fix drift surfaced by the Reviewer.
 
 `iconix-orchestrator.md` is the entry point for `/iconix-next`. It never produces artifacts itself — it routes work and enforces that upstream phases are complete before dispatching downstream agents.
 
@@ -64,6 +66,15 @@ The Migration agent has two modes controlled by `knowledge_graph.enabled` in `ic
 - **Enabled:** queries a pre-built Graphify knowledge graph (`graphify-out/graph.json`) for faster extraction, with provenance tracking (`EXTRACTED` / `INFERRED` / `AMBIGUOUS` edge labels)
 
 The `/iconix-graphify` command bootstraps this integration. Other agents are not yet graph-aware (Phase 2 work planned for architect/reviewer/traceability/docs).
+
+## ICONIX Theory References
+
+When reviewing ICONIX artifacts (use cases, robustness diagrams, sequence diagrams, domain models, test cases) or auditing the kit itself for methodology compliance, treat these as the authoritative sources:
+
+- **`docs/iconix/iconix-process-reference.md`** (committed) — coverage matrix mapping every Top 10 list and key rule from Rosenberg & Stephens to the agent/template/command that enforces it, with a ✅/⚠️/❌ status per rule. **Look here first** to find which agent owns a given ICONIX rule and whether it's currently enforced. Use it to detect mismatches between an artifact and the rule it's supposed to satisfy.
+- **`Use Case Driven Object Modeling with UML.pdf`** — Doug Rosenberg & Matt Stephens (Apress, 2007), the canonical ICONIX text. **Gitignored** (copyrighted), so only available on machines where the user has placed it locally. When present, use it as the source of truth for resolving ambiguities the matrix doesn't settle (e.g., subtle robustness-diagram connection rules, exact GRASP application). The file is large — always read with the `pages` parameter for a specific chapter range, never the whole file. If the PDF is not present locally, fall back to the reference matrix and say so explicitly.
+
+When flagging a possible methodology violation (e.g., a robustness diagram with boundary→entity links, a UC missing alternate courses, a sequence diagram with controllers calling boundaries directly), cite the specific rule from the matrix — and quote the relevant passage from the book when available — rather than asserting it from memory.
 
 ## Adding or Modifying Agents/Commands
 
@@ -98,6 +109,17 @@ bash iconix-init --source . --global
 ```
 
 After install: edit `.claude/iconix.config.yaml` to add containers and NFR catalog path, then open Claude Code and run `/iconix-next`.
+
+## Keeping README and state machine in sync
+
+Whenever a change in this conversation touches the kit's user-facing surface — files under `agents/`, `commands/`, `templates/`, the installers (`iconix-init`, `iconix-init.ps1`), `templates/iconix.config.yaml`, the directory layout, or the agent pipeline / milestone gates — review both of these before treating the change as complete:
+
+1. **`README.md`** — confirm it still accurately states the agent count, the command list, installer flags, the directory layout it advertises, and any examples that reference renamed or removed items.
+2. **`iconix-state-machine.puml`** (root) — confirm states, transitions, M1/M2/M3 gates, and agent labels still match the pipeline. If a new agent, gate, or transition was introduced or one was renamed/removed, update the diagram in the same change.
+
+If a mismatch is found, fix it in the same change rather than deferring. Mention in the response which files were updated and why.
+
+This is a CLAUDE.md instruction, so it applies while Claude is actively making or reviewing changes; it does not fire for edits made outside Claude Code. For harness-enforced automation on every file save, a PostToolUse hook in `.claude/settings.json` would be needed.
 
 ## Commit workflow
 
