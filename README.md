@@ -30,6 +30,7 @@ iconix-kit/
 │   ├── iconix-bug.md          # bug triage entry point (Type 1 vs Type 2)
 │   ├── iconix-pr.md           # open phase-appropriate PR (v0.9.5+)
 │   ├── iconix-trace-check.md  # local trace validation, mirrors CI gate (v0.9.5+)
+│   ├── iconix-concurrent.md   # detect class-level conflicts between in-flight UCs (v0.9.6+)
 │   ├── iconix-docs.md
 │   ├── iconix-migrate.md
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
@@ -50,6 +51,7 @@ iconix-kit/
     ├── intake-email-template.md        # email or written request
     ├── intake-feature-request-template.md  # feature request / ticket / user story
     ├── bug-report-template.md          # optional structured input for /iconix-bug
+    ├── concurrent-touch-template.md    # M2-gate concurrent-touch report format (v0.9.6+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -137,6 +139,7 @@ issue is resolved.
 | `/iconix-bug <ref>` | Reviewer (bug-triage mode) | Classify a bug as Type 1 (code defect) or Type 2 (design defect); recommend next step |
 | `/iconix-pr [draft\|ready] [--reviewers ...]` | Git | Open a phase-appropriate PR (M1/M2/M3/Impl) on the configured provider |
 | `/iconix-trace-check [<base>]` | Git | Run the traceability validator locally (same checks as the CI merge-gate) |
+| `/iconix-concurrent [<UC-ID>]` | Traceability (concurrent-touch mode) | Detect class- and container-level conflicts between in-flight UCs at M2 (or any time) |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
@@ -300,6 +303,63 @@ Reviewer (triage → Type 2)
 > **Review checklist:** After each review the Reviewer appends recurring defect patterns
 > to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
 > of the most common drift types, used to front-load future reviews.
+
+### Multi-developer concurrency (v0.9.6+) — concurrent-touch detection at M2
+
+Multiple developers running parallel UCs can quietly converge on the same domain class, controller, or database table — and the conflict only surfaces when their PRs collide at Implementation. The kit shifts that detection left to **M2 / PDR**, when the robustness diagrams already make class references explicit.
+
+**What's checked**, for every pair of in-flight UCs:
+
+| Touch type | Severity | Example |
+|---|---|---|
+| Both write the same domain entity (add operations or attributes) | **HIGH** | UC-017 adds `Bet.place()`; UC-019 adds `Bet.cancel()` |
+| Same-named boundary controller across UCs | **HIGH** | both UCs reference a class named `BetController` |
+| Both write the same DB container | **HIGH** | both UCs add columns to the same database container |
+| One writes, one reads the same entity | **MEDIUM** | UC-019 reads `BetLedger.balance` while UC-017 changes its semantics |
+| Both reference but neither modifies | **LOW** | informational only |
+
+**How "in-flight" is detected** (in priority order):
+
+1. Open `feature/UC-XXX-*` branches (requires v0.9.5 git integration)
+2. Unpromoted DRAFT artifacts in `use-cases/`, `robustness/`, `sequence/`
+3. UCs past M2 with no Implementation PR merged
+
+**The flow:**
+
+```
+M2 entry
+  └─► Traceability — concurrent-touch detection
+        │  produces change-impact/CT-<date>.md
+        │  classifies HIGH / MEDIUM / LOW
+        ▼
+   [HIGH conflicts present?]
+        │ YES                                   │ NO
+        ▼                                       ▼
+   Architect — propose resolutions          M2 promotion proceeds
+   (extract shared service, rename
+    controllers, share migration, etc.)
+        │
+        ▼
+   Resolved or accepted in M2 PR description
+   (mark accepted ones as [CT-ACCEPT-XXX])
+        │
+        ▼
+   Re-run M2 gate
+```
+
+**Configuration** (in `iconix.config.yaml`):
+
+```yaml
+concurrent_check:
+  enabled: true
+  block_on_high_conflict: false   # advisory by default; set true to fail M2 PR builds
+  detect_boundaries: true
+  detect_db_containers: true
+```
+
+**Default is advisory.** The check produces the report and surfaces it in the M2 PR; teams enable blocking after they trust the detector. Run it on demand with `/iconix-concurrent` mid-phase.
+
+**Why this is a kit extension over the canonical text:** Rosenberg's process assumes a small co-located team sharing one whiteboard model. For multi-developer / multi-branch environments, the canonical text doesn't address cross-UC conflict detection. v0.9.6 fills that gap, justified by Ch11 #1 (Model Update at every gate) extended to the multi-dev reality.
 
 ### Git integration (v0.9.5+) — `iconix-git` agent
 

@@ -72,6 +72,23 @@ If the review's recommendation is `BLOCK MERGE` or `REQUEST CHANGES`, also set t
 ## 5. Local trace check
 On `/iconix-trace-check`, run `.ci/validate-traceability.sh origin/<default_branch> HEAD` and surface the result. Same checks as the CI gate, run pre-push.
 
+## 6. In-flight UC detection (helper for Traceability's concurrent-touch check)
+When the Traceability agent runs `# Concurrent touch detection` (manually or at M2 gate), it asks you which UCs are currently in-flight. Compute the answer from git:
+
+1. List remote feature branches: `git branch -r --list 'origin/feature/UC-*'`
+2. For each branch, extract the UC-ID from the branch name (`feature/UC-XXX-<slug>` → `UC-XXX`)
+3. Determine branch age: `git log -1 --format=%cr "origin/feature/UC-XXX-<slug>"`
+4. Determine current phase from the branch's diff against `<default_branch>`:
+   - Touches `requirements/` + `use-cases/` only → M1
+   - + `robustness/` + `container-mapping/` → M2 in progress
+   - + `sequence/` + `test-cases/` → M3 in progress
+   - + `src/` → Implementation
+5. Return the list as: `[(UC-ID, phase, branch-age), ...]`
+
+If `git.provider` is unset or there's no git history, return an empty list and let Traceability fall back to detection by unpromoted DRAFT artifacts.
+
+You don't decide what conflicts exist — that's Traceability's job. You just answer "which UCs are currently active in git?"
+
 # Rules
 - You are read-only on ICONIX artifacts. Never modify UCs, RBs, SDs, code, or tests.
 - You never force-push.

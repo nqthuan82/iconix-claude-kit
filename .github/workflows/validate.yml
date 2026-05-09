@@ -111,6 +111,10 @@ jobs:
           test -f docs/iconix/templates/git-integration/commit-conventions.md || { echo "commit-conventions.md missing"; exit 1; }
           test -f .ci/validate-traceability.sh || { echo ".ci/validate-traceability.sh missing"; exit 1; }
           test -x .ci/validate-traceability.sh || { echo ".ci/validate-traceability.sh not executable"; exit 1; }
+          # v0.9.6: concurrent-touch detection template
+          test -f docs/iconix/templates/concurrent-touch-template.md || { echo "concurrent-touch-template.md missing"; exit 1; }
+          # v0.9.6: concurrent_check section present in seeded config
+          grep -q 'concurrent_check:' iconix.config.yaml || { echo "concurrent_check section missing in iconix.config.yaml"; exit 1; }
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }

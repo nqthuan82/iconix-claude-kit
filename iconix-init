@@ -138,6 +138,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/intake-email-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/concurrent-touch-template.md"             "docs/iconix/templates/" 2>/dev/null || true
 
   # Seed git-integration: branch + commit conventions (always)
   mkdir -p "docs/iconix/templates/git-integration"
@@ -213,6 +214,7 @@ Commands installed:
   /iconix-bug         triage a bug as Type 1 (code) or Type 2 (design)
   /iconix-pr          open a phase-appropriate PR (GitHub / Azure DevOps)
   /iconix-trace-check run the traceability validator locally
+  /iconix-concurrent  detect class-level conflicts between in-flight UCs (M2)
   /iconix-docs        generate user/dev/api docs
   /iconix-migrate     reverse-engineer from existing code
   /iconix-graphify    bootstrap Graphify integration (optional, for migration)

@@ -115,6 +115,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\intake-email-template.md")           "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\intake-feature-request-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\bug-report-template.md")              "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\concurrent-touch-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
 
         # Git integration — branch + commit conventions (always)
         New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null

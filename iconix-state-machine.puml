@@ -48,8 +48,12 @@ PrelimDesign --> M2Gate : RBs + domain model\n+ container mapping done
 
 ' ── Gate M2 ────────────────────────────────────────────────────────────
 state "M2 Gate / PDR\n(Traceability)" as M2Gate <<gate>>
-M2Gate --> PrelimDesign : [RB rule violations\nor UC→RB links invalid]
-M2Gate --> CDRPhase     : [M2 passed — all RBs valid]
+state "Concurrent-touch\nresolution\n(Architect)" as ConcurrentResolve <<change>>
+
+M2Gate --> PrelimDesign      : [RB rule violations\nor UC→RB links invalid]
+M2Gate --> ConcurrentResolve : [HIGH concurrent-touch\nconflicts detected\n(write/write, controller\ncollision, DB write/write)]
+M2Gate --> CDRPhase          : [M2 passed — all RBs valid\n+ no HIGH conflicts\n(or accepted)]
+ConcurrentResolve --> M2Gate : ADRs + UC/RB updates\nlanded; re-run gate
 
 ' ── Phase 3 : Detailed Design + Testing (Developer ∥ Tester) ───────────
 state "CDR Phase" as CDRPhase {

@@ -37,6 +37,15 @@ milestones:
   require_rule_validation: true
   max_revisions_per_artifact: 3   # anti-analysis-paralysis guardrail
 
+# Concurrent-touch detection at M2 (added v0.9.6)
+# Surfaces class- and container-level conflicts between in-flight UCs
+# before they become merge conflicts at Implementation.
+concurrent_check:
+  enabled: true
+  block_on_high_conflict: false   # advisory by default; true to fail M2 PR builds on HIGH conflicts
+  detect_boundaries: true         # check for same-named controllers across UCs
+  detect_db_containers: true      # check for two UCs writing the same DB container
+
 # Git integration (optional, used by iconix-git in v0.9.5+)
 # See docs/iconix/templates/git-integration/ for the full reference.
 git:

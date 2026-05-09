@@ -5,6 +5,102 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.6] — 2026-05-09
+
+Closes the second-largest gap from the v0.9.4 kit assessment: **multi-
+developer concurrency upfront detection**. Until now, two devs working
+on UCs that quietly converged on the same domain class (or controller,
+or DB table) only discovered the conflict when the Reviewer ran post-
+implementation drift detection. v0.9.6 shifts that detection left to
+**M2 / PDR**, when the robustness diagrams already make class
+references explicit. Advisory by default — teams enable CI blocking
+after they trust the detector.
+
+This is honestly a **kit extension** over the canonical ICONIX text.
+The book assumes a small co-located team sharing one whiteboard model;
+it doesn't address cross-UC conflict detection (verified via grep of
+the PDF: "concurrent" appears only in unrelated contexts). v0.9.6 fills
+that gap, justified by Ch11 #1 (Model Update at every gate) extended
+to the multi-dev reality. The matrix marks this clearly as a kit
+extension rather than misclaiming book coverage.
+
+### Added
+- `commands/iconix-concurrent.md` — new slash command. Standalone
+  invocation of the concurrent-touch detection (the same routine also
+  runs automatically at M2 gate). Accepts an optional UC-ID to filter
+  the report to conflicts involving that UC.
+- `templates/concurrent-touch-template.md` — report format. Sections:
+  detection scope, in-flight UCs, class-touch matrix, per-conflict
+  detail with severity (HIGH / MEDIUM / LOW) and recommended
+  resolutions, configuration echo, traceability footer. Installer
+  copies it to `docs/iconix/templates/`; CI smoke test asserts it
+  exists.
+- `templates/iconix.config.yaml` — new `concurrent_check:` section:
+  `enabled` (default true), `block_on_high_conflict` (default false —
+  advisory), `detect_boundaries` (default true), `detect_db_containers`
+  (default true).
+
+### Changed
+- `agents/iconix-traceability.md` — new section **Concurrent touch
+  detection**. Six-step routine: read config → identify in-flight UCs
+  via `git branch -r --list 'origin/feature/UC-*'` (or DRAFT artifacts
+  as fallback) → build class-touch maps from RBs and class model →
+  detect conflicts pairwise → recommend resolutions → render report.
+  Integrated into the M2 gate report.
+- `agents/iconix-architect.md` — new section **Resolving concurrent
+  touches**. Architect is the canonical resolver for HIGH conflicts,
+  proposing options (extract shared service, rename controllers, share
+  migration, etc.) but never unilaterally rewriting UCs/RBs. PDR
+  readiness checklist gains a concurrent-touch review item.
+- `agents/iconix-orchestrator.md` — phase 5 (M2 gate) now explicitly
+  includes concurrent-touch detection; HIGH conflicts route back to
+  Architect before M2 promotion. New routing heuristic for
+  `/iconix-concurrent`.
+- `agents/iconix-git.md` — new section **In-flight UC detection** as a
+  helper for Traceability's concurrent-touch check. Returns the list
+  of `(UC-ID, phase, branch-age)` tuples from open feature branches.
+  Falls back to empty list when no git context is available.
+- `iconix-state-machine.puml` — M2 gate now branches to a new
+  `Concurrent-touch resolution (Architect)` state on HIGH conflicts;
+  loops back to the gate after resolution.
+- `templates/git-integration/github/PULL_REQUEST_TEMPLATE/m2.md` and
+  `templates/git-integration/azure-devops/pull_request_templates/m2.md`
+  — both M2 PR templates gain a checklist item for concurrent-touch
+  review with `[CT-ACCEPT-XXX]` markers for explicitly-accepted
+  conflicts.
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy `concurrent-touch-template.md` to
+  `docs/iconix/templates/`. Bash "Next steps" output mentions
+  `/iconix-concurrent`.
+- `README.md` — `iconix-concurrent.md` added to the commands listing;
+  `concurrent-touch-template.md` added to the templates listing; new
+  full **Multi-developer concurrency** section explaining detection
+  scope, the M2 → Traceability → Architect flow, and configuration.
+- `docs/iconix/iconix-process-reference.md` — new row in the Drift-
+  detection sub-table for "Concurrent class touches across in-flight
+  UCs" marked ✅ with explicit "kit extension" framing. "Last reviewed"
+  bumped to v0.9.6 with rationale citing the book grep that confirmed
+  no canonical coverage.
+- `.github/workflows/validate.yml` — smoke test asserts
+  `concurrent-touch-template.md` exists and the seeded
+  `iconix.config.yaml` contains the `concurrent_check:` section.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- **Cited rules:** Ch11 #1 (Model Update at every gate) — concurrent-
+  touch detection extends the model-update concept across UCs at M2.
+  Ch6 PDR readiness — gains a new technical check, no shift to
+  existing rule statuses.
+- **Book verification:** grep of the PDF for "concurrent / parallel
+  develop / multi-dev / merge conflict / shared class" returned only
+  unrelated hits (transaction throughput in REQ wording, concurrent
+  activities in activity diagrams). Confirmed: this is a kit
+  extension, not a re-derivation of an existing rule.
+- **Status shifts:** new row added to the Drift-detection sub-table.
+  Marked ✅ for the new check itself, with explicit "kit extension"
+  framing in the kit-location cell so future audits aren't misled
+  about book coverage.
+- **No contradictions found.**
+
 ## [0.9.5] — 2026-05-09
 
 Closes the largest gap identified in the v0.9.4-session kit assessment:

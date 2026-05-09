@@ -274,6 +274,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | Code does not match NFRs | ✅ | Reviewer |
 | SD does not match UC text | ✅ | Reviewer |
 | Bug type classification (Type 1 vs Type 2) | ✅ | `iconix-reviewer.md` `# Bug triage`; `/iconix-bug <ref>` direct entry point (added v0.9.4) |
+| Concurrent class touches across in-flight UCs (kit extension) | ✅ | `iconix-traceability.md` `# Concurrent touch detection`; `/iconix-concurrent` (added v0.9.6); `iconix-architect.md` `# Resolving concurrent touches` is the resolver. **Not in book Top 10s** — kit extension justified by Ch11 #1 (Model Update at every gate) extended to multi-dev contexts the canonical 2-author/whiteboard model doesn't address |
 
 ---
 
@@ -344,7 +345,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.5 (Git integration — `iconix-git` agent + `/iconix-pr` + `/iconix-trace-check` + GitHub/Azure DevOps adapters; Ch11 #5 kit-location updated to cite Reviewer-as-PR-bot; no status shifts — git/PR is a tooling integration over existing methodology, not new rules. Out-of-scope items unchanged: human review meeting remains 🚫 — a PR comment thread is async/asynchronous, not the in-person whiteboard session the book describes.)_
+_Last reviewed: v0.9.6 (Concurrent-touch detection at M2 — kit extension over the canonical text; new row in Drift-detection sub-table for "Concurrent class touches across in-flight UCs"; honestly marked as not addressed by book Top 10s, justified by Ch11 #1 (Model Update at every gate) extended to multi-dev contexts. Confirmed via grep of the PDF that "concurrent" appears only in unrelated contexts (transaction throughput in REQ wording; concurrent activities in activity diagrams). v0.9.5 entries unchanged.)_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 

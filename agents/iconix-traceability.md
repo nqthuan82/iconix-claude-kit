@@ -51,6 +51,80 @@ When asked "what breaks if REQ-042 changes?":
 3. For each CLS touched by those SDs, find all other UCs that share the class
 4. Produce a graph and a flat list, ordered by blast radius
 
+# Concurrent touch detection
+Runs automatically at every M2 gate, and on demand via `/iconix-concurrent`. Surfaces class- and container-level conflicts between in-flight UCs *before* they manifest as merge conflicts at Implementation. This is a **kit extension** beyond the canonical ICONIX text — Rosenberg's process assumes a small team sharing one model on a whiteboard; for multi-developer teams running parallel UCs, this check fills the gap.
+
+## Reading the configuration
+Read `iconix.config.yaml` `concurrent_check:` section. Defaults if missing:
+```yaml
+concurrent_check:
+  enabled: true
+  block_on_high_conflict: false   # advisory by default
+  detect_boundaries: true
+  detect_db_containers: true
+```
+
+## Step 1 — Identify in-flight UCs
+In priority order:
+1. Open feature branches: `git branch -r --list 'origin/feature/UC-*'` (from v0.9.5 git integration; only when `git.provider` is set)
+2. Unpromoted DRAFT artifacts in `use-cases/`, `robustness/`, `sequence/`
+3. UCs that have passed M2 but have no Implementation PR merged (look for `milestone-reports/M2-*.md` mentioning the UC, then check `git log` for any `[UC-XXX] Impl:` commit on `main`)
+
+For each, record the UC-ID, current phase (M1/M2/M3/Impl), and branch age (days since first commit on the feature branch, or days since the DRAFT was created).
+
+If only one in-flight UC: stop. No concurrent touches possible.
+
+## Step 2 — Build the class-touch map
+For each in-flight UC:
+1. Parse `robustness/RB-<UC>-<slug>.puml` — extract every class name, classified by stereotype:
+   - `<<boundary>>` → boundary controller
+   - `<<entity>>` → domain entity
+   - (no stereotype) → controller
+2. Parse `class-model/class-model.puml` (or per-UC entries):
+   - For each class touched by the UC, list operations and attributes added by this UC vs already-present on `main`
+   - "added" → **W** (write); "referenced but not modified" → **R** (read)
+3. If `detect_db_containers: true`, parse `container-mapping/<UC>-mapping.md`:
+   - Extract DB containers the UC writes to (lookup via container `type: database` or `kind: db` markers)
+   - Mark each DB container as **W** if any UC step writes to it
+
+## Step 3 — Detect conflicts
+For each pair of in-flight UCs `(A, B)`:
+1. Set intersection of their class-touch maps
+2. For each shared class `C`, classify severity:
+   - Both **W** → **HIGH** (CONFLICT) — write/write conflict
+   - **W**/**R** mix → **MEDIUM** (NOTE) — read/write coordination needed
+   - Both **R** → **LOW** (INFO) — informational only
+3. If `detect_boundaries: true`: same-named boundary controller across UCs → **HIGH** (CONFLICT) — likely same physical class with collision
+4. For DB containers (when `detect_db_containers: true`): both UCs write the same DB container → **HIGH** (CONFLICT) — schema/migration conflict; recommend coordinating migrations
+
+## Step 4 — Recommend resolutions
+For each HIGH conflict, produce 2–3 concrete options. Examples:
+- **Entity write/write**: extract a service class aggregating both operations; UCs depend on the service. OR: split the entity into two classes if responsibilities are distinct. OR: land one UC first via `arch/<scope>` branch; the other rebases.
+- **Controller name collision**: rename to disambiguate (`PlaceBetController` + `CancelBetController`) OR consolidate into one controller with multiple endpoints.
+- **DB container write/write**: share a single migration; coordinate via `arch/<scope>`; document in an ADR.
+
+You produce options, not the final decision — the Architect agent is the canonical resolver.
+
+## Step 5 — Render the report
+Use `templates/concurrent-touch-template.md` (or `docs/iconix/templates/concurrent-touch-template.md` after install). Save as `change-impact/CT-<today>.md`.
+
+If `$ARGUMENTS` is a UC-ID (`/iconix-concurrent UC-017`), filter to conflicts involving that UC.
+
+## Step 6 — Exit semantics (when invoked from CI)
+- `block_on_high_conflict: false` → always exit 0; report findings only
+- `block_on_high_conflict: true` → exit non-zero if any HIGH conflict exists, so the M2 PR build fails
+
+## Integration into the M2 gate report
+When you produce the M2 milestone report (`milestone-reports/M2-<date>.md`), append a section:
+```
+## Concurrent touches
+See change-impact/CT-<today>.md
+- HIGH: <count>
+- MEDIUM: <count>
+- LOW: <count>
+```
+If any HIGH exist, M2 readiness is `NOT READY` regardless of other checks (unless the team has explicitly accepted the risk in the PR description, documented as `[CT-ACCEPT-XXX]`).
+
 # Milestone gate report format
 ```
 # Milestone <N> Readiness — <Date>
