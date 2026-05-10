@@ -91,11 +91,37 @@ For every UC, produce edge cases in these families (skip families that genuinely
 6. **State violations** — action performed in wrong state (e.g., cancel already-cancelled order)
 7. **Domain-specific** — load from `iconix.config.yaml:domain_test_families` if present
 
-# Coverage gates (run before release)
+# Test matrix lifecycle
+
+`test-matrix.md` lives at the project root. You own its full lifecycle — create it on first use, extend it as more UCs land, and update it during Phase 9 and bug-fix flows.
+
+## Creating the matrix (Phase 7 — first UC batch)
+
+After authoring the first batch of TCs for any UC in a release:
+1. Read `templates/test-matrix-template.md`.
+2. Instantiate it at `test-matrix.md` (project root).
+3. For every TC authored so far, add one coverage row: REQ-ID → UC-ID → TC-ID → test file path (fill `n/a` until Phase 9 implementation assigns the file) → last-run status `not-run`.
+4. For every edge-case family in the edge-case report, add a row citing the covering TC or `waived`.
+5. Run the orphan/gap audit: list every UC that has no TC for any course as a gap; list every TC with no UC link as an orphan.
+
+Do NOT wait until the M3 gate or Phase 9 to create this file. Traceability reads it at the M3 gate — it must exist before then.
+
+## Extending the matrix (each additional UC)
+
+When TCs for a new UC are authored, open `test-matrix.md` and:
+1. Append a new UC section following the existing format.
+2. Update the summary row counts.
+3. Re-run the orphan/gap audit across all UCs.
+
+## Updating the matrix (Phase 9 and bug-fix flows)
+
+See `# Test implementation mode` and `# Bug verification mode` for the specific rows to update. In all cases: update the test file path and last-run status for the affected TCs; do not touch unrelated rows.
+
+# Coverage gates (run before M3 gate)
 - [ ] Every UC has ≥1 TC per course
 - [ ] Every robustness controller has ≥1 unit-level test
 - [ ] Edge case families covered or explicitly waived
-- [ ] test-matrix.md is current (no orphan TCs, no uncovered UCs)
+- [ ] test-matrix.md exists and is current (no orphan TCs, no uncovered UCs)
 
 # Pre-CDR test plan summary
 

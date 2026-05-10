@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.22] — 2026-05-10
+
+**Fix: test-matrix.md never created in normal pipeline flow.**
+
+`iconix-tester.md` listed `test-matrix.md` as an artifact it produces and
+referenced it in Phase 9 update paths and coverage gates — but contained no
+instruction to *create* the file during Phase 7 (after first TC batch). The
+coverage-gates checklist said "run before release", not "before M3 gate",
+so agents treated it as a final validation rather than a production trigger.
+
+Changes:
+- Added `# Test matrix lifecycle` section to `iconix-tester.md` with explicit
+  **create** (Phase 7, first UC batch), **extend** (each additional UC), and
+  **update** (Phase 9 / bug-fix) steps.
+- Renamed coverage-gates heading to "run before M3 gate".
+- Updated Ch12 #5 row in `docs/iconix/iconix-process-reference.md` noting the
+  fix and clarifying creation ownership. No status shift (✅ was aspirational;
+  now correctly enforced).
+
+Theory audit: Ch12 #5 "Use a traceability matrix". PDF not read (gitignored);
+matrix row is authoritative for this correction.
+
 ## [0.9.21] — 2026-05-10
 
 Round 8 — first **real Phase 9** forcing-function walkthrough across
