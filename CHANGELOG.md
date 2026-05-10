@@ -5,6 +5,111 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.13] — 2026-05-10
+
+Round 2 forcing-function fixes (M2 Analyst phase). We continued
+the WCR run from v0.9.10/v0.9.11 into M2, walking the Analyst
+agent prompt mentally against the example RB-001. Eight gaps
+surfaced, all in the Analyst's prompt and the robustness template.
+
+Eight fixes:
+
+  M2-#1 UI sub-elements (buttons, fields, dropdowns) are NOT
+        boundaries. The agent's `# Boundary object naming` rule now
+        says so explicitly. Naive runs would have produced
+        `boundary "Send button"` for every UI control mentioned.
+
+  M2-#2 `Display X page` and `Load X entity` are SEPARATE
+        controllers. The prior `# Display controllers` section
+        conflated them. Renamed to `# Display vs data-fetch
+        controllers` with explicit guidance: when the UC has "load
+        then display", produce two controllers, connected.
+
+  M2-#3 Robustness template's comment-block format mismatched the
+        canonical example. Template had `User: <action>` /
+        `System: <response>` literal labels; example uses concrete
+        actor names. Aligned template to the example pattern.
+
+  M2-#4 Robustness template shipped with `actor User as U`
+        (generic). The kit's PO rule explicitly forbids generic
+        actor names. Replaced with `actor "<Actor name from UC>"
+        as Actor` placeholder.
+
+  M2-#5 Robustness template used !define BOUNDARY()/ENTITY()/
+        CONTROLLER() macros; example uses native PlantUML keywords
+        (`boundary`, `entity`, `control`). Templates and examples
+        now match — both use native keywords. Cleaner, more
+        idiomatic, easier to read raw.
+
+  M2-#6 Agent prompt and example disagreed on invoked-UC
+        representation. Prompt: "use a usecase node, not a
+        controller." Example: `control "Invoke Login"`. **Example
+        violates the rule.** v0.9.13 keeps the rule (methodology-
+        correct: use cases at this level are the thing being
+        invoked, not implementation controllers) and adds rationale
+        + a concrete PlantUML snippet. The example will surface as
+        a Layer-D finding when /iconix-upgrade is run on it; an
+        example refresh is deferred.
+
+  M2-#7 Analyst's domain-model rule 5 said "Time-box the INITIAL
+        domain model to ~2 hours." But since v0.9.3, the PO owns
+        the initial draft. The Analyst REFINES. Reworded to
+        "refinement at M2" with explicit reference to PO rule 9.
+
+  M2-#8 Analyst's PDR readiness checklist had no item to validate
+        v0.9.11's PO rule 12 mirror (Invokes: Traceability field
+        ↔ usecase nodes on the RB). Added the mirror check; cited
+        Traceability check #14 as the gate enforcer.
+
+Methodology audit per CLAUDE.md: methodology-surface change
+(Analyst rules + RB template). All cited rules already ✅;
+v0.9.13 enriches kit-location citations. No status shifts.
+Cited Ch5 #5 (RB syntax), Ch5 #1 (no GUI on domain model),
+Ch6 #2 (no detailed design on RB).
+
+### Changed
+- `agents/iconix-analyst.md`:
+  - `# Boundary object naming` adds the UI-sub-element exclusion
+    rule (M2-#1)
+  - `# Display controllers` renamed to `# Display vs data-fetch
+    controllers` with the separate-controllers rule (M2-#2)
+  - `# Invoked use cases on robustness diagrams` rewritten with
+    a "why not a controller" rationale + native PlantUML example
+    snippet (M2-#6)
+  - `# Domain model rules` rule 5 reworded — "initial" → "refinement
+    at M2"; references PO rule 9 explicitly (M2-#7)
+  - `# PDR readiness check` gains three items: UI-sub-element
+    check (M2-#1), human-verification note on the every-sentence-
+    maps-to-element check, and Invokes-mirror check (M2-#8)
+- `templates/robustness-template.puml` — full rewrite:
+  - Comment block format aligned to example (no User:/System:
+    label prefix; concrete actor names) (M2-#3)
+  - `actor User as U` replaced by `<Actor name from UC>` placeholder
+    (M2-#4)
+  - !define macros removed; native `boundary`, `entity`, `control`,
+    `usecase` keywords used throughout (M2-#5)
+  - Header comment block adds notes referencing the agent's three
+    new rules (UI sub-elements, invoked-UC representation, Display
+    vs Load)
+  - Example wiring shows the `usecase` node pattern for invoked UCs
+    (M2-#6)
+  - Layout defaults (`left to right direction`, `skinparam
+    shadowing false`, `skinparam ArrowColor`) added — match the
+    example's defaults
+  - **PlantUML rendering hardening** (caught at preview time):
+    arrow labels use `[bracket]` placeholders instead of
+    `<angle-bracket>` (PlantUML interprets unquoted `<...>` in
+    arrow labels as HTML/creole markup, which broke preview);
+    `note bottom` block uses literal `PREFIX-UC-XXX` instead of
+    `<PREFIX>-UC-XXX` (notes accept HTML markup, so unclosed
+    `<PREFIX>` tags broke rendering); inline `' comment` after
+    `as ALIAS` declarations moved to separate lines (mid-line
+    comments were unreliable). Template header now documents the
+    placeholder conventions explicitly so future template
+    additions don't repeat the mistake.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.13 with the M2-Analyst audit summary
+
 ## [0.9.12] — 2026-05-10
 
 The v0.9.9 dogfood test we owed. We pointed `/iconix-upgrade

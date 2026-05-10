@@ -1,62 +1,108 @@
 @startuml RB-XXX
 ' ============================================================
 ' UC-XXX: <Use Case Title>
+' Source: derived directly from UC-XXX use case text.
+' Each numbered controller below corresponds to a sentence
+' (or step) in the use case and will become a message on the
+' sequence diagram and a test case in the test plan.
 '
-' Basic Course:
-'   Step 1 | User: <user action>
-'           | System: <system response>
-'   Step 2 | User: <user action>
-'           | System: <system response>
+' Basic Course (mirror UC-XXX):
+'   1 | <Actor name from UC> <action verb>
+'     | System <response verb>
+'   2 | <Actor name from UC> <action verb>
+'     | System <response verb>
 '
 ' Alternate Course A: <name>
-'   A1 | User: <user action>
-'      | System: <system response>
+'   A1 | <deviation user action>
+'      | <deviation system response>
 '
 ' Alternate Course B: <name>
-'   B1 | User: <user action>
-'      | System: <system response>
+'   B1 | <deviation user action>
+'      | <deviation system response>
 ' ============================================================
 ' ICONIX connection rules:
-'   Actor <-> Boundary           OK
-'   Boundary <-> Controller      OK
-'   Controller <-> Controller    OK
-'   Controller <-> Entity        OK
+'   Actor      <-> Boundary             OK
+'   Boundary   <-> Controller           OK
+'   Controller <-> Controller           OK
+'   Controller <-> Entity               OK
 ' FORBIDDEN:
-'   Actor -> Controller/Entity   (must go via Boundary)
-'   Boundary -> Boundary         (must go via Controller)
-'   Boundary -> Entity           (must go via Controller)
-'   Entity -> Entity             (must go via Controller)
+'   Actor      -> Controller / Entity   (must go via Boundary)
+'   Boundary   -> Boundary              (must go via Controller)
+'   Boundary   -> Entity                (must go via Controller)
+'   Entity     -> Entity                (must go via Controller)
+'
+' NOTES:
+' - UI sub-elements (buttons, fields, dropdowns, menu items) are
+'   NOT boundaries -- only screens / pages / dialogs / API surfaces are.
+' - Invoked UCs use a `usecase` node, NOT a `control`. See
+'   `agents/iconix-analyst.md` `# Invoked use cases on robustness diagrams`.
+' - Display vs Load: separate controllers when both happen. See
+'   `agents/iconix-analyst.md` `# Display vs data-fetch controllers`.
+'
+' PLANTUML PLACEHOLDER NOTES:
+' - Quoted element labels (between "...") render as literal text on the
+'   diagram, including any < > characters inside. Replace them with the
+'   real names from your UC.
+' - Arrow labels (after the colon) MUST be plain text without < > -- bare
+'   angle brackets there break PlantUML rendering. The placeholder labels
+'   below use square brackets [like this] -- replace with real text.
 ' ============================================================
 
-skinparam actor {
-  BackgroundColor #FFFFFF
-}
+left to right direction
+skinparam shadowing false
+skinparam ArrowColor #444444
 
-!define BOUNDARY(x) entity "x" as x <<boundary>>
-!define ENTITY(x) entity "x" as x <<entity>>
-!define CONTROLLER(x) entity "x" as x <<controller>>
+' --- Actors (use the actor names from the UC; no generic "User") ---
+actor "<Actor name from UC>"   as Actor1
+' actor "<Secondary actor>"    as Actor2
 
-actor User as U
+' --- Boundaries (named screens / pages / API surfaces from the UC) ---
+' UI sub-elements (buttons, fields) are NOT boundaries -- only the parent page is.
+boundary "<Page name>"          as PageA
+' boundary "<Other page>"       as PageB
 
-' Basic course elements
-BOUNDARY(ScreenName)
-CONTROLLER(DoSomething)
-ENTITY(DomainClass)
+' --- Entities (domain objects from the UC; refined from domain model) ---
+entity "<DomainClass>"          as Ent1
+' entity "<OtherDomainClass>"   as Ent2
 
-U --> ScreenName
-ScreenName --> DoSomething
-DoSomething --> DomainClass
+' --- Invoked use cases (when this UC's flow invokes another UC). ---
+' usecase nodes, NOT controllers. See agent rule.
+' usecase "<Other UC Title>"    as OtherUC
 
-' Alternate course elements (shaded)
-CONTROLLER(HandleError) #Pink
-DoSomething --> HandleError
-HandleError --> ScreenName
+' --- Controllers (one per logical system step in the UC) ---
+control "<Verb-led action>"     as Step1
+' Display step: presents a screen
+control "Display <Page>"        as DisplayPage
+' Separate fetch step when display + fetch are distinct
+control "Load <Entity>"         as LoadData
+
+' --- Alternate-course controllers (highlighted pink for visual contrast) ---
+control "<Error / branch action>"   as AltStep1   #Pink
+
+' -- Basic course wiring --
+Actor1      --> PageA          : [action label]
+PageA       --> Step1
+Step1       --> Ent1           : [data passed]
+Step1       --> DisplayPage
+DisplayPage --> PageA
+
+' -- Alternate course wiring --
+Step1       --> AltStep1       : [branch condition]
+AltStep1    --> PageA          : [recovery]
+
+' -- Invoked use case (example -- delete if not applicable) --
+' Step1     --> OtherUC        : [when invoked]
+' OtherUC   --> Step1          : [after returning]
 
 note bottom
   Traceability:
-  - UC: UC-XXX
-  - Downstream RB: (this file)
-  - Sequence diagram: (filled by Developer)
+    UC: PREFIX-UC-XXX
+    Upstream REQ(s): PREFIX-REQ-XXX
+    Sequence diagram: PREFIX-SD-XXX (filled by Developer)
+    Test cases: (filled by Tester)
+
+    Replace PREFIX with the project prefix from iconix.config.yaml
+    (e.g., BS-UC-001 for the Internet Bookstore worked example).
 end note
 
 @enduml

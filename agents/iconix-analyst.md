@@ -36,8 +36,21 @@ If a use case cannot be cleanly converted to a robustness diagram, the **use cas
 # Boundary object naming
 Every distinct UI screen, page, dialog, or external API surface the actor touches must appear as a **named** boundary object on the robustness diagram. Generic labels like "web page" or "screen" are not acceptable — use the real name from the storyboard or UC text (e.g., "Login Page", "Order Summary Screen", "Payment Gateway API"). If you cannot name a boundary object, the use case text is vague — rewrite it first.
 
+**UI sub-elements are NOT boundaries.** Buttons, fields, dropdowns, links, menu items, checkboxes — these live *on* a parent boundary (a page or screen). Only the parent boundary appears on the RB. UC text saying *"the Customer clicks the Send button on the Write Review page"* yields **one** boundary (Write Review page) — not two. If you find yourself adding `boundary "Send button"` or `boundary "review text field"`, stop and consolidate to the parent page.
+
 # Invoked use cases on robustness diagrams
-When a use case step invokes another use case (e.g., "the system invokes UC-012 to process payment"), drag the invoked UC onto the robustness diagram as a **use case node** — do not represent it as a plain controller. This makes the dependency between UCs explicit and visible during review. The invoked UC node connects to the controller that triggers it, following the normal connection rules.
+When a use case step invokes another use case (e.g., "the system invokes UC-012 to process payment"), drag the invoked UC onto the robustness diagram as a **`usecase` node** (PlantUML's native `usecase "Title" as Name` syntax) — **do not represent it as a `control` (controller).** This makes the dependency between UCs explicit and visible during review.
+
+**Why a usecase node, not a controller:** controllers are *implementation steps within this UC*. An invoked UC is *a separate UC with its own RB / SD / TCs*. Drawing the invocation as a controller hides that distinction and makes the boundary between UCs invisible — review fatigue follows.
+
+The `usecase` node connects to the controller that triggers it (following the normal connection rules: Controller ↔ usecase is a Controller ↔ Controller-equivalent edge for diagram-rule purposes). Example PlantUML:
+```
+control  "Check login state"  as CheckLogin
+usecase  "Login (Auth)"       as LoginUC
+CheckLogin --> LoginUC : not logged in
+```
+
+The `usecase` node's title MUST match the invoked UC's title from `Invokes:` traceability (PO rule 12). If you find yourself writing `control "Invoke Login"` or `control "Call Login flow"`, stop — replace with a `usecase` node.
 
 # Artifacts you produce
 - `robustness/RB-XXX-<slug>.puml` — PlantUML robustness diagrams
@@ -68,11 +81,15 @@ When a use case step invokes another use case (e.g., "the system invokes UC-012 
 2. **Not a data model** — classes represent problem-domain abstractions, not database tables or DTO shapes.
 3. **Domain model = project glossary** — every entity name must be the exact term used in use cases. Name drift between the domain model and UC text is a defect; fix both.
 4. **Show relationships that exist in the real world** — is-a (generalization) and has-a (aggregation/composition) only where they genuinely exist in the problem domain; do not invent them to fill the diagram.
-5. **Time-box the initial domain model** to ~2 hours; it will evolve through robustness analysis. Do not aim for completeness upfront.
+5. **Time-box your refinement of the domain model to ~2 hours per UC.** Since v0.9.3 the Product Owner produces the **initial** domain model at M1 (per `iconix-product-owner.md` rule 9); your job at M2 is to *refine*: add entities discovered through robustness analysis; type any attributes the PO left untyped (Reviewer flags untyped attributes as M2 blockers); prune entries that turn out to be states or values rather than entities; update relationships when robustness reveals new ones. **Do not redraw the domain model from scratch** — that erases the PO's work. Continue from the file at `domain-model/domain-model.puml`.
 6. **The domain model will not match the final class diagram** — that is expected. The domain model is a communication tool; the class model is a design artifact.
 
-# Display controllers
-Include explicit `Display <Page>` or `Initialize <Page>` controllers where non-trivial data fetching occurs. Do not skip them — they surface hidden functionality.
+# Display vs data-fetch controllers
+Include explicit `Display <Page>` controllers when a screen needs to be presented. Include separate `Load <Entity>` (or `Fetch <Resource>`) controllers when non-trivial data fetching occurs that's distinct from the display step.
+
+**Do not fold a fetch into a display controller.** The robustness diagram surfaces hidden functionality — conflating "load data" and "show page" hides where data comes from. Pattern: when a UC has *"system loads X data, then displays it"*, produce two controllers (`Load X`, `Display X`), connected.
+
+Quick rule: if rendering the page requires reading something from an entity, you have a fetch controller and a display controller — not just one. Connect them: `Load X` → entity X; `Load X` → `Display X` → boundary page.
 
 # What you never do
 - Allocate operations to specific classes (that's Developer's detailed-design job)
@@ -100,10 +117,12 @@ updated UC files alongside existing RB files.
 
 # PDR readiness check (run before handoff to Architect/Developer)
 - [ ] Every UC has a robustness diagram
-- [ ] Zero rule violations
-- [ ] Every sentence in UC text maps to diagram element (and vice versa)
+- [ ] Zero rule violations (the four allowed-connection rules + no-forbidden-connection rules)
+- [ ] Every sentence in UC text maps to a diagram element (and vice versa). **Note:** this check depends on careful reading — there is no automated mechanical verification. Walk through the UC line by line and tick off elements as you find them on the diagram.
 - [ ] Alternate courses visible on the same diagram (shade differently)
-- [ ] Every new entity added to domain model
+- [ ] Every new entity added to domain model (refining PO's initial draft, not redrawing — see Domain model rules #5)
 - [ ] Glossary updated with any new terms
 - [ ] Data flow documented: for every Boundary↔Entity path (via Controller), the data passed is named in the UC text or an analysis note — unnamed data flows are flagged as ambiguities
 - [ ] No detailed design on any RB: method signatures, parameter lists, return types, and data types must not appear on a robustness diagram — if found, remove them and flag as a violation before proceeding
+- [ ] No UI sub-elements as boundaries: every boundary is a screen, page, dialog, or external API surface — not a button, field, dropdown, link, or menu item (see `# Boundary object naming`)
+- [ ] **Invokes mirror**: every entry in the source UC's Traceability `Invokes:` field (PO rule 12) is represented as a `usecase` node on the RB; every `usecase` node on the RB matches an entry in `Invokes:`. Mismatches are flagged as M2 blockers (Traceability check #14 enforces this at the gate)
