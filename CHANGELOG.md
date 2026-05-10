@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.23] — 2026-05-10
+
+**Fix: phase9-cycles/UC-XXX-cycle.md never created in normal pipeline flow.**
+
+`iconix-orchestrator.md` Phase 9 routing had the cycle log referenced only
+as `Optional: append final entry … if the team uses cycle logs` at 9.4. No
+sub-state created the file, no sub-state appended iteration rows.
+
+Changes:
+- **9.1**: Orchestrator now creates `phase9-cycles/UC-XXX-cycle.md` from
+  `templates/phase9-cycle-template.md` with UC metadata pre-populated.
+- **9.2**: Orchestrator appends one iteration-log row after each Reviewer
+  verdict before routing to 9.3 or 9.4.
+- **9.4**: Replaced `Optional: append final entry` with an explicit step to
+  fill the `## Exit` section (final verdict, merge commit, iteration count,
+  cap flag, drift patterns).
+- **Template header**: Replaced "Optional artifact — skip if not needed"
+  with a description of the automatic lifecycle (created at 9.1, rows at
+  9.2, Exit at 9.4).
+
+No Rosenberg rule row affected — kit extension artifact.
+
 ## [0.9.22] — 2026-05-10
 
 **Fix: test-matrix.md never created in normal pipeline flow.**

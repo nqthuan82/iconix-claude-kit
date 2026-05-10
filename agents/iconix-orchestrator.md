@@ -98,13 +98,14 @@ After M3 passes, the Orchestrator routes work between Developer, Tester, and Rev
 
 ## 9.1 — Implementation kickoff
 Per UC (one feature branch each, `feature/UC-XXX-<slug>` from v0.9.5):
+- **Create `phase9-cycles/UC-XXX-cycle.md`** from `templates/phase9-cycle-template.md`. Pre-populate: UC ID, title, branch name, M3-pass commit SHA + date, Phase 9 entry date. Leave the iteration log table empty (rows are appended at 9.2).
 - Dispatch **Developer** (Implementation mode) — code from the SD
 - Dispatch **Tester** (Test implementation mode) — implement TCs from the M3 catalogue
 - Both run in parallel on the same branch
 - Commits use `[UC-XXX] Impl: <summary>` (v0.9.5 convention)
 
 ## 9.2 — Pre-merge drift check
-When Developer + Tester signal "ready" (failing tests are now green; SD coverage feels complete), dispatch **Reviewer** (Pre-merge drift mode) on the PR diff. Verdict:
+When Developer + Tester signal "ready" (failing tests are now green; SD coverage feels complete), dispatch **Reviewer** (Pre-merge drift mode) on the PR diff. After the Reviewer returns a verdict, **append one row** to the `## Iteration log` in `phase9-cycles/UC-XXX-cycle.md` (iteration #, date, Developer state, Tester state, Reviewer verdict token, notes). Then route:
 - **APPROVE** → 9.4
 - **APPROVE WITH NOTES** → 9.4 (notes addressed in follow-ups, not blocking)
 - **REQUEST CHANGES** → 9.3
@@ -122,8 +123,8 @@ Route back to Developer (drift fixes only — minimal change to close the findin
 - Open or mark ready PR via `/iconix-pr` (provider-aware via `iconix-git`)
 - CI green: `validate-traceability.sh` + tests
 - Merge to main
+- Fill in `## Exit` section of `phase9-cycles/UC-XXX-cycle.md`: final verdict token, implementation merge commit SHA + date, total iterations used, cap-hit flag, and any drift patterns worth copying to `reviews/review-checklist.md`.
 - UC moves to "Done" phase (visible in `/iconix-metrics` snapshots)
-- Optional: append final entry to `phase9-cycles/UC-XXX-cycle.md` if the team uses cycle logs
 
 ## Phase 9 exit
 The whole batch exits Phase 9 when every UC in the M3 cohort has reached 9.4. UCs hitting the iteration cap escalate but don't block the rest of the batch.

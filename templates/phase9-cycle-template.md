@@ -1,9 +1,8 @@
 # Phase 9 Cycle Log — UC-XXX
 
-> **Optional artifact.** Teams that want audit-grade evidence of the
-> Phase 9 Developer ↔ Tester ↔ Reviewer loop maintain this file per UC.
-> It records each iteration's verdict and exit condition. Skip it if
-> your team doesn't need that level of evidence.
+> Created at **9.1 kickoff** by the Orchestrator (one file per UC, when `phase9.enabled: true`).
+> Iteration rows are appended by the Orchestrator after each **9.2 Reviewer verdict**.
+> The Exit section is filled at **9.4 merge**.
 >
 > Save as `phase9-cycles/UC-XXX-cycle.md`.
 
