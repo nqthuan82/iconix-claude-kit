@@ -5,6 +5,96 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.17] — 2026-05-10
+
+Round 4 — first **real M2 Analyst** forcing-function run. Followed
+the v0.9.13 Analyst prompt to actually produce a fresh BS-RB-001
+robustness diagram from BS-UC-001 + the PO-only initial domain
+model, then diffed against the example's RB-001. **Six issues**
+only visible by producing the diagram — net-new findings prompt
+review couldn't catch.
+
+The pattern from v0.9.15 holds: prompt-review of M2 Analyst
+(v0.9.13) found 8 issues; real run added 6 more. Real production
+keeps surfacing things prompt review missed.
+
+Six fixes:
+
+  R4-#1 Example RB violates v0.9.13's verb-led controller rule —
+        uses question-form names like `Is user logged in?`, `Is
+        Book Review length OK?`. Methodologically wrong (the
+        v0.9.13 rule says controllers are *actions*, not
+        *predicates*). Known limitation: example refresh deferred;
+        v0.9.17 keeps the rule and notes the example needs retrofit.
+
+  R4-#2 Analyst rules silent on rendering v0.9.15's `UI
+        dependencies (page/component reuse)` sub-field. Both my
+        run and the example drew reused pages identically to
+        UC-owned pages — visually indistinguishable. Fix: new
+        Analyst section `# Rendering UI dependencies and
+        downstream consumers on the RB` — UI-reused boundaries get
+        a `<<from PREFIX-UC-XXX Title>>` stereotype.
+
+  R4-#3 Same gap for v0.9.15's `Downstream consumers` sub-field.
+        Same fix: dashed arrow (`..>`) from produced entity to
+        consumer actor distinguishes async handoff from
+        synchronous flow.
+
+  R4-#4 Analyst lacked a controller-granularity rule equivalent
+        to PO rule 13. New section `# Controller granularity` —
+        consolidate similar error paths producing the same
+        response (alt B "too short" + alt C "too long" → one
+        controller); split paths producing different responses.
+        Default to consolidation; don't pre-fragment for testability.
+
+  R4-#5 Workflow step 6 was unconditionally imperative ("Rewrite
+        UC text"). Reworded to "Verify mapping; rewrite ONLY if
+        mismatches surface." On real runs UC text often already
+        maps cleanly — the prior wording read as "always rewrite."
+
+  R4-#6 Analyst rules didn't say what to do with PO's `' VERIFY:`
+        notes (v0.9.15 R3-#3 introduced them on the PO side
+        without specifying Analyst-side processing). Asymmetric:
+        PO wrote, Analyst silently improvised. Fix: Domain model
+        rule 5 now mandates `' RESOLVED at M2:` reword OR class
+        removal; unresolved VERIFY notes are an M2 PDR blocker.
+
+Methodology audit per CLAUDE.md: methodology-surface change. All
+cited rules already approved; v0.9.17 enriches kit-location
+citations and resolves the PO↔Analyst handoff asymmetry from v0.9.15.
+No status shifts. Cited Ch5 Top 10 #5 (RB syntax), Ch5
+controller-as-action principle, Ch6 PDR.
+
+Cumulative: 7 forcing-function rounds, 50 issues fixed
+(7+6+5+8+10+7+6+1[v0.9.16]). Real-run methodology continues to
+outpace prompt review by ~3-7 net-new findings per agent. M2
+Architect (real run), M3, Phase 9 still ahead.
+
+### Changed
+- `agents/iconix-analyst.md`:
+  - Workflow step 6 reworded from imperative-rewrite to verify-
+    then-rewrite-only-if (R4-#5)
+  - Workflow step 7 now references "Resolve every PO `' VERIFY:`
+    note" (R4-#6)
+  - New section `# Controller granularity (when to consolidate
+    vs split)` — mirrors PO rule 13 at the controller level
+    (R4-#4)
+  - New section `# Rendering UI dependencies and downstream
+    consumers on the RB` — formalizes the rendering rules for
+    v0.9.15's three Invokes sub-categories (R4-#2, R4-#3)
+  - Domain model rule 5 gains explicit `' VERIFY:` → `' RESOLVED at
+    M2:` resolution procedure (R4-#6)
+  - PDR readiness checklist gains four mirror checks: Invokes /
+    UI dependencies / Downstream consumers / VERIFY-resolved
+    (R4-#2, R4-#3, R4-#6)
+- `templates/robustness-template.puml`:
+  - Adds commented examples for UI-dependency boundary syntax
+    (`<<from ...>>` stereotype) (R4-#2)
+  - Adds commented examples for downstream-consumer dashed-arrow
+    syntax (R4-#3)
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.17 with the Round-4-real audit summary
+
 ## [0.9.16] — 2026-05-10
 
 PlantUML validation in CI. The forcing-function-within-forcing-

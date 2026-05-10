@@ -61,9 +61,19 @@ actor "<Actor name from UC>"   as Actor1
 boundary "<Page name>"          as PageA
 ' boundary "<Other page>"       as PageB
 
+' --- UI dependencies: pages REUSED from another UC ---
+' Same boundary syntax + `<<from PREFIX-UC-XXX Title>>` stereotype so the reuse
+' is visible in M2 review. See agent's UI-dependencies rendering rule.
+' boundary "<Reused page>" as ReusedPage <<from PREFIX-UC-XXX Other-UC-Title>>
+
 ' --- Entities (domain objects from the UC; refined from domain model) ---
 entity "<DomainClass>"          as Ent1
 ' entity "<OtherDomainClass>"   as Ent2
+
+' --- Downstream consumer actors (read async outputs of this UC) ---
+' Drawn with a DASHED arrow (..>) from the produced entity to distinguish
+' the async / decoupled handoff from this UC's synchronous flow.
+' actor "<Consumer>"            as Consumer
 
 ' --- Invoked use cases (when this UC's flow invokes another UC). ---
 ' usecase nodes, NOT controllers. See agent rule.
@@ -93,6 +103,13 @@ AltStep1    --> PageA          : [recovery]
 ' -- Invoked use case (example -- delete if not applicable) --
 ' Step1     --> OtherUC        : [when invoked]
 ' OtherUC   --> Step1          : [after returning]
+
+' -- UI dependency wiring (example -- delete if not applicable) --
+' Step1     --> ReusedPage     : [when reused page is shown]
+
+' -- Downstream consumer wiring (example -- delete if not applicable) --
+' Note the DASHED arrow distinguishing async handoff.
+' Ent1      ..> Consumer       : [downstream -- read by PREFIX-UC-XXX]
 
 note bottom
   Traceability:

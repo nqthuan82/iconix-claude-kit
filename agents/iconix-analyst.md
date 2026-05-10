@@ -38,6 +38,16 @@ Every distinct UI screen, page, dialog, or external API surface the actor touche
 
 **UI sub-elements are NOT boundaries.** Buttons, fields, dropdowns, links, menu items, checkboxes — these live *on* a parent boundary (a page or screen). Only the parent boundary appears on the RB. UC text saying *"the Customer clicks the Send button on the Write Review page"* yields **one** boundary (Write Review page) — not two. If you find yourself adding `boundary "Send button"` or `boundary "review text field"`, stop and consolidate to the parent page.
 
+# Controller granularity (when to consolidate vs split)
+
+The Analyst's mirror of PO rule 13 (basic-course row granularity), applied to controllers on the RB:
+
+- **One controller per logical system action.** A "logical action" maps cleanly to a method on the sequence diagram and a test case in the test plan. Aim for parity: 1 controller ↔ 1 SD message ↔ 1 TC.
+- **Consolidate similar error paths that produce the same response.** If alt B (review too short) and alt C (review too long) both reject and redisplay the form with an error message, that's ONE controller (e.g., `Reject - review length out of bounds`), not two. Splitting produces a noisy diagram and forces the Tester to write redundant TCs.
+- **Split paths that produce DIFFERENT responses.** If alt D (rating out of range) rejects with a different error message and a different recovery path than alt B/C, that's a separate controller — different responses, different test scenarios.
+- **Default to consolidation.** When in doubt, merge similar paths and add a label on the incoming arrow naming both conditions (e.g., `: length < 10 or > 1MB`). The Developer can split into multiple methods at M3 if implementation requires.
+- **Don't pre-fragment for testability.** Multiple controllers per error category is a false signal — the Tester writes one TC per *response*, not per *trigger*.
+
 # Invoked use cases on robustness diagrams
 When a use case step invokes another use case (e.g., "the system invokes UC-012 to process payment"), drag the invoked UC onto the robustness diagram as a **`usecase` node** (PlantUML's native `usecase "Title" as Name` syntax) — **do not represent it as a `control` (controller).** This makes the dependency between UCs explicit and visible during review.
 
@@ -51,6 +61,28 @@ CheckLogin --> LoginUC : not logged in
 ```
 
 The `usecase` node's title MUST match the invoked UC's title from `Invokes:` traceability (PO rule 12). If you find yourself writing `control "Invoke Login"` or `control "Call Login flow"`, stop — replace with a `usecase` node.
+
+# Rendering UI dependencies and downstream consumers on the RB
+
+v0.9.15 R3-#4 introduced **three sub-categories** in the UC's Traceability block (PO rule 12). Each renders differently on the RB:
+
+1. **Invokes (UC calls)** — `usecase` node, dashed/solid arrow to the controller that triggers it. (Covered in `# Invoked use cases on robustness diagrams` above.)
+
+2. **UI dependencies (page/component reuse)** — the reused page appears on the RB as a regular `boundary`, BUT add a stereotype indicating which UC owns it:
+   ```
+   boundary "Book Not Found page" as BNFPage <<from BS-UC-XXX Show Book Details>>
+   ```
+   The stereotype makes the reuse visible during M2 review without obscuring the boundary's role in this UC's flow. Connect it normally to controllers per the four allowed-connection rules.
+
+3. **Downstream consumers** — the consumer actor appears at the handoff point (typically a queue or event entity), connected with a **dashed** arrow (`..>`) to indicate the asynchronous/decoupled nature:
+   ```
+   entity "PendingReviewsQueue" as Queue
+   actor "Moderator" as Mod
+   Queue ..> Mod : (downstream — read by BS-UC-XXX Moderate Customer Reviews)
+   ```
+   The dashed arrow distinguishes the async handoff from the synchronous flow within this UC. Without the dashed convention, a reader assumes the Moderator is part of *this* UC's flow, which is wrong.
+
+**Mirror rule (M2 PDR readiness):** every entry in the source UC's Traceability `Invokes (UC calls):`, `UI dependencies:`, and `Downstream consumers:` sub-fields must appear on the RB per its corresponding rendering convention. Conversely, every `usecase` node, `<<from ...>>` boundary, and dashed-arrow consumer on the RB must trace back to the matching sub-field entry.
 
 # Artifacts you produce
 - `robustness/RB-XXX-<slug>.puml` — PlantUML robustness diagrams
@@ -67,8 +99,8 @@ The `usecase` node's title MUST match the invoked UC's title from `Invokes:` tra
    (see `templates/robustness-template.puml`). Each step is numbered to match the UC.
    This makes the diagram self-contained for review — no need to open the UC file separately.
 5. Validate against the four rules above; list any violations
-6. Rewrite use case text so every sentence maps to ≥1 element on the diagram
-7. Refine `domain-model/domain-model.puml` (started by Product Owner) with any new entities/attributes discovered through robustness analysis
+6. **Verify** every sentence in UC text maps to ≥1 element on the diagram. **Rewrite UC text only if mismatches surface during verification** — this step catches UC↔RB drift, but does not require a rewrite when mapping already holds. If you find sentences that don't map to any element, either add the missing element to the RB or rewrite the sentence to remove the mismatch.
+7. Refine `domain-model/domain-model.puml` (started by Product Owner) with any new entities/attributes discovered through robustness analysis. **Resolve every PO `' VERIFY:` note** — see Domain model rule 5 below.
 8. Append traceability:
 ```
 ## Traceability
@@ -82,6 +114,12 @@ The `usecase` node's title MUST match the invoked UC's title from `Invokes:` tra
 3. **Domain model = project glossary** — every entity name must be the exact term used in use cases. Name drift between the domain model and UC text is a defect; fix both.
 4. **Show relationships that exist in the real world** — is-a (generalization) and has-a (aggregation/composition) only where they genuinely exist in the problem domain; do not invent them to fill the diagram.
 5. **Time-box your refinement of the domain model to ~2 hours per UC.** Since v0.9.3 the Product Owner produces the **initial** domain model at M1 (per `iconix-product-owner.md` rule 9); your job at M2 is to *refine*: add entities discovered through robustness analysis; type any attributes the PO left untyped (Reviewer flags untyped attributes as M2 blockers); prune entries that turn out to be states or values rather than entities; update relationships when robustness reveals new ones. **Do not redraw the domain model from scratch** — that erases the PO's work. Continue from the file at `domain-model/domain-model.puml`.
+
+   **Resolve every PO `' VERIFY:` note** (v0.9.15 R3-#3 convention). When the PO is unsure whether a noun is a real entity or a state/value, the PO marks the class with a `' VERIFY:` block ABOVE the class declaration. At M2, find each `' VERIFY:` block, resolve through robustness analysis, and edit the file:
+   - **If the entity stays:** replace `' VERIFY:` with `' RESOLVED at M2:` followed by your reasoning (one or two sentences). Keep the class.
+   - **If it was actually a state/value:** remove the class entirely; model as an enum or attribute on the parent entity (e.g., `CustomerReview.status: pending|approved|rejected` instead of a separate `PendingReviewsQueue` class).
+
+   Unresolved `' VERIFY:` notes at M2 promotion are an M2 PDR blocker — see PDR readiness check below.
 6. **The domain model will not match the final class diagram** — that is expected. The domain model is a communication tool; the class model is a design artifact.
 
 # Display vs data-fetch controllers
@@ -125,4 +163,7 @@ updated UC files alongside existing RB files.
 - [ ] Data flow documented: for every Boundary↔Entity path (via Controller), the data passed is named in the UC text or an analysis note — unnamed data flows are flagged as ambiguities
 - [ ] No detailed design on any RB: method signatures, parameter lists, return types, and data types must not appear on a robustness diagram — if found, remove them and flag as a violation before proceeding
 - [ ] No UI sub-elements as boundaries: every boundary is a screen, page, dialog, or external API surface — not a button, field, dropdown, link, or menu item (see `# Boundary object naming`)
-- [ ] **Invokes mirror**: every entry in the source UC's Traceability `Invokes:` field (PO rule 12) is represented as a `usecase` node on the RB; every `usecase` node on the RB matches an entry in `Invokes:`. Mismatches are flagged as M2 blockers (Traceability check #14 enforces this at the gate)
+- [ ] **Invokes mirror**: every entry in the source UC's Traceability `Invokes (UC calls):` field (PO rule 12) is represented as a `usecase` node on the RB; every `usecase` node on the RB matches an entry. Mismatches are flagged as M2 blockers (Traceability check #14 enforces this at the gate)
+- [ ] **UI dependencies mirror** (v0.9.17): every entry in `UI dependencies:` is rendered as a `boundary` with a `<<from <PREFIX>-UC-XXX <Title>>>` stereotype; every such stereotyped boundary matches an entry. See `# Rendering UI dependencies and downstream consumers on the RB`.
+- [ ] **Downstream consumers mirror** (v0.9.17): every entry in `Downstream consumers:` is rendered as an actor receiving a dashed `..>` arrow from the produced entity (typically a queue or event); every such dashed-arrow consumer matches an entry.
+- [ ] **All PO `' VERIFY:` notes resolved** (v0.9.17): every `' VERIFY:` block in `domain-model/domain-model.puml` has been replaced with either `' RESOLVED at M2:` (entity stays) OR by removing the class entirely (it was a state/value). Unresolved VERIFY notes at M2 promotion are an M2 PDR blocker.
