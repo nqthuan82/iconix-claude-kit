@@ -60,8 +60,27 @@ describe the conditions that increase the likelihood.>
     → could be either; flag for closer SD/UC comparison>
 
 ## Traceability
-> Filled in by the Reviewer after triage. Do not edit by hand.
+
+> **Filled by the Reviewer during BUG TRIAGE.** Once populated, do not edit
+> by hand — subsequent updates go in `## Closure` below.
+
 - Bug type: <Type 1 (implementation) | Type 2 (design)>
 - Root artifact: <file path or diagram ID where defect originates>
 - Affected UC: <UC-XXX>
 - Recommended next step: <Developer bug-fix mode | /iconix-impact UC-XXX → REQ change flow>
+
+## Closure
+
+> **Filled by the Reviewer in Bug-fix verification mode (Type 1) OR Type 2
+> closure mode (Type 2)** AFTER the fix has merged. Until then, this section
+> is empty. Do not delete the section heading — empty Closure is itself an
+> auditable signal ("bug filed but not yet verified closed").
+
+- Closed: <date>
+- Verified-by: iconix-reviewer (<Bug-fix verification mode | Type 2 closure mode>)
+- Driven by CI report: <PREFIX>-CI-XXX (Type 2 only; omit for Type 1)
+- New SD: <PREFIX>-SD-XXX (commit <SHA>) (Type 2 only; for Type 1 the SD is unchanged so this field is omitted)
+- Merged code: PR <#NN>, commit <SHA>
+- Drift closed: <one or two sentences — for Type 1, what specific drift the original triage flagged is now closed; for Type 2, that the new design + merged code together address the original Observed-vs-Expected gap>
+- Reproduction now: <one sentence — what happens when you replay the original Reproduction steps>
+

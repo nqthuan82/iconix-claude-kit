@@ -19,6 +19,19 @@
 > One row per Developer ↔ Tester ↔ Reviewer cycle. Append; never edit
 > historical entries. The cap is `phase9.max_iterations_per_uc`
 > (default 5) — escalate to Architect/PO if you reach the cap.
+>
+> **`Reviewer verdict` column** — use ONE of the four discrete tokens
+> exactly (machine-readable for `iconix-metrics` to compute Phase 9
+> iteration-count distributions per UC). Optional context after a
+> dash, no other prefix:
+>
+> - `APPROVE` — clean review; proceed to 9.4
+> - `APPROVE WITH NOTES` — approved with non-blocking [INFO] findings
+> - `REQUEST CHANGES` — drift findings; back to 9.3 (Developer + Tester)
+> - `BLOCK MERGE` — multiple findings or NFR violations; back to 9.3
+>
+> Token must appear at the start of the cell. Free-text-only verdicts
+> (e.g., "looks good") are an audit-trail smell and break metrics.
 
 | # | Date | Developer state | Tester state | Reviewer verdict | Notes |
 |---|---|---|---|---|---|

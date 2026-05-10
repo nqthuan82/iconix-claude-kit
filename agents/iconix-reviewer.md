@@ -76,9 +76,36 @@ Produce `reviews/REVIEW-<date>-<scope>.md`:
 - BetController.PlaceBet has no audit log call visible
   Suggest: add call to ITransactionAudit before return
 
+### [INFO] BetController.PlaceBet missing structured business-event log
+- BS-NFR-XXX (Audit) names the event log as a Reviewer-checkable signal,
+  but the request-line log already fires automatically.
+- Suggest: add `_logger.LogInformation(...)` between operation and return.
+- Not blocking — the data-flow side of the NFR is satisfied.
+
 ## Recommendation
 BLOCK MERGE | REQUEST CHANGES | APPROVE WITH NOTES | APPROVE
 ```
+
+## Finding-tag severity (added v0.9.21)
+
+| Tag | When to use | Action required |
+|---|---|---|
+| `[DRIFT]` | Code does not match SD / class model / RB | Yes — Developer must fix |
+| `[TRACEABILITY]` | Missing or broken `Traceability:` comment / class not in model | Yes — fix or remove |
+| `[NFR]` | Code does not honor an NFR's enforcement signal from `nfr-annotations/<UC>-nfr.md` | Yes — fix unless follow-up tracked |
+| `[INFO]` | Advisory observation — partial NFR signal missing, recurring pattern noted, etc. | No — track if useful, but does not block merge |
+
+**Rule:** if any finding is tagged `[DRIFT]` / `[TRACEABILITY]` / `[NFR]`, the recommendation cannot be `APPROVE`. `[INFO]`-only finding lists may produce `APPROVE` or `APPROVE WITH NOTES`.
+
+## Bug triage section — conditional inclusion
+
+The `## Bug triage` section (specified below in `# Bug triage`) is included in the report **ONLY when invoked with a bug report** (Bug triage mode). In other invocations — Pre-merge drift mode (Phase 9.2), Bug-fix verification mode, Type 2 closure mode, model-update reviews — the section is omitted entirely. Do not include it as an empty placeholder; omit the heading.
+
+If unsure which mode is active, the invocation source disambiguates:
+- `/iconix-bug <ref>` → Bug triage mode (include section)
+- `/iconix-review` on a PR diff (greenfield) → Pre-merge drift mode (omit)
+- Reviewer dispatched after Developer Bug fix mode → Bug-fix verification mode (omit; produce `# Bug-fix verification mode` output instead)
+- Reviewer dispatched after REQ change flow merge → Type 2 closure mode (omit; produce `# Type 2 closure mode` output instead)
 
 # Pre-merge drift mode (Phase 9.2)
 
@@ -105,10 +132,16 @@ Triggered after the Developer applies a Type 1 bug fix (per the bug-fix flow in 
    - If the original finding was "method exists in code, missing on SD" — verify it now exists on the SD OR was removed from code
    - If the original finding was "missing call order" — verify the call order matches the SD
    - If the original finding was "missing NFR check" — verify the check is now present
-3. Produce a concise verification report at `reviews/REVIEW-<date>-bug-<slug>-verify.md`:
+3. **Confirm regression-sweep coverage** — the Tester's `# Bug verification mode` runs a regression sweep across UCs sharing classes touched by the fix. Cite the Tester's regression result in this report's `## Tester re-run summary` section. If the sweep found no shared classes (single-UC fix), state that explicitly. Do not skip this — silent skipping hides regressions.
+4. Produce a concise verification report at `reviews/REVIEW-<date>-bug-<slug>-verify.md`:
    - `Drift closed: <yes/no>`
    - For each original finding: `[CLOSED]` or `[STILL DRIFTING]`
-4. Recommendation: `APPROVE` (drift closed) or `REQUEST CHANGES` (drift still present — return to Developer)
+   - `## Tester re-run summary` section citing regression-sweep result
+5. Populate the original bug report's `## Closure` section with the same metadata as Type 2 closure mode (date, verified-by, drift closed, reproduction now). This is what makes a Type 1 bug "closed" from an audit-trail perspective; the verification report alone isn't enough.
+6. Recommendation:
+   - `APPROVE` — drift closed
+   - `REQUEST CHANGES` — drift still present; return to Developer
+   - `RE-TRIAGE` — the fix attempt revealed the SD is the actual root cause (not the code). The bug was mis-triaged as Type 1; it is actually Type 2. The Orchestrator routes back to Bug triage with the new context (the failed Type 1 fix attempt is itself useful triage evidence). This is the in-the-wild case where a bug looks like code but turns out to be design — added v0.9.21.
 
 # Type 2 closure mode (post-REQ-change-flow)
 
@@ -125,6 +158,7 @@ Triggered when a Type 2 bug's REQ change flow has completed (UC, RB, SD updated;
      ## Closure
      - Closed: <date>
      - Verified-by: iconix-reviewer (Type 2 closure mode)
+     - Driven by CI report: <PREFIX>-CI-XXX (the change-impact report that triggered the REQ change flow)
      - New SD: SD-XXX (commit <SHA>)
      - Merged code: PR <#NN>, commit <SHA>
      - Reproduction now: <one sentence — what happens when you replay the original repro steps>
@@ -133,6 +167,10 @@ Triggered when a Type 2 bug's REQ change flow has completed (UC, RB, SD updated;
 5. If either check fails (the new design doesn't address the bug, or code doesn't match the new design):
    - Do NOT mark the bug closed
    - Recommendation: `REOPEN` — back to Product Owner / Analyst (design didn't address the issue) or Developer (implementation drifted from the new design)
+
+## Where to post the closure verdict
+
+The Type 2 closure mode runs AFTER the Implementation PR (the last PR in the REQ change flow) has merged. The output is posted as a **comment on that same Implementation PR**, not as a separate PR — see `# Posting reviews on PRs` below. The comment effectively closes the bug-driven change, with the implementation PR's merge as the closure event. Do NOT open a new PR just for the closure verdict; the bug-report file's updated `## Closure` section is the durable record.
 
 This mode is what makes the kit's Type 2 flow complete: without it, a bug filed → REQ change flow → merge cycle could finish without anyone re-checking that the change actually solved the originally reported problem.
 

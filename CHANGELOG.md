@@ -5,6 +5,139 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.21] — 2026-05-10
+
+Round 8 — first **real Phase 9** forcing-function walkthrough across
+all three new Reviewer modes introduced in v0.9.8 (Pre-merge drift,
+Bug-fix verification, Type 2 closure). Walked through the modes end-
+to-end on hypothetical PR + bug-flow scenarios for BS-UC-001:
+- Sub-round 8a — Greenfield Phase 9 (9.1 → 9.2 → 9.4) exercising
+  Pre-merge drift mode
+- Sub-round 8b — Type 1 bug flow (triage → fix → Bug-fix verification)
+- Sub-round 8c — Type 2 bug flow (triage → REQ change flow → Type 2
+  closure)
+
+**Nine issues** found across the three modes. Slightly fewer than
+M3 Tester (10) because the Reviewer's existing `# What you check`
+infrastructure (6 categories) absorbed some surface that would
+otherwise have been finding territory. Confirms the v0.9.20 pattern:
+shipped infrastructure correlates inversely with finding count.
+
+Pattern continues:
+  - M1 PO:        prompt 13 + real 7  (v0.9.10/11 + v0.9.15)
+  - M2 Analyst:   prompt 8  + real 6  (v0.9.13 + v0.9.17)
+  - M2 Architect: prompt 10 + real 10 (v0.9.14 + v0.9.18)
+  - M3 Developer: prompt 0  + real 12 (v0.9.19)
+  - M3 Tester:    prompt 0  + real 10 (v0.9.20)
+  - Phase 9:      prompt 0  + real 9  (v0.9.21) <-- this round
+
+Nine fixes, three groups + one cross-cutting:
+
+### Group A — Pre-merge drift mode (3 fixes)
+
+  M3-Phase9-#1 `[INFO]` finding tag had no documentation; producing
+        the 8a review I had to invent it. Fix: added formal severity
+        table — `[DRIFT]` / `[TRACEABILITY]` / `[NFR]` are blocking;
+        `[INFO]` is advisory and can produce APPROVE / APPROVE WITH
+        NOTES.
+
+  M3-Phase9-#2 `## Bug triage` section appeared awkwardly in non-bug
+        Pre-merge reviews. Fix: section now explicitly conditional
+        — included only when invoked via `/iconix-bug` (Bug triage
+        mode); omitted in Pre-merge drift / Bug-fix verification /
+        Type 2 closure modes. Disambiguation table added.
+
+  M3-Phase9-#3 phase9-cycle template's "Reviewer verdict" column
+        accepted free text. Fix: standardized to the four discrete
+        tokens (APPROVE / APPROVE WITH NOTES / REQUEST CHANGES /
+        BLOCK MERGE) at start of cell — machine-readable for
+        iconix-metrics to compute Phase 9 iteration-count
+        distributions per UC.
+
+### Group B — Bug-fix verification mode (2 fixes)
+
+  M3-Phase9-#4 The mode didn't say WHO populates the bug report's
+        `## Closure` section. The bug-report template's wording
+        ("Filled in by the Reviewer after triage") predates v0.9.8
+        and was wrong post-v0.9.8. Fix: bug-report template now
+        explicitly distinguishes Traceability (filled at triage) vs
+        Closure (filled at verification/closure); Bug-fix
+        verification mode step 5 now mandates populating the bug
+        report's Closure section, not just the verification report.
+
+  M3-Phase9-#5 Mode lacked regression-sweep guidance. Fix: new
+        step 3 requires confirming the Tester's regression sweep
+        result; if no shared classes (single-UC fix), state that
+        explicitly. Silent skipping no longer allowed.
+
+### Group C — Type 2 closure mode (3 fixes)
+
+  M3-Phase9-#6 (combined with #4) Bug-report template's Traceability
+        and Closure sections didn't distinguish triage-time vs
+        verification/closure-time ownership. Fix: explicit "Filled
+        by..." annotations on each section; empty Closure is now an
+        auditable signal ("bug filed but not yet verified closed");
+        section heading must NOT be deleted.
+
+  M3-Phase9-#7 Closure schema missing `Driven by CI report:` field.
+        Fix: added to the closure schema in Type 2 closure mode AND
+        in the bug-report template — preserves the audit chain
+        "what triggered this REQ change" on the closed bug report.
+
+  M3-Phase9-#8 Where to post the closure verdict was unspecified.
+        Fix: new "Where to post the closure verdict" sub-section —
+        Type 2 closure runs AFTER the Implementation PR has merged;
+        the verdict is posted as a comment on THAT SAME PR (not a
+        separate PR). The bug-report file's updated Closure section
+        is the durable record.
+
+### Group D — Cross-cutting (1 fix)
+
+  M3-Phase9-#9 Phase 9 routing had no escalation path for "Type 1
+        fix attempt reveals it's actually Type 2." Naïve handling
+        forced the Reviewer to either approve a still-broken fix
+        or REQUEST CHANGES forever (looping inside the cap). Fix:
+        new `RE-TRIAGE` recommendation token in Bug-fix
+        verification mode (alongside APPROVE / REQUEST CHANGES) —
+        Orchestrator routes back to Bug triage with the failed
+        Type 1 fix attempt as new triage evidence. The in-the-wild
+        case where a bug looks like code but turns out to be design.
+
+Methodology audit per CLAUDE.md: methodology-surface change
+(Reviewer rules + bug-report template + phase9-cycle template).
+All cited rules already approved; v0.9.21 enriches kit-location
+citations and closes the audit-trail gap on the bug-report's
+Closure ownership. No status shifts. Cited Ch11 #1 (Model Update
+at every gate), Ch10 #9 (if coding reveals design wrong, change
+it AND review the process — Type 2 closure is the "review the
+process" half), Ch11 #5 (follow up review with action points).
+
+Cumulative: 11 forcing-function rounds, 91 issues fixed
+(13+8+10+5+7+6+1[v0.9.16]+10+12+10+9). Phase 9 (the post-CDR
+implementation loop) is now real-run-tested. Remaining real-run
+rounds: `/iconix-metrics` real run (Round 9), real
+`/iconix-upgrade` end-to-end (Round 10).
+
+### Changed
+- `agents/iconix-reviewer.md`:
+  - `# Output format` adds an `[INFO]` example finding,
+    finding-tag severity table, conditional bug-triage rule
+    (M3-Phase9-#1, #2)
+  - `# Bug-fix verification mode` adds regression-sweep step
+    (M3-Phase9-#5), Closure-population step (M3-Phase9-#4),
+    `RE-TRIAGE` recommendation (M3-Phase9-#9)
+  - `# Type 2 closure mode` adds `Driven by CI report:` field
+    (M3-Phase9-#7) and "Where to post the closure verdict"
+    sub-section (M3-Phase9-#8)
+- `templates/bug-report-template.md` — Traceability vs Closure
+  ownership distinguished; explicit "Filled by..." annotations;
+  Closure schema expanded with `Driven by CI report:` and
+  `Drift closed:` fields (M3-Phase9-#4, #6, #7)
+- `templates/phase9-cycle-template.md` — Reviewer-verdict column
+  standardized to discrete tokens with format rule (M3-Phase9-#3)
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.21 with the Round-8-Phase-9 audit summary
+
 ## [0.9.20] — 2026-05-10
 
 Round 7 — first **real M3 Tester** forcing-function run.
