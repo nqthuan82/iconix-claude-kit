@@ -118,6 +118,7 @@ if [[ "${SCOPE}" == "project" ]]; then
     requirements use-cases use-case-packages robustness domain-model \
     class-model sequence container-mapping nfr-annotations \
     adrs test-cases features test-matrices milestone-reports \
+    metrics \
     docs/architecture docs/iconix
   echo "  created ICONIX folder structure"
 
@@ -139,6 +140,9 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/concurrent-touch-template.md"             "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/metrics-snapshot-template.md"             "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/metrics-schema.json"                      "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true
 
   # Seed git-integration: branch + commit conventions (always)
   mkdir -p "docs/iconix/templates/git-integration"
@@ -203,6 +207,7 @@ Agents installed:
   - iconix-traceability    (ID ledger, milestone gates, change impact)
   - iconix-reviewer        (code vs design drift detection, bug triage)
   - iconix-git             (branch/PR/commit hygiene; provider-agnostic)
+  - iconix-metrics         (project metrics + audit-friendly snapshots)
   - iconix-docs            (user / dev / API docs generation)
   - iconix-migration       (reverse-engineer ICONIX onto legacy code)
 
@@ -215,6 +220,7 @@ Commands installed:
   /iconix-pr          open a phase-appropriate PR (GitHub / Azure DevOps)
   /iconix-trace-check run the traceability validator locally
   /iconix-concurrent  detect class-level conflicts between in-flight UCs (M2)
+  /iconix-metrics     produce ICONIX metrics snapshot (markdown + JSON)
   /iconix-docs        generate user/dev/api docs
   /iconix-migrate     reverse-engineer from existing code
   /iconix-graphify    bootstrap Graphify integration (optional, for migration)

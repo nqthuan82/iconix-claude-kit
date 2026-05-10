@@ -258,7 +258,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 9 | Create high-level review list based on use case titles | ✅ | `iconix-reviewer.md` — checklist per UC |
 | 8 | Break each UC item into a smaller checklist | ✅ | Reviewer walks RB controllers per UC |
 | 7 | Review code at several levels (conventions, design adherence, UC trace) | ✅ | Reviewer checks code vs SD vs UC |
-| 6 | Gather data; build boilerplate checklists for future reviews | ✅ | `iconix-reviewer.md` Rules — recurring defect patterns appended to `reviews/review-checklist.md` after each review |
+| 6 | Gather data; build boilerplate checklists for future reviews | ✅ | `iconix-reviewer.md` Rules — recurring defect patterns appended to `reviews/review-checklist.md` after each review; `iconix-metrics.md` extends per-review data to project-wide trend (added v0.9.7) |
 | 5 | Follow up review with action points | ✅ | Reviewer produces BLOCK/CHANGES/APPROVE report with items; Git agent posts the report as a structured PR comment when `git.provider` is set (added v0.9.5) |
 | 4 | Focus on error detection, not correction | ✅ | Reviewer identifies drift; Developer fixes |
 | 3 | Use integrated code/model browser | ❌ | Tooling choice; not in kit scope |
@@ -275,6 +275,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | SD does not match UC text | ✅ | Reviewer |
 | Bug type classification (Type 1 vs Type 2) | ✅ | `iconix-reviewer.md` `# Bug triage`; `/iconix-bug <ref>` direct entry point (added v0.9.4) |
 | Concurrent class touches across in-flight UCs (kit extension) | ✅ | `iconix-traceability.md` `# Concurrent touch detection`; `/iconix-concurrent` (added v0.9.6); `iconix-architect.md` `# Resolving concurrent touches` is the resolver. **Not in book Top 10s** — kit extension justified by Ch11 #1 (Model Update at every gate) extended to multi-dev contexts the canonical 2-author/whiteboard model doesn't address |
+| Project-wide metrics + audit evidence (kit extension) | ✅ | `iconix-metrics.md` + `/iconix-metrics` (added v0.9.7) — produces `metrics/snapshot-<date>.{md,json}` and `metrics/trend-<date>.md`; JSON schema at `templates/metrics-schema.json`; definitions at `docs/iconix/metrics-glossary.md`. **Not prescribed by the book** — closest references are Ch11 #6 (per-review data gathering) and the Code-Inspection-vs-Code-Review sidebar acknowledging metrics in formal inspections. v0.9.7 extends these to project-wide aggregation. ISO-audit-relevant for SMEs in regulated environments. |
 
 ---
 
@@ -345,7 +346,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.6 (Concurrent-touch detection at M2 — kit extension over the canonical text; new row in Drift-detection sub-table for "Concurrent class touches across in-flight UCs"; honestly marked as not addressed by book Top 10s, justified by Ch11 #1 (Model Update at every gate) extended to multi-dev contexts. Confirmed via grep of the PDF that "concurrent" appears only in unrelated contexts (transaction throughput in REQ wording; concurrent activities in activity diagrams). v0.9.5 entries unchanged.)_
+_Last reviewed: v0.9.7 (Project-wide metrics + audit evidence — kit extension; new row in Drift-detection sub-table for "Project-wide metrics + audit evidence"; Ch11 #6 kit-location updated to cite the project-wide extension. Honestly marked as not prescribed by the book; closest references are Ch11 #6 (per-review data gathering) and Code-Inspection-vs-Code-Review sidebar. Verified via PDF grep — "metric/dashboard/measure/kpi" appears only in incidental contexts (per-review metrics gathering on line 12405; class-count metrics on line 648). ISO-audit framing added to acknowledge SME / regulated-environment use case. v0.9.6 and v0.9.5 entries unchanged.)_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 

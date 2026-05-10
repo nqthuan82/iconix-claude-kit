@@ -95,6 +95,7 @@ try {
             "requirements","use-cases","use-case-packages","robustness","domain-model",
             "class-model","sequence","container-mapping","nfr-annotations",
             "adrs","test-cases","features","test-matrices","milestone-reports",
+            "metrics",
             "docs\architecture","docs\iconix","docs\iconix\templates"
         )
         foreach ($f in $folders) { New-Item -ItemType Directory -Force -Path $f | Out-Null }
@@ -116,6 +117,9 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\intake-feature-request-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\bug-report-template.md")              "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\concurrent-touch-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\metrics-snapshot-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
 
         # Git integration — branch + commit conventions (always)
         New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null
@@ -167,11 +171,39 @@ try {
     Write-Host "[OK] ICONIX kit installed."
     Write-Host ""
     Write-Host "Next steps:"
-    Write-Host "  1. Review and edit iconix.config.yaml"
+    Write-Host "  1. Review and edit iconix.config.yaml (project prefix, stack, containers, git provider, concurrent_check, metrics)"
     Write-Host "  2. Drop your architecture doc at docs\architecture\"
     Write-Host "  3. Open Claude Code in this directory"
     Write-Host "  4. Run /agents to confirm agents are loaded"
     Write-Host "  5. Run /iconix-next to start the pipeline"
+    Write-Host ""
+    Write-Host "Agents installed:"
+    Write-Host "  - iconix-orchestrator    (routing + phase enforcement)"
+    Write-Host "  - iconix-product-owner   (requirements, use cases, glossary, initial domain model)"
+    Write-Host "  - iconix-analyst         (robustness diagrams, refined domain model)"
+    Write-Host "  - iconix-architect       (packages, NFRs, ADRs)"
+    Write-Host "  - iconix-developer       (sequence diagrams, code, unit tests)"
+    Write-Host "  - iconix-tester          (test cases, Gherkin, regression matrix)"
+    Write-Host "  - iconix-traceability    (ID ledger, milestone gates, change impact)"
+    Write-Host "  - iconix-reviewer        (code vs design drift detection, bug triage)"
+    Write-Host "  - iconix-git             (branch/PR/commit hygiene; provider-agnostic)"
+    Write-Host "  - iconix-metrics         (project metrics + audit-friendly snapshots)"
+    Write-Host "  - iconix-docs            (user / dev / API docs generation)"
+    Write-Host "  - iconix-migration       (reverse-engineer ICONIX onto legacy code)"
+    Write-Host ""
+    Write-Host "Commands installed:"
+    Write-Host "  /iconix-next        run next pipeline step"
+    Write-Host "  /iconix-status      milestone readiness report"
+    Write-Host "  /iconix-impact      change impact analysis"
+    Write-Host "  /iconix-review      ICONIX-style code review"
+    Write-Host "  /iconix-bug         triage a bug as Type 1 (code) or Type 2 (design)"
+    Write-Host "  /iconix-pr          open a phase-appropriate PR (GitHub / Azure DevOps)"
+    Write-Host "  /iconix-trace-check run the traceability validator locally"
+    Write-Host "  /iconix-concurrent  detect class-level conflicts between in-flight UCs (M2)"
+    Write-Host "  /iconix-metrics     produce ICONIX metrics snapshot (markdown + JSON)"
+    Write-Host "  /iconix-docs        generate user/dev/api docs"
+    Write-Host "  /iconix-migrate     reverse-engineer from existing code"
+    Write-Host "  /iconix-graphify    bootstrap Graphify integration (optional, for migration)"
 }
 finally {
     Remove-Item $WorkDir -Recurse -Force -ErrorAction SilentlyContinue

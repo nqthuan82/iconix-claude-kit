@@ -46,6 +46,18 @@ concurrent_check:
   detect_boundaries: true         # check for same-named controllers across UCs
   detect_db_containers: true      # check for two UCs writing the same DB container
 
+# Metrics snapshot (added v0.9.7)
+# Produces audit-friendly markdown + machine-readable JSON for downstream
+# dashboards. Snapshot-based; reads current state from artifacts + git log.
+# See docs/iconix/metrics-glossary.md for definitions and
+# docs/iconix/templates/metrics-schema.json for the JSON schema.
+metrics:
+  enabled: true
+  output_dir: "metrics"
+  ci_snapshot: false              # generate snapshot on push to main / scheduled CI
+  retention: 12                   # keep N most recent snapshot pairs; older are pruned
+  git_history_window: "12 months" # how far back to scan for cycle-time computation
+
 # Git integration (optional, used by iconix-git in v0.9.5+)
 # See docs/iconix/templates/git-integration/ for the full reference.
 git:

@@ -115,6 +115,13 @@ jobs:
           test -f docs/iconix/templates/concurrent-touch-template.md || { echo "concurrent-touch-template.md missing"; exit 1; }
           # v0.9.6: concurrent_check section present in seeded config
           grep -q 'concurrent_check:' iconix.config.yaml || { echo "concurrent_check section missing in iconix.config.yaml"; exit 1; }
+          # v0.9.7: metrics templates and glossary
+          test -f docs/iconix/templates/metrics-snapshot-template.md || { echo "metrics-snapshot-template.md missing"; exit 1; }
+          test -f docs/iconix/templates/metrics-schema.json || { echo "metrics-schema.json missing"; exit 1; }
+          test -f docs/iconix/metrics-glossary.md || { echo "metrics-glossary.md missing"; exit 1; }
+          test -d metrics || { echo "metrics/ folder missing"; exit 1; }
+          # v0.9.7: metrics section present in seeded config
+          grep -q 'metrics:' iconix.config.yaml || { echo "metrics section missing in iconix.config.yaml"; exit 1; }
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }

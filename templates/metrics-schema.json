@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iconix-kit/metrics-schema-v1.json",
+  "title": "ICONIX Metrics Snapshot v1",
+  "description": "Schema for metrics/snapshot-<date>.json produced by iconix-metrics. Stable schema for downstream dashboards (Power BI, Grafana, Azure Workbooks, GitHub Insights, etc.).",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "project", "throughput", "cycle_time", "quality", "process_compliance"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version. Bumped on breaking changes."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp."
+    },
+    "git_head": {
+      "type": "string",
+      "description": "Short SHA of HEAD at snapshot time."
+    },
+    "compared_to": {
+      "type": ["string", "null"],
+      "description": "Path to prior snapshot used for trend comparison; null on first snapshot."
+    },
+    "project": {
+      "type": "object",
+      "required": ["name", "prefix"],
+      "properties": {
+        "name": { "type": "string" },
+        "prefix": { "type": "string", "description": "Project ID prefix from iconix.config.yaml" }
+      }
+    },
+    "throughput": {
+      "type": "object",
+      "required": ["use_cases", "requirements", "bugs"],
+      "properties": {
+        "use_cases": {
+          "type": "object",
+          "properties": {
+            "total":         { "type": "integer", "minimum": 0 },
+            "by_phase": {
+              "type": "object",
+              "properties": {
+                "M1":             { "type": "integer", "minimum": 0 },
+                "M2":             { "type": "integer", "minimum": 0 },
+                "M3":             { "type": "integer", "minimum": 0 },
+                "Implementation": { "type": "integer", "minimum": 0 },
+                "Done":           { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            },
+            "added_last_30d": { "type": "integer", "minimum": 0 },
+            "added_last_7d":  { "type": "integer", "minimum": 0 }
+          }
+        },
+        "requirements": {
+          "type": "object",
+          "properties": {
+            "total":          { "type": "integer", "minimum": 0 },
+            "added_last_30d": { "type": "integer", "minimum": 0 },
+            "added_last_7d":  { "type": "integer", "minimum": 0 }
+          }
+        },
+        "bugs": {
+          "type": "object",
+          "properties": {
+            "total":          { "type": "integer", "minimum": 0 },
+            "type_1":         { "type": "integer", "minimum": 0 },
+            "type_2":         { "type": "integer", "minimum": 0 },
+            "type_2_ratio":   { "type": "number",  "minimum": 0, "maximum": 1 },
+            "filed_last_30d": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "cycle_time": {
+      "type": "object",
+      "description": "Days from phase entry to phase pass per UC. Each entry has median, p90, samples.",
+      "properties": {
+        "m1_entry_to_pass_days":     { "$ref": "#/$defs/duration_stats" },
+        "m1_to_m2_pass_days":        { "$ref": "#/$defs/duration_stats" },
+        "m2_to_m3_pass_days":        { "$ref": "#/$defs/duration_stats" },
+        "m3_to_impl_merge_days":     { "$ref": "#/$defs/duration_stats" },
+        "branch_to_merge_days":      { "$ref": "#/$defs/duration_stats" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "gate_failure_rate": {
+          "type": "object",
+          "properties": {
+            "m1": { "type": "number", "minimum": 0, "maximum": 1 },
+            "m2": { "type": "number", "minimum": 0, "maximum": 1 },
+            "m3": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "drift_findings_per_pr":          { "$ref": "#/$defs/count_stats" },
+        "drift_total_last_30d":           { "type": "integer", "minimum": 0 },
+        "top_drift_patterns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": { "type": "string" },
+              "count":   { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "concurrent_touch_at_m2": {
+          "type": "object",
+          "properties": {
+            "high_total":    { "type": "integer", "minimum": 0 },
+            "high_resolved": { "type": "integer", "minimum": 0 },
+            "high_accepted": { "type": "integer", "minimum": 0 },
+            "medium_total":  { "type": "integer", "minimum": 0 },
+            "low_total":     { "type": "integer", "minimum": 0 }
+          }
+        },
+        "traceability_hygiene": {
+          "type": "object",
+          "properties": {
+            "orphan_uc_count":             { "type": "integer", "minimum": 0 },
+            "ghost_uc_count":              { "type": "integer", "minimum": 0 },
+            "title_drifted_uc_count":      { "type": "integer", "minimum": 0 },
+            "dangling_cross_package_links":{ "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "process_compliance": {
+      "type": "object",
+      "description": "ISO-audit-relevant percentages. Target >=0.95 for the first three; >=0.90 for NFRs.",
+      "properties": {
+        "uc_through_all_3_gates_pct":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "trace_comment_coverage_pct":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "req_with_downstream_uc_pct":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "nfr_with_covering_adr_pct":    { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "trends": {
+      "type": ["object", "null"],
+      "description": "Present only when compared_to is non-null.",
+      "properties": {
+        "comparison_to": { "type": "string" },
+        "comparison_age_days": { "type": "integer", "minimum": 0 },
+        "deltas": {
+          "type": "object",
+          "additionalProperties": { "type": ["number", "integer", "string"] }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "id"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["orphan_uc", "ghost_uc", "stale_branch", "missing_trace_comment", "orphan_req", "untyped_attribute", "concurrent_high_unresolved"]
+          },
+          "id":           { "type": "string" },
+          "since":        { "type": "string", "format": "date" },
+          "age_days":     { "type": "integer", "minimum": 0 },
+          "detail":       { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "duration_stats": {
+      "type": "object",
+      "properties": {
+        "median":  { "type": "number", "minimum": 0 },
+        "p90":     { "type": "number", "minimum": 0 },
+        "samples": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "count_stats": {
+      "type": "object",
+      "properties": {
+        "median":  { "type": "number", "minimum": 0 },
+        "max":     { "type": "integer", "minimum": 0 },
+        "samples": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

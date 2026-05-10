@@ -5,6 +5,110 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.7] — 2026-05-10
+
+Closes the #1 gap from the v0.9.6 backlog: **metrics & audit evidence**.
+The kit produces well-structured artifacts at every phase, but until
+now there was no aggregation showing teams whether the process was
+actually paying off — and no single artifact a regulated-environment
+auditor could point at and say "this is your ICONIX evidence." v0.9.7
+adds an `iconix-metrics` agent that scans the project's current state
++ git history at run-time and produces audit-friendly snapshots
+(markdown for humans + JSON for dashboards).
+
+Snapshot-based, not event-based. The agent reads everything that
+already exists (artifacts, milestone reports, reviews, change-impact
+reports, bug reports, git log) and computes ~15 metrics across 5
+categories. No external state, no new infrastructure — fits the kit's
+"all artifacts are files" principle.
+
+Provider-neutral on visualization: the JSON conforms to a stable
+schema (v1.0); teams build their own dashboards in Power BI, Grafana,
+Azure Workbooks, GitHub Insights, or anything else that reads JSON.
+The kit ships no vendor templates — same provider-neutrality stance
+as v0.9.5 git integration.
+
+Honestly marked as a kit extension. The book has only incidental
+mentions of metrics (per-review data on Ch11 line 12405; the Code-
+Inspection-vs-Code-Review sidebar acknowledging that formal
+inspections gather metrics). v0.9.7 extends these to project-wide
+aggregation, justified by Ch11 #6 and SME / regulated-environment
+audit needs (ISO 27001 + 9001).
+
+### Added
+- `agents/iconix-metrics.md` — new read-only agent. Produces
+  `metrics/snapshot-<date>.md` (audit-friendly markdown) and
+  `metrics/snapshot-<date>.json` (validates against schema v1.0). On
+  `/iconix-metrics trend`, also produces `metrics/trend-<date>.md`
+  with deltas vs the prior snapshot. Read-only on everything except
+  `metrics/`. Eight-step computation algorithm specified in the agent
+  prompt: read config → throughput → cycle time (from
+  `[<UC>] <phase>: ...` commits) → quality → process compliance →
+  trends → blockers → render. Retention enforced: prunes old
+  snapshots beyond `metrics.retention` (default 12).
+- `commands/iconix-metrics.md` — new slash command.
+  `/iconix-metrics` produces a snapshot; `/iconix-metrics trend`
+  also produces the trend report.
+- `templates/metrics-snapshot-template.md` — markdown format. Six
+  numbered sections: throughput, cycle time, quality, process
+  compliance, trend (when applicable), blockers and stale state.
+  Includes ISO-audit framing.
+- `templates/metrics-schema.json` — formal JSON schema (Draft
+  2020-12, schema version 1.0). Stable contract for downstream
+  dashboards. Required and optional fields explicitly documented.
+- `docs/iconix/metrics-glossary.md` — authoritative definitions for
+  every metric. Lists what's intentionally **not** a metric (no
+  per-developer attribution, no LOC, no story-point velocity, no
+  cost estimates — Ch13 #3 stays 🚫).
+
+### Changed
+- `templates/iconix.config.yaml` — new `metrics:` section with
+  `enabled` (default true), `output_dir` (default `metrics`),
+  `ci_snapshot` (default false), `retention` (default 12),
+  `git_history_window` (default 12 months).
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell):
+  - Both create `metrics/` folder during folder-structure seeding
+  - Both copy `metrics-snapshot-template.md` and
+    `metrics-schema.json` to `docs/iconix/templates/`
+  - Both copy `metrics-glossary.md` to `docs/iconix/`
+  - Bash "Next steps" lists `/iconix-metrics`
+- `agents/iconix-orchestrator.md` — routing heuristic for "how is
+  the project doing?" / "ISO audit evidence" → Metrics agent.
+- `README.md` — `iconix-metrics.md` in agents listing;
+  `iconix-metrics.md` command listing; `metrics-snapshot-template.md`
+  and `metrics-schema.json` in templates listing; new full **Metrics
+  & audit evidence** section explaining the 5 metric categories,
+  output layout, configuration, and ISO-audit framing.
+- `docs/iconix/iconix-process-reference.md`:
+  - Drift-detection sub-table gains a "Project-wide metrics + audit
+    evidence (kit extension)" row marked ✅, explicitly framed as
+    not-in-book.
+  - Ch11 #6 kit-location updated to cite the project-wide extension.
+  - "Last reviewed" bumped to v0.9.7 with rationale (PDF grep
+    confirms only incidental coverage of "metric/dashboard/measure/kpi").
+- `.github/workflows/validate.yml` — smoke test asserts
+  `metrics-snapshot-template.md`, `metrics-schema.json`,
+  `metrics-glossary.md`, `metrics/` folder, and `metrics:` section
+  in the seeded `iconix.config.yaml`.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- **Cited rules:** Ch11 #6 (Gather data during the review) — kit
+  location updated to add project-wide extension. Ch11
+  Code-Inspection-vs-Code-Review sidebar — explicitly acknowledges
+  formal code inspections gather metrics.
+- **Book verification:** PDF grep for `metric|dashboard|measure|
+  gate-failure|drift rate|kpi|throughput` returned only incidental
+  hits (class-count metrics on line 648; the per-review note on
+  line 12405). Confirmed: project-wide metrics is a kit extension.
+- **Status shifts:** new ✅ row added to the Drift-detection
+  sub-table for "Project-wide metrics + audit evidence", explicitly
+  marked as kit extension. Ch11 #6 status unchanged (already ✅;
+  citation extended).
+- **No contradictions found.** The book's bias toward small co-
+  located teams doesn't conflict with project-wide metrics — it just
+  doesn't address them. Adding metrics doesn't violate any canonical
+  principle.
+
 ## [0.9.6] — 2026-05-09
 
 Closes the second-largest gap from the v0.9.4 kit assessment: **multi-

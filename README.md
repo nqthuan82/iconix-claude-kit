@@ -20,6 +20,7 @@ iconix-kit/
 │   ├── iconix-traceability.md
 │   ├── iconix-reviewer.md     # code ↔ design drift detection
 │   ├── iconix-git.md          # branch/PR/commit hygiene; provider-agnostic (v0.9.5+)
+│   ├── iconix-metrics.md      # project metrics + audit-friendly snapshots (v0.9.7+)
 │   ├── iconix-docs.md         # user / dev / API doc generation
 │   └── iconix-migration.md    # retrofit ICONIX onto legacy code (Graphify-aware in v0.3.0+)
 ├── commands/                # Claude Code slash commands
@@ -31,6 +32,7 @@ iconix-kit/
 │   ├── iconix-pr.md           # open phase-appropriate PR (v0.9.5+)
 │   ├── iconix-trace-check.md  # local trace validation, mirrors CI gate (v0.9.5+)
 │   ├── iconix-concurrent.md   # detect class-level conflicts between in-flight UCs (v0.9.6+)
+│   ├── iconix-metrics.md      # produce metrics snapshot (markdown + JSON) (v0.9.7+)
 │   ├── iconix-docs.md
 │   ├── iconix-migrate.md
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
@@ -52,6 +54,8 @@ iconix-kit/
     ├── intake-feature-request-template.md  # feature request / ticket / user story
     ├── bug-report-template.md          # optional structured input for /iconix-bug
     ├── concurrent-touch-template.md    # M2-gate concurrent-touch report format (v0.9.6+)
+    ├── metrics-snapshot-template.md    # markdown format for metrics snapshots (v0.9.7+)
+    ├── metrics-schema.json             # JSON schema for snapshot output (v0.9.7+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -140,6 +144,7 @@ issue is resolved.
 | `/iconix-pr [draft\|ready] [--reviewers ...]` | Git | Open a phase-appropriate PR (M1/M2/M3/Impl) on the configured provider |
 | `/iconix-trace-check [<base>]` | Git | Run the traceability validator locally (same checks as the CI merge-gate) |
 | `/iconix-concurrent [<UC-ID>]` | Traceability (concurrent-touch mode) | Detect class- and container-level conflicts between in-flight UCs at M2 (or any time) |
+| `/iconix-metrics [trend]` | Metrics | Produce snapshot (markdown + JSON) of throughput, cycle time, quality, process compliance; `trend` arg for delta vs. prior snapshot |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
@@ -303,6 +308,46 @@ Reviewer (triage → Type 2)
 > **Review checklist:** After each review the Reviewer appends recurring defect patterns
 > to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
 > of the most common drift types, used to front-load future reviews.
+
+### Metrics & audit evidence (v0.9.7+) — `iconix-metrics` agent
+
+The kit's artifact discipline produces signals teams can measure: throughput, cycle time, gate-failure rates, drift findings, process compliance. v0.9.7 ships an agent that scans the project's current state + git history and produces audit-friendly snapshots — markdown for humans, JSON for dashboards.
+
+**What gets measured** (full glossary at `docs/iconix/metrics-glossary.md`):
+
+| Category | Examples |
+|---|---|
+| **Throughput** | UCs by phase; REQs added; bug volume; Type 2 / total ratio |
+| **Cycle time** | Days from M1 entry to M1 pass; M2→M3; branch-to-merge — derived from `[<UC>] <phase>: ...` commits |
+| **Quality** | M1/M2/M3 gate-failure rates; drift findings per Implementation PR; concurrent-touch outcomes (HIGH resolved/accepted/unresolved) |
+| **Process compliance** | % of UCs through all 3 gates; trace-comment coverage; REQ/UC linkage; NFR/ADR linkage. **Target ≥95%** for ISO audits. |
+| **Trends** | Deltas vs. the previous snapshot, with directional indicators |
+
+**Output:**
+
+```
+metrics/
+├── snapshot-2026-05-09.md     # human-readable, audit-friendly
+├── snapshot-2026-05-09.json   # validates against metrics-schema.json (v1.0)
+└── trend-2026-05-09.md         # only on /iconix-metrics trend
+```
+
+The JSON conforms to a versioned schema (`templates/metrics-schema.json`), so dashboards built against v1.0 stay stable. Provider-neutral: hook your own viz onto the JSON — Power BI, Grafana, Azure Workbooks, GitHub Insights, anything that can read JSON.
+
+**Configuration** (`iconix.config.yaml`):
+
+```yaml
+metrics:
+  enabled: true
+  output_dir: "metrics"
+  ci_snapshot: false             # generate on push to main (CI integration)
+  retention: 12                  # keep N most recent snapshot pairs
+  git_history_window: "12 months"
+```
+
+**For ISO 27001 / 9001 audits:** the markdown snapshots are themselves audit artifacts. Preserve them under your retention policy. The four process-compliance metrics (UCs through all gates, trace-comment coverage, REQ/UC linkage, NFR/ADR linkage) are the bridge between *"we follow ICONIX"* and *"here's the evidence."*
+
+**Why this is a kit extension over the canonical text:** Rosenberg's process doesn't prescribe project-wide metrics. Closest book references: Ch11 #6 ("Use data gathered during the review to accumulate boilerplate checklists for future reviews") — per-review, not project-wide; and the Code-Inspection-vs-Code-Review sidebar in Ch11 acknowledging that formal code inspections gather metrics. v0.9.7 honestly extends these to project-wide aggregation.
 
 ### Multi-developer concurrency (v0.9.6+) — concurrent-touch detection at M2
 
