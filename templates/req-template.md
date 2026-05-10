@@ -19,5 +19,5 @@ The system shall <observable behaviour — active voice, present tense, one sent
 P0 — must have | P1 — should have | P2 — nice to have
 
 ## Traceability
-- **Source:** <stakeholder / BRD section / ticket / meeting date>
+- **Intakes:** <comma-separated list of intake files this REQ was extracted from — same convention as UC template's `Intakes:` field. For direct stakeholder requests with no intake artifact, capture an `intake-email` or `intake-transcript` first; do not put free-text stakeholder names here.>
 - **Downstream UCs:** (filled by Product Owner)

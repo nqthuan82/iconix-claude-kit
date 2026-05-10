@@ -43,6 +43,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 11. Every `usecase` entry on a package overview diagram has a matching `use-cases/UC-XXX-<slug>.md` file; entries with no matching file are flagged as **ghost UCs** (M1 blocker)
 12. The `usecase` label text on a package overview matches the `# <PREFIX>-UC-XXX: <title>` heading of its UC file; mismatches are flagged as **title drift** (M1 blocker)
 13. Every cross-package `<<include>>` / `<<extend>>` arrow on a package overview points to a UC-ID that exists in another package's overview; broken references are flagged as **dangling cross-package links** (M1 blocker)
+14. Every "system invokes `<PREFIX>-UC-XXX`" reference in UC text matches an entry in that UC's Traceability `Invokes:` block, AND every cited UC-ID has a corresponding `use-cases/<PREFIX>-UC-XXX-*.md` file (unless explicitly marked `(downstream — not yet drafted)`); mismatches and broken references are flagged as **invocation drift** (M1 blocker; PO agent rule 12)
 
 # Change impact analysis
 When asked "what breaks if REQ-042 changes?":

@@ -5,6 +5,90 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.11] — 2026-05-10
+
+Round 2 forcing-function fixes. We continued the real-world test
+run from v0.9.10 (Write Customer Review example, M1 gate review).
+Six more issues surfaced — gaps in template fields, the cross-UC
+invocation citation rule, and the Traceability gate's coverage of
+in-text UC references. v0.9.11 closes them.
+
+Issues #R2-#1, #R2-#2, #R2-#3 — template gaps:
+
+  R2-#1: UC template missing `Invokes:` and `Domain entities` fields
+         that the example uses but the template doesn't ship. These
+         carry real traceability value: Domain entities tells the
+         Analyst which entities to expect on the robustness diagram;
+         Invokes tells everyone downstream which UCs this one depends
+         on.
+
+  R2-#2: UC template's Postconditions field was a single string;
+         real UCs split outcomes (Success vs Rejection vs ...). The
+         example used `Success:` / `Rejection:` sub-headings; the
+         template now formalizes that pattern.
+
+  R2-#3: REQ template used `Source:` (free text); UC template uses
+         `Intakes:` (structured list). Same concept, different field
+         names — inconsistent. v0.9.11 aligns REQ to `Intakes:`.
+
+Issues #R2-#4, #R2-#5, #R2-#6 — cross-UC invocation handling:
+
+  R2-#4: The "cite invoked UCs with explicit IDs" rule lived only
+         in the Analyst agent (M2) — but the PO drafts UC text at
+         M1, before the Analyst sees it. So the Analyst had to
+         retrofit invocation citations during M2 instead of finding
+         them already correct. v0.9.11 adds rule 12 to the PO so
+         the citation convention ships from M1.
+
+  R2-#5: PO M1 checklist had no item for "UC-text invocations match
+         the Traceability Invokes: block." Drift between the two
+         was easy and undetected.
+
+  R2-#6: Traceability agent had 13 validation checks; none covered
+         in-text UC invocations. A UC saying "system invokes
+         BS-UC-999" with no `BS-UC-999.md` file would slide past
+         the M1 gate. v0.9.11 adds check #14 (invocation drift).
+
+### Methodology audit (per CLAUDE.md)
+- **Cited rules:** Ch3 #7 (two-column UC format), Ch4 #1 (8 easy
+  steps to better use case), Ch3 #2 (UCs in context of object
+  model — Domain entities field strengthens UC↔domain-model
+  tracing). All already ✅.
+- **Status shifts:** none. Citations get richer.
+- **No contradictions found.** v0.9.11 unifies a citation
+  convention that had been split across PO and Analyst agents.
+
+### Changed
+- `templates/use-case-template.md`:
+  - Postconditions structured as Success/Rejection sub-bullets with
+    a comment about additional states (R2-#2)
+  - Traceability block adds `Invokes:` and `Domain entities
+    introduced or used:` fields with example syntax (R2-#1)
+- `templates/req-template.md` — `Source:` field replaced by
+  `Intakes:` with same structure as UC template (R2-#3)
+- `agents/iconix-product-owner.md`:
+  - New rule 12 "Cross-UC invocations cite explicit IDs" with
+    format spec `<PREFIX>-UC-XXX | <Title> | <Package>`, mirror
+    rule between UC text and Traceability block, and
+    `(downstream — not yet drafted)` escape for forward references
+    (R2-#4)
+  - M1 checklist gains an item enforcing the mirror rule (R2-#5)
+- `agents/iconix-traceability.md` — new check #14 "invocation
+  drift" added to the validation suite (R2-#6); broken / unmatched
+  invocations are M1 blockers
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.11 with the Round-2 audit summary
+
+### Note on the example
+The Write Customer Review example was authored before v0.9.11 and
+will not match the new template fields. This is intentional —
+running `/iconix-upgrade --dry-run examples/write-customer-review/`
+should now flag the example's UC as needing retrofit (missing
+`Intakes:` field per v0.9.10, alt course A's preamble per v0.9.10,
+plus the new v0.9.11 gaps). That's the v0.9.9 dogfood test we owe;
+the example refresh itself is intentionally deferred until the
+Round-2-and-beyond fixes are done.
+
 ## [0.9.10] — 2026-05-10
 
 Forcing-function fixes. We started a real-world test run of the kit
