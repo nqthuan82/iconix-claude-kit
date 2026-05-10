@@ -5,6 +5,161 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.20] — 2026-05-10
+
+Round 7 — first **real M3 Tester** forcing-function run.
+Followed the v0.9.13 Tester prompt against BS-UC-001 + BS-RB-001
++ my fresh BS-SD-001 + class model + container-mapping +
+nfr-annotations to produce fresh test plan + per-course TCs +
+per-controller unit TCs. Diffed against the example's 7 TCs +
+test plan + sampled BS-TC-001 (system, basic) and BS-TC-002
+(unit, alt-D) for code-level structure.
+
+**Ten issues** found. Slightly less than M3 Developer (12)
+because the Tester had two existing templates (`test-case-template`,
+`test-plan-template`) absorbing some surface; Developer had only
+one (`sequence-template`). **Confirms: shipped templates correlate
+inversely with finding count.** Pattern continues:
+
+  - M1 PO:        prompt 13 + real 7  (v0.9.10/11 + v0.9.15)
+  - M2 Analyst:   prompt 8  + real 6  (v0.9.13 + v0.9.17)
+  - M2 Architect: prompt 10 + real 10 (v0.9.14 + v0.9.18)
+  - M3 Developer: prompt 0  + real 12 (v0.9.19)
+  - M3 Tester:    prompt 0  + real 10 (v0.9.20) <-- this round
+
+Ten fixes, three groups:
+
+### Group A — Coverage strategy / rule contradicts example (2 fixes)
+
+  M3T-R-#1 "One test per controller" was a mandatory rule but the
+        example BS-UC-001 has 11 controllers and only 7 TCs total
+        — many controllers have NO dedicated unit TC. Fix:
+        reworded to "every controller exercised by ≥1 TC (unit OR
+        system); unit preferred for non-trivial logic, system-
+        transitive acceptable for orchestration steps." The
+        example's strategy is now the documented strategy.
+
+  M3T-R-#2 TC template's `Robustness controller:` field was
+        SINGULAR; example uses `Robustness controllers exercised:`
+        (plural, comma-separated). Fix: template renamed and
+        reformatted; one TC may exercise multiple controllers.
+
+### Group B — Implementation surface missing from templates (4 fixes)
+
+  M3T-R-#3 TC template had NO `## Implementation note` section,
+        but every example TC has runnable code (60+ lines of C#
+        per TC). The biggest gap of this round. Fix: new
+        `## Implementation note (<stack> + <test framework>, per
+        <ADR>)` section in the TC template with explicit guidance:
+        cite stack, test framework, ADRs, infrastructure
+        dependencies. The example's runnable code blocks finally
+        have a home in the kit. Closes the gap between TC-as-spec
+        and TC-as-runnable-test.
+
+  M3T-R-#4 Test-plan template had no Test-framework / dependencies
+        section. Example's tests reference WebApplicationFactory,
+        Testcontainers, NSubstitute, Reqnroll — none documented.
+        Fix: new §6 "Test framework / dependencies" with rows for
+        primary framework, mocking lib, integration infra, BDD
+        framework (when applicable), test data builders, DB test
+        doubles, HTTP/browser automation. Includes guidance for
+        the per-TC BDD convention (BDD scoped to acceptance tests
+        only).
+
+  M3T-R-#6 `edge-case-reports/UC-XXX-edge-cases.md` declared as
+        Tester output; no template. Fix: new
+        `templates/edge-case-report-template.md` covering all 7
+        edge-case families with one row per family — covering TC
+        OR documented waiver. Silent omission no longer possible.
+
+  M3T-R-#7 `test-matrix.md` declared as Tester output; no template.
+        Fix: new `templates/test-matrix-template.md` with REQ↔UC↔TC
+        coverage table, superseded-TC ledger, orphan/gap audit.
+        `iconix-metrics` will parse Pass/Fail/Skip from this
+        matrix.
+
+### Group C — Convention / lifecycle ambiguities (4 fixes)
+
+  M3T-R-#5 Per-TC BDD when project default is non-BDD was
+        undocumented. Example has `bdd: false` in config but
+        BS-TC-101 uses Reqnroll. Fix: new TC `## Type` value
+        `acceptance-bdd` for stakeholder-signed acceptance TCs
+        using Gherkin even when project default is xUnit. Tester
+        agent prompt now formalizes the convention; test-plan §6
+        documents the framework scope; `features/UC-XXX.feature`
+        artifact rule updated.
+
+  M3T-R-#9 Acceptance TCs in Gherkin format don't fit the
+        template's two-column Steps/Expected mirror. Fix:
+        template's Steps section now allows Given/When/Then prose
+        when `## Type: acceptance-bdd`; Expected may be empty
+        (Then clauses live inside Steps).
+
+  M3T-R-#10 Regression TC's `Supersedes TC:` lifecycle was
+        unspecified. Example BS-TC-021 supersedes BS-TC-003 but
+        TC-003's file is still present and unmarked. Fix: new
+        `## Status` field on TC template (`active` /
+        `superseded by TC-XXX` / `retired`); Tester agent's new
+        `# Superseded TC lifecycle` section formalizes the
+        keep-and-mark convention; test-matrix template includes a
+        "Superseded TC ledger" section.
+
+  M3T-R-#12 `## Edge case family` was mandatory but always `n/a`
+        for basic-course TCs. Fix: section made conditional —
+        include only if the TC tests one of the edge-case
+        families; omit entirely otherwise.
+
+Methodology audit per CLAUDE.md: methodology-surface change. All
+cited rules already approved; v0.9.20 enriches kit-location
+citations and closes a major template-coverage gap. No status
+shifts. Cited Ch12 Top 10 (test-design rules), Ch12 #7
+(test-first thinking), Ch11 #6 (gather data; build boilerplate
+checklists — extended to the test-matrix template's superseded-TC
+ledger and orphan/gap audit).
+
+Cumulative: 10 forcing-function rounds, 82 issues fixed
+(13+8+10+5+7+6+1[v0.9.16]+10+12+10).
+
+### Added
+- `templates/edge-case-report-template.md` — per-UC edge-case
+  enumeration with one row per of the 7 families; covering TC
+  OR documented waiver. Includes coverage summary at the bottom.
+- `templates/test-matrix-template.md` — living REQ↔UC↔TC matrix
+  with status legend (Pass / Fail / Skip / Pending / Superseded),
+  superseded-TC ledger, and orphan / gap audit (orphan TCs,
+  uncovered UCs, stale automation entries).
+
+### Changed
+- `templates/test-case-template.md` — substantial rewrite:
+  - New `## Type` value `acceptance-bdd` (M3T-R-#5)
+  - New `## Status` field for superseded TCs (M3T-R-#10)
+  - `Robustness controller:` → `Robustness controllers exercised:`
+    (plural list) (M3T-R-#2)
+  - Steps section accepts Given/When/Then for acceptance-bdd
+    (M3T-R-#9)
+  - `## Edge case family` made conditional (M3T-R-#12)
+  - New `## Implementation note (<stack> + <test framework>, per
+    <ADR>)` section with code block (M3T-R-#3)
+- `templates/test-plan-template.md` — new §6 "Test framework /
+  dependencies" with 7 layer rows (M3T-R-#4)
+- `agents/iconix-tester.md`:
+  - ICONIX rules reworded — controller-coverage rule now describes
+    the two-path strategy (unit-preferred vs system-transitive)
+    (M3T-R-#1)
+  - New `# Per-TC BDD convention` section (M3T-R-#5)
+  - New `# Superseded TC lifecycle` section (M3T-R-#10)
+  - `# Artifacts you produce` updated with template references
+    for all 5 outputs
+  - `# Test case template` section expanded with field-by-field
+    guidance keyed to the new template structure
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy the 2 new templates to `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts the 2 new
+  templates are installed.
+- `README.md` — 2 new templates added to the directory listing.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.20 with the Round-7-real audit summary.
+
 ## [0.9.19] — 2026-05-10
 
 Round 6 — first **real M3 Developer** forcing-function run.

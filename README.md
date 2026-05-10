@@ -57,6 +57,8 @@ iconix-kit/
     ├── milestone-report-template.md        # M1/M2/M3 readiness format (v0.9.18+)
     ├── class-model-template.puml           # detailed static model (v0.9.19+)
     ├── cdr-report-template.md              # per-UC M3 readiness report (v0.9.19+)
+    ├── edge-case-report-template.md        # per-UC edge-case enumeration (v0.9.20+)
+    ├── test-matrix-template.md             # living REQ↔UC↔TC matrix (v0.9.20+)
     ├── change-impact-template.md
     ├── graphify-setup.md        # Graphify integration setup guide
     ├── intake-transcript-template.md   # stakeholder interview / meeting notes

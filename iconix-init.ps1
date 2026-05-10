@@ -111,6 +111,8 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\milestone-report-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\class-model-template.puml")                "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\cdr-report-template.md")                   "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\edge-case-report-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\test-matrix-template.md")                  "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\use-case-diagram-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\domain-model-initial-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
