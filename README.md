@@ -49,6 +49,11 @@ iconix-kit/
     ├── test-case-template.md
     ├── test-plan-template.md
     ├── adr-template.md          # architecture decision record
+    ├── container-mapping-template.md       # per-UC container mapping (v0.9.14+)
+    ├── nfr-annotations-template.md         # per-UC NFR enforcement (v0.9.14+)
+    ├── nfr-catalog-template.md             # project-wide NFR catalog (v0.9.14+)
+    ├── architecture-package-map-template.md  # CODE/deployment packages (v0.9.14+)
+    ├── integration-surface-template.md     # external touchpoints (v0.9.14+)
     ├── change-impact-template.md
     ├── graphify-setup.md        # Graphify integration setup guide
     ├── intake-transcript-template.md   # stakeholder interview / meeting notes

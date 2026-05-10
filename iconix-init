@@ -126,6 +126,11 @@ if [[ "${SCOPE}" == "project" ]]; then
   mkdir -p "docs/iconix/templates"
   cp "${WORKDIR}/templates/req-template.md"            "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/adr-template.md"           "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/container-mapping-template.md"            "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/nfr-annotations-template.md"              "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/nfr-catalog-template.md"                  "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/architecture-package-map-template.md"     "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/integration-surface-template.md"          "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/use-case-template.md"        "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/use-case-diagram-template.puml" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/domain-model-initial-template.puml" "docs/iconix/templates/" 2>/dev/null || true

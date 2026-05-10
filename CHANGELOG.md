@@ -5,6 +5,104 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.14] — 2026-05-10
+
+Round 2 forcing-function fixes (M2 Architect phase). We continued
+the WCR run from v0.9.13 into M2 Architect. **Ten issues** found —
+the largest single-agent finding count of any forcing-function
+round. Why so many? The Architect was the most under-templated
+agent in the kit: it produces 5 artifact categories but only ADRs
+had a template, and the worked example only demonstrates 1 of the
+5. Fresh users had no format guidance for 4 of the 5 outputs.
+
+This commit ships 5 new templates and a substantial overhaul of
+the Architect agent prompt to close the gap.
+
+Ten fixes:
+
+  M2A-#1 4 of 5 Architect artifacts had no template. Added
+         container-mapping, nfr-annotations, nfr-catalog,
+         architecture-package-map, integration-surface templates.
+  M2A-#2 WCR example only demonstrates ADR. (Example expansion
+         deferred to a future refresh; v0.9.14 ships the templates
+         so future projects have format guidance.)
+  M2A-#3 Folder mismatch — installer didn't create `packages/`
+         or `integration-points/`. Resolved by relocating these
+         project-wide artifacts to `docs/architecture/` (already
+         created by installer).
+  M2A-#4 "package-map" was semantically ambiguous (UC packages vs
+         code packages). Renamed agent's output to
+         `docs/architecture/package-map.md` and clarified in the
+         prompt + template that this is CODE/deployment-level
+         packaging, distinct from PO-owned `use-case-packages/`.
+  M2A-#5 No template for `nfr-catalog.md`. Added.
+  M2A-#6 Architect's input list named `nfr-catalog.md` (bare); the
+         actual configured path is `docs/nfr-catalog.md`. Updated
+         the agent prompt to read from the configured path.
+  M2A-#7 Container-mapping format unspecified. Template added
+         (containers + role + testability seam + NFR refs +
+         cross-cutting concerns + open architectural questions).
+  M2A-#8 NFR-annotations format unspecified. Template added
+         (NFR ID + target + where enforced + Reviewer-checkable
+         signal + test-design hints for Tester).
+  M2A-#9 PDR readiness checklist had no item for "open
+         architectural questions" per Decision rule 5. Added: "No
+         blocking architectural questions remain open without a
+         Proposed ADR."
+  M2A-#10 Concurrent-touch resolver scope vs "never rewrite UCs"
+         was ambiguous. Clarified routing: UC splits, entity-name
+         changes in UC text, and RB updates are dispatched via
+         /iconix-next to PO/Analyst respectively; the Architect
+         never edits those files even when its decision drove the
+         change.
+
+Methodology audit per CLAUDE.md: methodology-surface change. All
+cited rules already approved; v0.9.14 enriches kit-location
+citations and closes a major template-coverage gap. No status
+shifts. Cited Ch7 Top 10 (architecture decisions documented;
+testability seams; cross-cutting concerns) and Ch6 PDR.
+
+### Added
+- `templates/container-mapping-template.md` — per-UC container
+  mapping with role, testability seams, NFR refs, cross-cutting
+  concerns, open architectural questions, traceability footer.
+- `templates/nfr-annotations-template.md` — per-UC NFR
+  enforcement detail with target, where-enforced, Reviewer-
+  checkable signal, test-design hints for the Tester.
+- `templates/nfr-catalog-template.md` — project-wide NFR catalog
+  with stable IDs, categories, measurable targets, ownership,
+  UC-applicability, covering-ADR references.
+- `templates/architecture-package-map-template.md` — code /
+  deployment package decomposition with allowed-dependencies
+  matrix, UC→package allocation, architecture-test enforcement
+  guidance.
+- `templates/integration-surface-template.md` — inbound /
+  outbound / bidirectional integration touchpoints with auth,
+  rate limits, failure modes, ADR refs.
+
+### Changed
+- `agents/iconix-architect.md`:
+  - `# Inputs you rely on` — NFR catalog path now references
+    `iconix.config.yaml` `nfr_catalog` configuration; mentions
+    template for first-time setup (M2A-#5, M2A-#6)
+  - `# Artifacts you produce` — restructured into per-UC,
+    project-wide, and ADR groups; each artifact references its
+    template; project-wide artifacts relocated to
+    `docs/architecture/` (M2A-#1, M2A-#2, M2A-#3, M2A-#4,
+    M2A-#7, M2A-#8)
+  - `# Resolving concurrent touches` — added explicit routing for
+    UC splits, entity-name changes, RB updates (M2A-#10)
+  - `# PDR readiness check` — expanded to enforce all 5 Architect
+    artifacts; new "no blocking architectural questions without a
+    Proposed ADR" item (M2A-#9)
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy the 5 new templates to `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts all 5 new
+  templates are installed.
+- `README.md` — 5 new templates added to the directory listing.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.14 with the M2-Architect audit summary.
+
 ## [0.9.13] — 2026-05-10
 
 Round 2 forcing-function fixes (M2 Analyst phase). We continued
