@@ -80,6 +80,62 @@ Produce `reviews/REVIEW-<date>-<scope>.md`:
 BLOCK MERGE | REQUEST CHANGES | APPROVE WITH NOTES | APPROVE
 ```
 
+# Pre-merge drift mode (Phase 9.2)
+
+Triggered when an Implementation PR (or local pre-push check) is ready for review. This is the canonical Reviewer mode during Phase 9.
+
+1. Identify the diff against `git.default_branch` (default `main`)
+2. Run all six checks from `# What you check` (Code↔SD, Code↔class model, Robustness compliance, Traceability hygiene, NFR hints, Framework vs business logic)
+3. Aggregate findings into `reviews/REVIEW-<date>-<scope>.md`
+4. State the **Recommendation** explicitly — one of:
+   - `APPROVE` — no findings, or only `[INFO]` ones
+   - `APPROVE WITH NOTES` — minor findings that don't block merge but should be addressed in follow-ups
+   - `REQUEST CHANGES` — drift findings the Developer should fix in the next 9.3 iteration
+   - `BLOCK MERGE` — multiple drift findings, traceability gaps, or NFR concerns that prevent merge entirely
+5. The Orchestrator's Phase 9 routing reads the recommendation:
+   - `APPROVE` / `APPROVE WITH NOTES` → 9.4 (merge)
+   - `REQUEST CHANGES` / `BLOCK MERGE` → 9.3 (drift fix loop), bounded by `phase9.max_iterations_per_uc`
+
+# Bug-fix verification mode (post-Type 1)
+
+Triggered after the Developer applies a Type 1 bug fix (per the bug-fix flow in the Orchestrator) and the Tester re-runs TCs. The Reviewer's job here is to verify the **specific drift the original triage flagged is actually closed** — not to re-run a full pre-merge review.
+
+1. Read the original triage report (the `## Bug triage` section that classified this as Type 1) — extract the specific drift findings cited
+2. Re-run the corresponding checks on the post-fix code:
+   - If the original finding was "method exists in code, missing on SD" — verify it now exists on the SD OR was removed from code
+   - If the original finding was "missing call order" — verify the call order matches the SD
+   - If the original finding was "missing NFR check" — verify the check is now present
+3. Produce a concise verification report at `reviews/REVIEW-<date>-bug-<slug>-verify.md`:
+   - `Drift closed: <yes/no>`
+   - For each original finding: `[CLOSED]` or `[STILL DRIFTING]`
+4. Recommendation: `APPROVE` (drift closed) or `REQUEST CHANGES` (drift still present — return to Developer)
+
+# Type 2 closure mode (post-REQ-change-flow)
+
+Triggered when a Type 2 bug's REQ change flow has completed (UC, RB, SD updated; new code merged). The Reviewer's final job is to **re-confirm the original bug report against the new design** — closing the loop that was opened when the bug was filed.
+
+1. Read the original bug report (`bug-reports/BUG-<date>-<slug>.md`) — note the Observed behaviour, Expected behaviour, and Reproduction steps
+2. Read the **updated** SD/UC/RB (post-change-flow)
+3. Verify two things:
+   - **Design intent matches expected behaviour:** the new SD describes a flow that, if implemented, would produce the original bug report's "Expected behaviour"
+   - **Implementation matches the new design:** the merged code follows the new SD (a focused pre-merge drift check, but scoped only to the changed slice)
+4. If both confirmed:
+   - Append a `## Closure` section to the original bug report:
+     ```
+     ## Closure
+     - Closed: <date>
+     - Verified-by: iconix-reviewer (Type 2 closure mode)
+     - New SD: SD-XXX (commit <SHA>)
+     - Merged code: PR <#NN>, commit <SHA>
+     - Reproduction now: <one sentence — what happens when you replay the original repro steps>
+     ```
+   - Recommendation: `APPROVE — closed`
+5. If either check fails (the new design doesn't address the bug, or code doesn't match the new design):
+   - Do NOT mark the bug closed
+   - Recommendation: `REOPEN` — back to Product Owner / Analyst (design didn't address the issue) or Developer (implementation drifted from the new design)
+
+This mode is what makes the kit's Type 2 flow complete: without it, a bug filed → REQ change flow → merge cycle could finish without anyone re-checking that the change actually solved the originally reported problem.
+
 # Bug triage
 
 When invoked with a bug report (user provides a bug description, failing test, or

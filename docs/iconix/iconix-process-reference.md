@@ -235,16 +235,16 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 | # | Guideline | Status | Kit location |
 |---|---|---|---|
-| 10 | Drive code directly from the design | ✅ | Developer agent core principle |
-| 9 | If coding reveals design is wrong, change it and review the process | ✅ | Reviewer detects drift; bug Type 2 flow triggers design update |
-| 8 | Hold regular code inspections | ✅ | `iconix-reviewer.md` — drift detection = code inspection |
+| 10 | Drive code directly from the design | ✅ | Developer agent core principle; `iconix-developer.md` `# Implementation mode` (Phase 9.1) makes this explicit (added v0.9.8) |
+| 9 | If coding reveals design is wrong, change it and review the process | ✅ | Reviewer detects drift; bug Type 2 flow triggers design update; Reviewer's `# Type 2 closure mode` (v0.9.8) re-confirms the change actually addressed the reported issue |
+| 8 | Hold regular code inspections | ✅ | `iconix-reviewer.md` `# Pre-merge drift mode` — Phase 9.2 makes the inspection routine on every Implementation PR (added v0.9.8) |
 | 7 | Always question the framework's design choices | ✅ | `iconix-reviewer.md` check #6 — flags framework concerns mixed into business logic; no-ADR framework trade-offs flagged |
 | 6 | Don't let framework issues take over business issues | ✅ | `iconix-reviewer.md` check #6 — flags methods with framework boilerplate but no visible domain behaviour |
-| 5 | If code gets out of control, revisit the design | ✅ | Bug Type 2 flow re-runs Traceability → full change pipeline |
-| 4 | Keep design and code in sync | ✅ | Reviewer + M3 gate |
-| 3 | Focus on unit testing while implementing code | ✅ | Developer is expected to write unit tests |
+| 5 | If code gets out of control, revisit the design | ✅ | Bug Type 2 flow re-runs Traceability → full change pipeline; Phase 9 iteration cap (`phase9.max_iterations_per_uc`) escalates a stuck Type 1 to Architect / PO before it becomes Type 2 (added v0.9.8) |
+| 4 | Keep design and code in sync | ✅ | Reviewer + M3 gate; Phase 9.2 pre-merge drift check is the per-PR enforcement (added v0.9.8) |
+| 3 | Focus on unit testing while implementing code | ✅ | Developer is expected to write unit tests; `iconix-tester.md` `# Test implementation mode` runs Tester in parallel with Developer at Phase 9.1 (added v0.9.8) |
 | 2 | Don't overcomment code | ❌ | Not in kit (out of scope for agent prompts) |
-| 1 | Implement the alternate courses, not just the basic course | ✅ | Developer + Tester — both handle alternate courses |
+| 1 | Implement the alternate courses, not just the basic course | ✅ | Developer + Tester — both handle alternate courses; Phase 9 Implementation mode explicitly cites Ch10 #1 (added v0.9.8) |
 
 ---
 
@@ -346,7 +346,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ## Summary Coverage Matrix
 
-_Last reviewed: v0.9.7 (Project-wide metrics + audit evidence — kit extension; new row in Drift-detection sub-table for "Project-wide metrics + audit evidence"; Ch11 #6 kit-location updated to cite the project-wide extension. Honestly marked as not prescribed by the book; closest references are Ch11 #6 (per-review data gathering) and Code-Inspection-vs-Code-Review sidebar. Verified via PDF grep — "metric/dashboard/measure/kpi" appears only in incidental contexts (per-review metrics gathering on line 12405; class-count metrics on line 648). ISO-audit framing added to acknowledge SME / regulated-environment use case. v0.9.6 and v0.9.5 entries unchanged.)_
+_Last reviewed: v0.9.8 (Phase 9 implementation loop — operationalizes existing Ch10 rules #10/#9/#8/#5/#4/#3/#1; no new rules introduced. Ch10 row citations updated to cite the new Phase 9 sub-states (9.1–9.4) and the new Reviewer modes (Pre-merge drift, Bug-fix verification, Type 2 closure). Verified via PDF read of Ch10 Top 10 list (book p. 259) — every Phase 9 routing rule cites a specific Top 10 number rather than improvising. **Type 2 closure** (Reviewer re-confirming the original bug report against the new SD) is a small refinement of Ch10 #9 ("review the process") — not a new rule, but a missing closure step in the kit's prior bug flow. v0.9.7 entries unchanged.)_
 
 Coverage formula: (✅ × 1 + ⚠️ × 0.5) ÷ (✅ + ⚠️ + ❌) — 🚫 (out-of-scope) excluded from denominator
 

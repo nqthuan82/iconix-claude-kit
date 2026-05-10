@@ -74,18 +74,36 @@ state "M3 Gate / CDR\n(Traceability)" as M3Gate <<gate>>
 M3Gate --> CDRPhase       : [SD→CLS→TC links broken\nor test plan missing]
 M3Gate --> Implementation : [M3 passed]
 
-' ── Phase 4 : Implementation ───────────────────────────────────────────
-state "Implementation\n(Developer + Tester iterate)" as Implementation <<agent>>
-Implementation --> Done : release
+' ── Phase 4 : Implementation loop (Phase 9 sub-states) ─────────────────
+state "Implementation Loop" as Implementation <<agent>> {
+  state "9.1 Implementation kickoff\n(Developer + Tester in parallel)" as Phase9_1
+  state "9.2 Pre-merge drift check\n(Reviewer)" as Phase9_2
+  state "9.3 Drift fix iteration\n(Developer + Tester)" as Phase9_3
+  state "9.4 Implementation merge\n(/iconix-pr → CI green → main)" as Phase9_4
+  state "Escalate to Architect / PO\n(iteration cap hit)" as Phase9_Escalate <<change>>
+
+  [*]        --> Phase9_1
+  Phase9_1   --> Phase9_2 : code + tests ready
+  Phase9_2   --> Phase9_4 : APPROVE\nor APPROVE WITH NOTES
+  Phase9_2   --> Phase9_3 : REQUEST CHANGES\nor BLOCK MERGE
+  Phase9_3   --> Phase9_2 : drift fixes applied;\nre-review
+  Phase9_3   --> Phase9_Escalate : iteration cap hit\n(phase9.max_iterations_per_uc)
+  Phase9_Escalate --> PrelimDesign : architectural — back to Architect
+  Phase9_Escalate --> Requirements : requirements-shaped — back to PO
+  Phase9_4   --> [*]
+}
+Implementation --> Done : all UCs reach 9.4
 
 ' ── Done ───────────────────────────────────────────────────────────────
 state "Done" as Done
 Done --> [*]
 
 ' ── Bug Flow ────────────────────────────────────────────────────────────
+' BugTriage is the only bug-flow-specific state. The Type 1 fix-and-verify
+' loop is the SAME loop as Phase 9.3 → 9.2 — book Ch10 #9 treats it as one
+' process, so we don't redraw the loop, we re-enter the Implementation
+' Loop on a bugfix/T1-* branch instead of a feature/UC-* branch.
 state "Bug Triage\n(Reviewer)" as BugTriage <<bug>>
-state "Bug Fix\n(Developer)" as BugFix <<bug>>
-state "Bug Verify\n(Tester)" as BugVerify <<bug>>
 
 note left of BugTriage
   Entry points:
@@ -97,11 +115,9 @@ note left of BugTriage
     iconix-orchestrator.md)
 end note
 
-BugTriage --> BugFix        : Type 1 — code diverges\nfrom correct SD
-BugTriage --> REQChange     : Type 2 — design is wrong\n→ full REQ change flow
-BugFix    --> BugVerify     : fix applied
-BugVerify --> Implementation : TCs pass + no regressions
-BugVerify --> BugFix        : TCs still failing
+Done --> BugTriage : bug reported on shipped feature
+BugTriage --> Phase9_3 : Type 1 — code diverges from SD\n(re-enters Implementation Loop\nat 9.3 on bugfix/T1-* branch;\nReviewer uses Bug-fix verification mode at 9.2)
+BugTriage --> REQChange : Type 2 — design is wrong\n→ full REQ change flow\n(eventually re-enters\nImplementation Loop)
 
 ' ── REQ Change Flow ──────────────────────────────────────────────────────
 state "REQ Change\n(/iconix-impact → CI report)" as REQChange <<change>>

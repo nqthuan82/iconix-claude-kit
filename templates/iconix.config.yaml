@@ -46,6 +46,15 @@ concurrent_check:
   detect_boundaries: true         # check for same-named controllers across UCs
   detect_db_containers: true      # check for two UCs writing the same DB container
 
+# Phase 9 implementation loop (added v0.9.8)
+# Caps the Developer ↔ Tester ↔ Reviewer loop per UC. When the cap is hit,
+# the Orchestrator escalates instead of continuing — a Type 1 problem that
+# can't be fixed in N rounds is probably a Type 2 (design) problem.
+phase9:
+  enabled: true
+  max_iterations_per_uc: 5         # consistent with milestones.max_revisions_per_artifact (3) but slightly higher because Phase 9 has more iteration types
+  reviewer_required_for_merge: true   # Pre-merge drift check is mandatory; false = advisory only
+
 # Metrics snapshot (added v0.9.7)
 # Produces audit-friendly markdown + machine-readable JSON for downstream
 # dashboards. Snapshot-based; reads current state from artifacts + git log.

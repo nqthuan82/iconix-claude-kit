@@ -54,6 +54,7 @@ iconix-kit/
     ├── intake-feature-request-template.md  # feature request / ticket / user story
     ├── bug-report-template.md          # optional structured input for /iconix-bug
     ├── concurrent-touch-template.md    # M2-gate concurrent-touch report format (v0.9.6+)
+    ├── phase9-cycle-template.md        # optional Phase 9 cycle log format (v0.9.8+)
     ├── metrics-snapshot-template.md    # markdown format for metrics snapshots (v0.9.7+)
     ├── metrics-schema.json             # JSON schema for snapshot output (v0.9.7+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
@@ -179,7 +180,8 @@ incomplete. It never produces artifacts itself.
           │    [M3 gate] ── Traceability ── validates SD→CLS→TC links;
           │                                 checks test-plan exists and is complete
           │
-          ├─► Implementation   — Developer + Tester iterate (build to design, fix drift)
+          ├─► Implementation loop  — Phase 9: 9.1 kickoff → 9.2 pre-merge drift → 9.3 fix → 9.4 merge
+          │       (capped at phase9.max_iterations_per_uc; escalates to Architect / PO if hit)
           │
           └─► (done — release)
 ```
@@ -308,6 +310,50 @@ Reviewer (triage → Type 2)
 > **Review checklist:** After each review the Reviewer appends recurring defect patterns
 > to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
 > of the most common drift types, used to front-load future reviews.
+
+### Phase 9 — the implementation loop (v0.9.8+)
+
+After M3 / CDR passes, the implementation phase isn't a black box ("Developer + Tester iterate") — it's a 4-sub-state loop owned by the Orchestrator, with explicit handoffs and an iteration cap.
+
+```
+9.1 Kickoff    │  Developer codes from SD; Tester implements TCs; both on
+               │  feature/UC-XXX-<slug>. Commits: [UC-XXX] Impl: <summary>.
+   ▼
+9.2 Pre-merge  │  Reviewer drift check. Verdict: APPROVE | APPROVE WITH NOTES |
+   drift       │  REQUEST CHANGES | BLOCK MERGE.
+   ▼
+[if APPROVE / WITH NOTES]            [if REQUEST CHANGES / BLOCK MERGE]
+   │                                              ▼
+   │                                  9.3 Drift fix loop
+   │                                  Developer fixes the specific findings;
+   │                                  Tester re-runs affected TCs + regression.
+   │                                  Back to 9.2.
+   │                                  Capped at phase9.max_iterations_per_uc
+   │                                  (default 5); escalate to Architect (if
+   │                                  architectural) or PO (if scope-shaped).
+   ▼
+9.4 Merge      │  /iconix-pr ready-for-review; CI green; merged to main.
+               │  UC moves to "Done" in /iconix-metrics.
+```
+
+**Configuration** (`iconix.config.yaml`):
+
+```yaml
+phase9:
+  enabled: true
+  max_iterations_per_uc: 5         # cap on the 9.2↔9.3 loop per UC
+  reviewer_required_for_merge: true   # pre-merge drift check is mandatory
+```
+
+**Three new Reviewer modes:**
+
+- **Pre-merge drift mode** (9.2) — full code↔SD↔class-model drift check on the PR diff
+- **Bug-fix verification mode** (post-Type 1) — verify the *specific* drift the original triage flagged is actually closed
+- **Type 2 closure mode** (post-REQ-change-flow) — re-confirm the original bug report against the new SD; appends a `## Closure` section to the bug report. **This closes the loop that opens when a Type 2 bug is filed** — without it, a fix could merge without anyone re-checking that it actually addressed the reported problem.
+
+**Optional cycle log:** teams that want audit-grade evidence of the loop history can maintain `phase9-cycles/UC-XXX-cycle.md` per UC (template at `templates/phase9-cycle-template.md`).
+
+**Methodology:** operationalizes book Ch10 #10 (drive code from design), #9 (if coding reveals design wrong, change it AND review the process), #8 (regular code inspections), #5 (if code gets out of control, revisit the design), #4 (keep design and code in sync), #3 (focus on unit testing while implementing), #1 (implement alternate courses too) — all already ✅ in the matrix; v0.9.8 just makes the loop routing explicit.
 
 ### Metrics & audit evidence (v0.9.7+) — `iconix-metrics` agent
 

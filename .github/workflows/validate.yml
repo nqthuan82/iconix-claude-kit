@@ -122,6 +122,10 @@ jobs:
           test -d metrics || { echo "metrics/ folder missing"; exit 1; }
           # v0.9.7: metrics section present in seeded config
           grep -q 'metrics:' iconix.config.yaml || { echo "metrics section missing in iconix.config.yaml"; exit 1; }
+          # v0.9.8: phase 9 cycle template + folder + config section
+          test -f docs/iconix/templates/phase9-cycle-template.md || { echo "phase9-cycle-template.md missing"; exit 1; }
+          test -d phase9-cycles || { echo "phase9-cycles/ folder missing"; exit 1; }
+          grep -q 'phase9:' iconix.config.yaml || { echo "phase9 section missing in iconix.config.yaml"; exit 1; }
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }

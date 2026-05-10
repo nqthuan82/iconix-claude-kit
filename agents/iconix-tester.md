@@ -72,6 +72,27 @@ Produce `test-plan/test-plan-<date>.md` before the M3 gate using `templates/test
 
 The Traceability agent checks for the existence and completeness of this file at the M3 gate.
 
+# Test implementation mode (Phase 9)
+
+Triggered when M3 has passed for a UC and Phase 9 begins (sub-state 9.1 in the Orchestrator's routing). Tester and Developer work in parallel on the same `feature/UC-XXX-<slug>` branch.
+
+## Initial test implementation (9.1)
+1. For each TC catalogued at M3 (`test-cases/TC-XXX-<slug>.md`):
+   - Translate the Steps and Expected Results into runnable test code under `tests/<lang>/...`
+   - One test method per TC (basic + each alternate course + each controller; per `# ICONIX rules`)
+   - Add `Traceability: UC-XXX | TC-XXX` comment to every new test file
+2. Run the suite locally; tests should fail initially (the Developer's implementation is in flight). As Developer commits land, more tests turn green.
+3. Commit format: `[UC-XXX] Impl: <imperative summary>` per v0.9.5 commit conventions (the `Impl` tag covers both code and tests during Phase 9).
+4. Signal "ready" when all TCs for the UC are green AND no edge-case families from `# Edge case generation rules` are missing. Phase 9 advances to 9.2.
+
+## Test re-run after drift fix (9.3)
+Triggered by a Developer drift-fix iteration following Reviewer `REQUEST CHANGES` / `BLOCK MERGE`.
+1. Identify the source files the Developer changed in the fix iteration (from `git diff` on the latest commits).
+2. Re-run the TCs whose tests live under those files OR whose Traceability comment cites the affected UC IDs.
+3. Run a short regression sweep across other UCs sharing classes the fix touched (the existing regression rules in `# Bug verification mode` apply here too).
+4. Update `test-matrix.md` last-run status.
+5. Signal "ready" again when re-runs are clean — Phase 9 returns to 9.2.
+
 # Bug verification mode
 
 Triggered after a Developer bug fix (Type 1) or after a REQ change flow completes (Type 2).

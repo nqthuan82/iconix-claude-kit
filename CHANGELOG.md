@@ -5,6 +5,128 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.8] — 2026-05-10
+
+Closes the largest remaining behavioural gap from the v0.9.4 kit
+assessment: **Phase 9 — the implementation loop**. Until now, the
+post-CDR phase was a one-line placeholder in the orchestrator
+("Developer + Tester iterate") with no specification of who owns
+which iteration, when the Reviewer kicks in, or what triggers
+"done." v0.9.8 expands Phase 9 into 4 explicit sub-states
+(9.1 kickoff → 9.2 pre-merge drift → 9.3 fix loop → 9.4 merge)
+with handoff conditions, an iteration cap, and escalation paths.
+
+Bundles backlog item #2 — **Reviewer Type 2 closure**. After a Type 2
+bug's REQ change flow completes, the Reviewer now re-confirms the
+*original* bug report against the *new* SD, appending a `## Closure`
+section to the bug report. Without this, a Type 2 fix could merge
+without anyone re-checking it actually solved the reported problem.
+Both changes ship together because Phase 9 is the natural home for
+the bug-fix paths.
+
+Methodology audit: operationalizes existing Ch10 rules (#10, #9, #8,
+#5, #4, #3, #1) — no new rules introduced. Verified via PDF read of
+the Ch10 Top 10 list. Type 2 closure is a small refinement of Ch10
+#9 ("review the process") — closing a missing step in the kit's
+prior bug flow rather than inventing a new methodology.
+
+### Added
+- `templates/phase9-cycle-template.md` — optional per-UC cycle log.
+  Records each Developer ↔ Tester ↔ Reviewer iteration's verdict and
+  the final exit state. For teams wanting audit-grade evidence of
+  the loop history (lives in `phase9-cycles/UC-XXX-cycle.md`).
+- `agents/iconix-reviewer.md` — three new mode sections:
+  - **Pre-merge drift mode (Phase 9.2)** — the canonical Phase 9
+    review. Aggregates code↔SD, code↔class-model, robustness, NFR,
+    framework/business-logic checks into one verdict (APPROVE /
+    APPROVE WITH NOTES / REQUEST CHANGES / BLOCK MERGE). Drives 9.4
+    or 9.3 routing.
+  - **Bug-fix verification mode (post-Type 1)** — focused re-check
+    that the *specific drift the original triage flagged* is closed.
+    Not a full pre-merge review; just verification.
+  - **Type 2 closure mode (post-REQ-change-flow)** — re-confirms the
+    *original bug report* against the *new* SD. Appends a `## Closure`
+    section to the bug report on success; recommends `REOPEN` if the
+    new design or implementation doesn't address the reported issue.
+- `agents/iconix-developer.md` — new **Implementation mode (Phase 9)**
+  section with two sub-modes: initial implementation (9.1) and drift
+  fix iteration (9.3). Cites Ch10 #1 explicitly for alternate-course
+  coverage.
+- `agents/iconix-tester.md` — new **Test implementation mode (Phase 9)**
+  section with two sub-modes: initial test implementation (9.1) and
+  test re-run after drift fix (9.3). Tester runs in parallel with
+  Developer on the same `feature/UC-XXX-<slug>` branch.
+- `templates/iconix.config.yaml` — new `phase9:` section with
+  `enabled` (default true), `max_iterations_per_uc` (default 5 — the
+  9.2↔9.3 cap), `reviewer_required_for_merge` (default true).
+
+### Changed
+- `agents/iconix-orchestrator.md`:
+  - Phase 9 in the phase-order list expanded from one-line placeholder
+    to a pointer to the new `# Phase 9 routing` section.
+  - New section **Phase 9 routing — the implementation loop** with
+    explicit 9.1 / 9.2 / 9.3 / 9.4 sub-state semantics, exit conditions,
+    and the iteration-cap escalation logic (architectural drift →
+    Architect; requirements-shaped → PO; either path effectively bumps
+    a stuck Type 1 to Type 2).
+  - Type 1 bug flow now ends with **Reviewer bug-fix verification mode**
+    (the missing closure step the prior version skipped).
+  - Type 2 bug flow now ends with **Reviewer Type 2 closure mode**.
+- `iconix-state-machine.puml`:
+  - `Implementation` state expanded to a composite state with
+    sub-states 9.1 / 9.2 / 9.3 / 9.4 and an `Escalate` change-state.
+    Loop transition 9.3 → 9.2; cap-hit transition 9.3 → escalate;
+    merge transition 9.4 → done.
+  - **Removed standalone `BugFix` and `BugVerify` states** — they
+    redundantly modelled the same loop as Phase 9.3 → 9.2. The
+    Type 1 bug flow now re-enters the Implementation Loop at 9.3
+    on a `bugfix/T1-*` branch (book Ch10 #9 treats fix-and-verify
+    as one process; the kit shouldn't draw two loops). Reviewer
+    mode selection (Pre-merge drift mode vs Bug-fix verification
+    mode) is an internal detail of the agent at 9.2 — not a
+    separate state-machine flow. `Done` now has an outbound
+    `--> BugTriage` transition for "bug reported on shipped feature."
+- `agents/iconix-orchestrator.md` — `# Bug flow` Type 1 narrative
+  rewritten to acknowledge it's the same loop as Phase 9.3 → 9.2,
+  with the only differences being the branch name and the Reviewer's
+  mode at 9.2. No new behaviour; just stops drawing the loop twice.
+- `README.md`:
+  - `phase9-cycle-template.md` added to the templates listing.
+  - Pipeline diagram now shows `Implementation loop` with the four
+    sub-states inline.
+  - New full **Phase 9 — the implementation loop** section explaining
+    the 4-sub-state flow, configuration, three new Reviewer modes,
+    optional cycle log, and the methodology mapping to Ch10.
+- `docs/iconix/iconix-process-reference.md`:
+  - Ch10 row citations refreshed (#10, #9, #8, #5, #4, #3, #1) to
+    point at the new Phase 9 sub-states and Reviewer modes. Status
+    unchanged on every row (already ✅).
+  - "Last reviewed" bumped to v0.9.8 with rationale citing PDF read
+    of book p. 259.
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell):
+  - Both create `phase9-cycles/` folder during folder-structure
+    seeding.
+  - Both copy `phase9-cycle-template.md` to `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts
+  `phase9-cycle-template.md`, `phase9-cycles/` folder, and the
+  `phase9:` section in seeded `iconix.config.yaml`.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- **Cited rules:** Ch10 #10 (drive code from design), #9 (if coding
+  reveals design wrong, change it AND review the process), #8 (regular
+  code inspections), #5 (if code gets out of control, revisit the
+  design), #4 (keep design and code in sync), #3 (focus on unit
+  testing while implementing), #1 (implement alternate courses too).
+- **Book verification:** PDF read of Ch10 Top 10 list (book p. 259).
+  Confirmed Phase 9's sub-state design maps cleanly to Ch10's
+  guidelines without inventing new ones.
+- **Status shifts:** none. Every Ch10 ✅ row gets a richer kit-location
+  citation pointing at the new Phase 9 sub-states / Reviewer modes.
+- **Type 2 closure framing:** small refinement of Ch10 #9's "AND
+  review the process" — closing a missing step in the prior bug flow.
+  Not classified as a new methodology rule.
+- **No contradictions found.**
+
 ## [0.9.7] — 2026-05-10
 
 Closes the #1 gap from the v0.9.6 backlog: **metrics & audit evidence**.

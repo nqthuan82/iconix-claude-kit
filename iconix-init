@@ -118,7 +118,7 @@ if [[ "${SCOPE}" == "project" ]]; then
     requirements use-cases use-case-packages robustness domain-model \
     class-model sequence container-mapping nfr-annotations \
     adrs test-cases features test-matrices milestone-reports \
-    metrics \
+    metrics phase9-cycles \
     docs/architecture docs/iconix
   echo "  created ICONIX folder structure"
 
@@ -140,6 +140,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/intake-feature-request-template.md"       "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/concurrent-touch-template.md"             "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/phase9-cycle-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-snapshot-template.md"             "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-schema.json"                      "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true

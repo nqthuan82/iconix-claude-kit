@@ -95,7 +95,7 @@ try {
             "requirements","use-cases","use-case-packages","robustness","domain-model",
             "class-model","sequence","container-mapping","nfr-annotations",
             "adrs","test-cases","features","test-matrices","milestone-reports",
-            "metrics",
+            "metrics","phase9-cycles",
             "docs\architecture","docs\iconix","docs\iconix\templates"
         )
         foreach ($f in $folders) { New-Item -ItemType Directory -Force -Path $f | Out-Null }
@@ -117,6 +117,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\intake-feature-request-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\bug-report-template.md")              "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\concurrent-touch-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\phase9-cycle-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-snapshot-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
