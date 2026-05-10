@@ -43,6 +43,7 @@ iconix-kit/
     ├── req-template.md          # atomic requirement
     ├── use-case-template.md
     ├── use-case-diagram-template.puml   # one PlantUML diagram per UC package
+    ├── domain-model-initial-template.puml  # PO's initial domain model draft (v0.9.10+)
     ├── robustness-template.puml # includes UC scenario text as comment block
     ├── sequence-template.puml   # UC steps as group blocks
     ├── test-case-template.md

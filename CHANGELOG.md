@@ -5,6 +5,146 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.10] — 2026-05-10
+
+Forcing-function fixes. We started a real-world test run of the kit
+on the Write Customer Review example (driving its 3 intakes through
+the PO agent's intake checklist + REQ/UC drafting). Seven concrete
+issues surfaced before reaching M1 gate — issues that no amount of
+agent-prompt review could have caught. v0.9.10 fixes all seven.
+
+This is exactly the kind of feedback that confirms the v0.9.5–v0.9.9
+agent prompts need real-world exercise, not just internal logic
+review. Future versions should keep running real examples through
+the kit and folding back the findings.
+
+### Issues found and fixed
+
+1. **Multi-input intake convergence was unspecified.** Real projects
+   often deliver several intakes (email + transcript + ticket) for
+   the same feature. The PO agent told you what to do with one input,
+   not several. Fix: new `## When multiple intakes describe the same
+   goal` section in `agents/iconix-product-owner.md` with a 4-step
+   consolidation rule. UC's Traceability block now lists ALL source
+   intakes, not just the most recent one.
+
+2. **REQ atomicity criteria not defined.** The kit said "atomic
+   functional requirements" without telling you what *atomic* meant.
+   You could plausibly produce 1, 2, or 3 REQs from the same intake.
+   Fix: new rule 10 in PO agent — "one REQ per testable observable
+   behaviour; alternates extending the same goal stay in the parent
+   REQ unless they introduce a distinct measurable target, distinct
+   user goal, or pass an orthogonality test." Bias toward fewer REQs
+   with richer alternate-course coverage.
+
+3. **Initial domain model lacked a template + inline guidance.** PO
+   rule 9 said "draw an attribute-only class diagram" but shipped no
+   PUML template, no concrete heuristic for "is this noun an entity
+   or a state on another entity?", and forced you to bounce to the
+   Analyst agent file for the rules. Fix: new
+   `templates/domain-model-initial-template.puml` with inline rule
+   comments AND the most critical heuristics inlined into PO rule 9
+   (real-world only; attributes-only; type everything; skip state-
+   machine entities; show relationships; domain model = glossary).
+
+4. **Two-column UC format had no convention for runtime forks.**
+   Some user actions branch on a runtime precondition (logged in
+   yes/no). The format has no inline conditional. Fix: new rule 11
+   in PO agent + comment in `templates/use-case-template.md` —
+   "basic course is the happy path with preconditions met; runtime
+   forks become alternate courses with `At step N, if <condition>:`
+   preamble." Static preconditions go in the Preconditions metadata,
+   not in alternates.
+
+5. **"Two paragraphs total" prompt rule contradicted the UC template
+   structure.** The PO agent's rule said "no UC exceeds two
+   paragraphs total: paragraph 1 = basic course, paragraph 2 = all
+   alternate courses" — but `templates/use-case-template.md` has
+   separate `## Alternate Course A: <name>` H2 sections (one per
+   alternate). A UC with 5 alternates (like Write Customer Review)
+   has 5 H2 sections — clearly not "two paragraphs." Fix: rule 3
+   restated as "fits on one page when rendered" (preserves the
+   book's brevity intent without the literal-paragraph-count
+   contradiction); template comment clarifies that the structured
+   H2 alternates are correct format but total length stays
+   page-length. M1 checklist item updated; feature-request
+   template's INVEST line updated.
+
+6. **Intake templates blurred raw input and PO output.** The email
+   template had `## Verbatim text` (input) and `## PO restatement`
+   (output) in the same file separated only by a `---`. A fresh
+   reader couldn't tell at a glance what the email *was* vs what
+   the PO *added*. Fix: explicit ⚠️ banner separator in
+   `intake-email-template.md` and `intake-transcript-template.md`
+   making input/output ownership unmistakable. (BRD and
+   feature-request templates are single-author; no banner needed.)
+
+7. **Intake `## Status` Ready/Blocked checkbox was never enforced.**
+   The PO agent could happily extract REQs from an intake whose
+   Status was still `Blocked` or unchecked, since nothing in the
+   prompt told it to verify. Fix: new "Status-Ready check" paragraph
+   in PO intake-checklist section — "before any REQ/UC drafting,
+   verify the intake's `## Status` block is `Ready` and all
+   `[VERIFY]` items resolved. If `Blocked`, refuse and surface the
+   open items."
+
+### Added
+- `templates/domain-model-initial-template.puml` — new (issue #3).
+  PUML skeleton with all six initial-domain-model rules as inline
+  comments. Replaces the implicit "go read the analyst's rules"
+  pointer.
+
+### Changed
+- `agents/iconix-product-owner.md`:
+  - Rule 3 restated (issue #5 — "two-paragraph" → "one-page" + UC-template alignment)
+  - Rule 9 expanded with inline critical heuristics + reference to
+    new template (issue #3)
+  - New rules 10 and 11 (issues #2 and #4 — REQ atomicity, conditional path forks)
+  - New Status-Ready check paragraph in `# Intake checklist` (issue #7)
+  - New `## When multiple intakes describe the same goal` section
+    in `# Intake checklist` (issue #1)
+  - M1 checklist item updated for one-page rule (issue #5)
+  - Split-signals list adds "rendered UC overflows one page" (issue #5)
+- `templates/intake-email-template.md` — ⚠️ banner between Verbatim
+  text and PO restatement (issue #6)
+- `templates/intake-transcript-template.md` — ⚠️ banner between
+  interview content and Analyst summary (issue #6)
+- `templates/intake-feature-request-template.md` — INVEST line
+  updated from "two-paragraph rule" to "one page when rendered"
+  (issue #5)
+- `templates/use-case-template.md`:
+  - Header comment block explaining the brevity rule + when to use
+    Alternate Courses vs Preconditions vs basic-course path (issues #4 and #5)
+  - Alternate course tables now have a leading "At step N, if
+    `<condition>`:" example row (issue #4)
+  - Traceability block adds an `Intakes:` field for multi-intake
+    consolidation (issue #1)
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy `domain-model-initial-template.puml` to
+  `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts
+  `domain-model-initial-template.puml` is installed.
+- `README.md` — `domain-model-initial-template.puml` in templates
+  listing.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed" bumped
+  to v0.9.10. No status shifts (all fixes clarify existing ✅ rules);
+  rationale notes the cited Ch3, Ch2, Ch4 rules.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- **Cited rules:** Ch3 #7 (two-column UC format) — already ✅, fixes
+  #4 and #5 strengthen citations. Ch3 #1 (UC brevity — "typically
+  two paragraphs", but a *typical*, not *maximum*) — fix #5 restates
+  the kit's hardened "no UC exceeds two paragraphs" to align with the
+  book's softer intent. Ch2 #3 (initial domain model before UCs) —
+  already ✅, fix #3 adds the missing template. Ch4 #1 (8 easy steps
+  to better use case) — already ⚠️, no change to status.
+- **Status shifts:** none. All seven fixes clarify or refine existing
+  ✅ rows; the cited fixes don't move any cell from one status to
+  another. Citations get more specific.
+- **No contradictions found.** Fix #5 actually *resolved* a
+  contradiction the kit had been shipping for several versions
+  (agent prompt vs UC template).
+
 ## [0.9.9] — 2026-05-10
 
 Closes the kit-version-evolution loop that v0.9.5–v0.9.8 implicitly

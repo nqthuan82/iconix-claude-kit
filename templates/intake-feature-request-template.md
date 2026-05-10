@@ -65,7 +65,7 @@ Feature: <feature name>
 - [ ] **Negotiable** — scope can be discussed before extraction
 - [ ] **Valuable** — benefit clause describes real stakeholder value
 - [ ] **Estimable** — clear enough to size
-- [ ] **Small** — fits a sprint; UC will fit the two-paragraph rule (split if not)
+- [ ] **Small** — fits a sprint; UC will fit on one page when rendered (split if not)
 - [ ] **Testable** — every "Then" clause is observable and unambiguous
 
 ## Priority

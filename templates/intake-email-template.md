@@ -11,6 +11,18 @@
 
 ---
 
+> ⚠️ **Above this line: stakeholder input (do not edit).**
+> ⚠️ **Below this line: Product Owner agent output (intake checklist).**
+>
+> The two halves of this file have different ownership. The verbatim text above
+> is what was received and should never be paraphrased or "cleaned up." The
+> sections below are the PO agent's restatement, populated by applying the
+> intake checklist from `agents/iconix-product-owner.md`. Every `[VERIFY]` tag
+> below marks an inference that must be confirmed with a stakeholder before
+> the `## Status` block can be ticked `Ready`.
+
+---
+
 ## PO restatement
 > Fill in the sections below. Mark every inference with `[VERIFY]` — do not invent facts.
 

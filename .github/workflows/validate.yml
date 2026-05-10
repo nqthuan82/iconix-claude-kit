@@ -130,6 +130,8 @@ jobs:
           grep -q 'kit_version:' iconix.config.yaml || { echo "kit_version field missing in iconix.config.yaml"; exit 1; }
           test -f docs/iconix/templates/upgrade-report-template.md || { echo "upgrade-report-template.md missing"; exit 1; }
           test -d upgrades || { echo "upgrades/ folder missing"; exit 1; }
+          # v0.9.10: initial domain model template (forcing-function fix)
+          test -f docs/iconix/templates/domain-model-initial-template.puml || { echo "domain-model-initial-template.puml missing"; exit 1; }
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }

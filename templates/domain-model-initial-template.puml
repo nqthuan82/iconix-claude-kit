@@ -1,0 +1,71 @@
+@startuml DomainModel
+' ──────────────────────────────────────────────────────────────────────
+' Initial domain model — drafted by the Product Owner at M1.
+' Refined by the Analyst at M2 through robustness analysis.
+'
+' Save as `domain-model/domain-model.puml` at the project root.
+'
+' Rules (full set in agents/iconix-product-owner.md rule 9 and
+' agents/iconix-analyst.md `# Domain model rules`):
+'
+'   1. REAL-WORLD ENTITIES ONLY. No GUI classes. Pages, forms, screens
+'      are NOT domain entities. (Examples to delete if you see them:
+'      `WriteReviewPage`, `OrderForm`, `LoginScreen`.)
+'
+'   2. ATTRIBUTES ONLY, NO OPERATIONS. Operations come at M3 (Developer).
+'      The Reviewer flags entity classes with operations and zero
+'      attributes as "attribute-sparse" — fix at M2.
+'
+'   3. TYPE EVERY ATTRIBUTE. Untyped attributes (`+ name`, `+ data: any`)
+'      are M2 blockers. Use real types: `string`, `int`, `decimal`,
+'      `DateTime`, enum names, other entity names.
+'
+'   4. SKIP STATE-MACHINE ENTITIES. A "PendingQueue" is usually a STATE
+'      on another entity, not a separate class. Ask: "is this a noun in
+'      the business domain, or a phase of another noun?" If a phase,
+'      model it as `entity.status: <enum>` instead of a separate class.
+'
+'   5. SHOW IS-A / HAS-A RELATIONSHIPS. Floating classes with no
+'      relationships are an M1 smell — either link them, or question
+'      whether they belong on the domain model at all.
+'
+'   6. DOMAIN MODEL = PROJECT GLOSSARY. Every noun in UC text must
+'      appear here (or on a referenced sub-diagram). The PO's M1
+'      checklist enforces this.
+'
+'   7. TIME-BOX: ~1 hour for typical scope. This is a glossary-as-
+'      diagram, not a finished class model. The Analyst refines it.
+' ──────────────────────────────────────────────────────────────────────
+
+' ── Replace the placeholder content below with your domain entities. ──
+' ── Delete this template's example block before committing.           ──
+
+' Example (delete and rewrite for your domain):
+'
+' class Customer {
+'   + id: int
+'   + email: string
+' }
+'
+' class Book {
+'   + id: int
+'   + title: string
+' }
+'
+' class CustomerReview {
+'   + id: int
+'   + text: string
+'   + rating: int
+'   + status: ReviewStatus     ' <- enum, not a separate Queue class
+' }
+'
+' enum ReviewStatus {
+'   Pending
+'   Approved
+'   Rejected
+' }
+'
+' Customer "1" -- "0..*" CustomerReview : writes
+' Book     "1" -- "0..*" CustomerReview : has
+
+@enduml

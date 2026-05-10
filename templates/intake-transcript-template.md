@@ -50,6 +50,17 @@
 
 ---
 
+> ⚠️ **Above this line: interview content captured live (input).**
+> ⚠️ **Below this line: post-interview analysis for the Product Owner agent (output).**
+>
+> The interview content above is what was said during the meeting and should
+> stay close to the stakeholder's words. The Analyst summary below is a
+> structured hand-off to the PO agent — populated after the interview by the
+> human analyst (the role conducting the interview, not the iconix-analyst
+> agent). The PO agent reads this section as input to its intake checklist.
+
+---
+
 ## Analyst summary
 > Fill this in after the interview. This section is the hand-off to the Product Owner agent.
 
