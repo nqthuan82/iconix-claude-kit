@@ -55,6 +55,8 @@ iconix-kit/
     ├── architecture-package-map-template.md  # CODE/deployment packages (v0.9.14+)
     ├── integration-surface-template.md     # external touchpoints (v0.9.14+)
     ├── milestone-report-template.md        # M1/M2/M3 readiness format (v0.9.18+)
+    ├── class-model-template.puml           # detailed static model (v0.9.19+)
+    ├── cdr-report-template.md              # per-UC M3 readiness report (v0.9.19+)
     ├── change-impact-template.md
     ├── graphify-setup.md        # Graphify integration setup guide
     ├── intake-transcript-template.md   # stakeholder interview / meeting notes

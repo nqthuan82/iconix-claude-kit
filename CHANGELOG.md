@@ -5,6 +5,189 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.19] — 2026-05-10
+
+Round 6 — first **real M3 Developer** forcing-function run.
+Followed the v0.9.13 Developer prompt against my v0.9.17 fresh
+BS-RB-001 + the example's analyst-refined domain model + my
+v0.9.18 fresh container-mapping + BS-ADR-001. Mentally produced
+fresh BS-SD-001 + class model + code skeleton structure; diffed
+against `08-BS-SD-001-...example.puml`.
+
+**Twelve issues — largest finding count of any round.** Two
+reasons: (1) the Developer agent had **zero prior prompt review**,
+so every issue is net-new; (2) the Developer integrates heavily
+with v0.9.10–v0.9.18 upstream changes, surfacing many integration
+gaps the upstream-only prompt review couldn't see.
+
+Pattern continues:
+  - M1 PO:        prompt 13 + real 7  (v0.9.10/11 + v0.9.15)
+  - M2 Analyst:   prompt 8  + real 6  (v0.9.13 + v0.9.17)
+  - M2 Architect: prompt 10 + real 10 (v0.9.14 + v0.9.18)
+  - M3 Developer: prompt 0  + real 12 (v0.9.19) <-- this round
+
+Twelve fixes, three groups:
+
+### Group A — SD-rendering rules (3 fixes)
+
+  M3D-R-#1 No rule for representing invoked UCs on the SD. The
+        RB has `usecase` nodes (v0.9.13); the SD didn't have an
+        equivalent. Fix: new SD-rendering rule — render as
+        synthetic boundary lifeline + explanatory note describing
+        the framework mechanism (e.g., cookie auth challenge,
+        OAuth consent screen). Fallback: `note over` block when
+        framework hides the invocation.
+
+  M3D-R-#3 No rule for framework-helper lifelines. The example
+        introduces `MVC ModelBinder + ModelState` as a lifeline;
+        kit didn't say when. Fix: new heuristic — include when
+        the framework's behavior maps to ≥1 RB controller; omit
+        for trivial forwarding (DI resolution, routing).
+
+  M3D-R-#4 v0.9.15's three Invokes sub-categories had no SD-level
+        rendering rules. Fix: dedicated section mirroring the RB
+        rules at SD level. UI dependencies → `<<from PREFIX-UC-
+        XXX>>` stereotype on lifeline; downstream consumers →
+        lifeline at right edge with dashed `..>` from producing
+        entity. The example's BS-SD-001 is missing the Moderator
+        downstream-consumer rendering — that's now flagged as
+        SD-RB drift.
+
+### Group B — Template / convention gaps (4 fixes)
+
+  M3D-R-#6 Sequence template used generic `User` actor + bare
+        `ScreenName` placeholders, violating PO actor rules and
+        unrepresentative of real SDs. Fix: complete rewrite with
+        stack-anchored multi-line labels (`\n` syntax),
+        Razor-View paths, EF Core annotations, repository-pattern
+        lifelines. Demonstrates rule 8 (design patterns visible
+        on SD) instead of leaving it to readers.
+
+  M3D-R-#7 No template for `class-model.puml`. Developer declared
+        it as output; nothing existed. Same gap pattern as
+        Architect pre-v0.9.14 (4 of 5 outputs untemplated). Fix:
+        new `templates/class-model-template.puml` — distinct
+        from `domain-model.puml` (entities only, attributes only)
+        because the class model is the DETAILED static model
+        (entities + DI interfaces + repositories + orchestrators
+        with attributes AND operations). Six rules in the header,
+        stack stereotypes (`<<entity>>`, `<<controller>>`,
+        `<<repository>>`, `<<service>>`, `<<value>>`,
+        `<<external>>`), interface↔implementation pairs.
+
+  M3D-R-#8 No template for `cdr-report.md`. Same gap as v0.9.18
+        milestone-report. Fix: new `templates/cdr-report-template.md`
+        — per-UC M3 readiness report with SD↔RB-controller coverage
+        table, lifelines-introduced-beyond-domain-model
+        justification table, SD-rendering-rule mirror checks,
+        cross-cutting allocation summary, code skeleton paths
+        table, full CDR readiness checklist, open questions for
+        the Tester running in parallel.
+
+  M3D-R-#11 Sequence template didn't demonstrate design-pattern
+        rendering. Rule 8 says "show patterns"; template didn't
+        show how. Fix: rewrite (combined with M3D-R-#6) includes
+        Repository (`IBookRepository` + `EfBookRepository`), DI
+        interface (`ICurrentUserService`), framework controller
+        as orchestrator lifeline.
+
+### Group C — Allocation / structure rules (5 fixes)
+
+  M3D-R-#2 "Controller" name collision (ICONIX RB controller vs
+        framework controller class). Fix: rule 2 expanded with
+        explicit name-collision warning. RB controllers become
+        messages (logical actions); framework controllers
+        (MVC controller, Spring controller, etc.) become
+        orchestrator lifelines. The framework controller
+        receives or initiates many RB-controller-derived
+        messages.
+
+  M3D-R-#5 Rule for DI interfaces vs domain classes was unclear.
+        Architectural / DI interfaces (e.g., `ICurrentUserService`)
+        are NOT domain classes; they appear as lifelines when
+        the container-mapping allocates behavior to them. Fix:
+        rule 4 expanded — DI interfaces don't violate the
+        no-invent-classes rule but DO require justification (in
+        class-model annotation, SD note, or cdr-report).
+
+  M3D-R-#9 Code skeleton paths didn't align with v0.9.14
+        package-map. Naive run produces `src/csharp/Class.cs`;
+        real .NET solutions need `src/Bookstore.Web/Controllers/Class.cs`.
+        Fix: new section "Code skeleton paths align with the
+        architecture package map" — every source file's directory
+        name MUST match a package row in `docs/architecture/
+        package-map.md`. Files placed under non-package-map
+        directories are flagged as architectural drift by the
+        Reviewer.
+
+  M3D-R-#10 Behavior allocation heuristic didn't address
+        cross-cutting concerns. "Information expert" works for
+        domain ops; auth lives elsewhere (controller `[Authorize]`,
+        not on `CustomerSession`). Fix: explicit override —
+        cross-cutting concerns listed in container-mapping's
+        "Cross-cutting concerns" section override the
+        information-expert default. Connects v0.9.14's
+        cross-cutting section to the Developer's allocation rule.
+
+  M3D-R-#12 Rule 6 "stable SD" was vague — no concrete signal.
+        Fix: 6 explicit signals required — every RB controller
+        has ≥1 message; every message has an allocated class;
+        every UC course has its own group block; class-model
+        annotation block filled in; `class-model.puml` exists;
+        no Phase-9 commits yet.
+
+CDR readiness checklist expanded to enforce all new rules
+(11 items, up from 6).
+
+Methodology audit per CLAUDE.md: methodology-surface change.
+All cited rules already approved; v0.9.19 enriches kit-location
+citations and closes a major template-coverage gap. No status
+shifts. Cited Ch8 Top 10 (sequence diagrams and behavior
+allocation), Ch9 CDR, Ch10 Implementation #1 (alternate courses),
+Ch11 #6 (cross-cutting concerns).
+
+Cumulative: 9 forcing-function rounds, 72 issues fixed
+(13+8+10+5+7+6+1[v0.9.16]+10+12).
+
+### Added
+- `templates/class-model-template.puml` — detailed static model
+  template; entity / controller / repository / service / value /
+  external stereotypes; interface↔implementation pairs; six
+  inline rules. Distinct from `domain-model-initial-template.puml`
+  (which has attributes only and is the project glossary).
+- `templates/cdr-report-template.md` — per-UC M3 readiness
+  report. SD↔RB-controller coverage table, lifeline
+  justifications, SD-rendering-rule mirror checks, cross-cutting
+  allocation summary, code skeleton paths, full CDR checklist,
+  Tester awareness section.
+
+### Changed
+- `agents/iconix-developer.md` — substantial overhaul:
+  - Rule 2 expanded with controller name-collision warning
+    (M3D-R-#2)
+  - Rule 4 expanded for DI interfaces / Application-layer types
+    (M3D-R-#5)
+  - Rule 6 "stable SD" criteria made concrete (M3D-R-#12)
+  - Behavior allocation heuristics include cross-cutting override
+    (M3D-R-#10)
+  - New section `# SD-level rendering rules` (M3D-R-#1, #3, #4)
+  - New section `# Code skeleton paths align with the
+    architecture package map` (M3D-R-#9)
+  - CDR readiness checklist expanded from 6 to 11 items
+- `templates/sequence-template.puml` — full rewrite with
+  stack-anchored multi-line lifelines, repository pattern, DI
+  interface, framework-controller orchestrator, downstream
+  consumer dashed-arrow demonstration, UI-dependency
+  stereotype demonstration, invoked-UC synthetic-boundary +
+  note pattern (M3D-R-#6, M3D-R-#11)
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy the 2 new templates to `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts the
+  2 new templates are installed.
+- `README.md` — 2 new templates added to the directory listing.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.19 with the Round-6-real audit summary.
+
 ## [0.9.18] — 2026-05-10
 
 Round 5 — first **real M2 Architect** forcing-function run.

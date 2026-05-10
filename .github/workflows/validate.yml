@@ -213,6 +213,9 @@ jobs:
           test -f docs/iconix/templates/integration-surface-template.md || { echo "integration-surface-template.md missing"; exit 1; }
           # v0.9.18: milestone-report template (forcing-function fix — M2A-R-#10)
           test -f docs/iconix/templates/milestone-report-template.md || { echo "milestone-report-template.md missing"; exit 1; }
+          # v0.9.19: Developer templates (forcing-function fixes — M3D-R-#7, #8)
+          test -f docs/iconix/templates/class-model-template.puml || { echo "class-model-template.puml missing"; exit 1; }
+          test -f docs/iconix/templates/cdr-report-template.md || { echo "cdr-report-template.md missing"; exit 1; }
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }

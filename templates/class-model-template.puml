@@ -1,0 +1,129 @@
+@startuml ClassModel
+' ──────────────────────────────────────────────────────────────────────
+' Class Model — produced by the Developer at M3.
+'
+' This is the DETAILED static model. Distinct from `domain-model.puml`:
+'   - Domain model = real-world entities, attributes only, project glossary.
+'     Owned: PO at M1 (initial), Analyst at M2 (refinement).
+'   - Class model = implementation classes with attributes + OPERATIONS,
+'     including framework / DI / repository / orchestrator classes that
+'     don't appear on the domain model. Owned: Developer at M3.
+'
+' Save as `class-model/class-model.puml` at the project root.
+'
+' Rules:
+'   1. Every class referenced on a sequence diagram (SD-XXX) must
+'      appear here. The CDR readiness check enforces this.
+'   2. Every operation on a class must be allocated to it via an SD
+'      message arrow (one method per arrow per Developer rule 5).
+'   3. Attributes MUST be typed. Untyped attributes (`+ name` with no
+'      `: type`) are M3 blockers (Reviewer check #2 — "attribute untyped").
+'   4. Entity classes (the ones that came from the domain model) need
+'      ≥1 attribute even if the framework typically generates them via
+'      ORM. Attribute-sparse entities (≥2 operations and 0 attributes)
+'      are flagged by the Reviewer.
+'   5. Use stereotypes to make architectural roles visible:
+'        <<entity>>      — domain entity
+'        <<controller>>  — orchestrator (MVC controller, application service)
+'        <<repository>>  — persistence-adapter interface or impl
+'        <<service>>     — Application-layer interface (DI)
+'        <<value>>       — value object (no identity)
+'        <<external>>    — third-party library / framework type used as a lifeline
+'   6. Show interface ↔ implementation pairs for DI-introduced types
+'      (e.g., ICurrentUserService → CookieCurrentUserService). Reviewer
+'      check #6 looks for framework concerns mixed into business logic;
+'      visible interface boundaries help.
+' ──────────────────────────────────────────────────────────────────────
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' ──────────────────────────────────────────────────────────────────────
+' >>> REPLACE THE EXAMPLE BELOW WITH YOUR PROJECT'S CLASSES. <<<
+' >>> The example shows the Internet Bookstore stack (.NET).         <<<
+' ──────────────────────────────────────────────────────────────────────
+
+' ── Boundary / orchestrator (Web layer) ───────────────────────────
+class WriteCustomerReviewController <<controller>> {
+  + WriteAsync(bookId : int) : ActionResult
+  + SubmitAsync(review : CustomerReview) : ActionResult
+}
+
+' ── Domain entities (came from domain model; attributes typed) ────
+class CustomerReview <<entity>> {
+  + id : int
+  + bookId : int
+  + customerId : int
+  + reviewText : string
+  + rating : int
+  + status : ReviewStatus
+  + Validate(context : ValidationContext) : IEnumerable<ValidationResult>
+}
+
+class Book <<entity>> {
+  + id : int
+  + title : string
+}
+
+class CustomerSession <<entity>> {
+  + customerId : int
+  + isLoggedIn : bool
+}
+
+' ── Application-layer interfaces (DI; introduced per Developer rule 4) ─
+interface ICurrentUserService <<service>> {
+  + GetSession(httpContext : HttpContext) : CustomerSession
+}
+
+class CookieCurrentUserService <<service>> {
+  ' Implementation; lives in Bookstore.Application.
+}
+
+' ── Repository interfaces + implementations ──────────────────────
+interface IBookRepository <<repository>> {
+  + GetByIdAsync(id : int) : Task<Book>
+  + Exists(id : int) : bool
+}
+
+class EfBookRepository <<repository>> {
+  ' Implementation; lives in Bookstore.Infrastructure.
+}
+
+interface ICustomerReviewRepository <<repository>> {
+  + AddAsync(review : CustomerReview) : Task<CustomerReview>
+}
+
+class EfCustomerReviewRepository <<repository>> {
+}
+
+' ── Async-output adapter ──────────────────────────────────────────
+interface IPendingReviewsQueue <<repository>> {
+  + EnqueueAsync(reviewId : int) : Task
+}
+
+class BusPendingReviewsQueue <<repository>> {
+}
+
+' ── Relationships ─────────────────────────────────────────────────
+WriteCustomerReviewController --> ICurrentUserService : uses
+WriteCustomerReviewController --> IBookRepository : uses
+WriteCustomerReviewController --> ICustomerReviewRepository : uses
+WriteCustomerReviewController --> IPendingReviewsQueue : uses
+
+CookieCurrentUserService ..|> ICurrentUserService
+EfBookRepository ..|> IBookRepository
+EfCustomerReviewRepository ..|> ICustomerReviewRepository
+BusPendingReviewsQueue ..|> IPendingReviewsQueue
+
+CustomerReview "0..*" --> "1" Book : references
+CustomerReview "0..*" --> "1" CustomerSession : created by
+
+note bottom
+  Traceability:
+    UC: PREFIX-UC-XXX
+    SDs that reference these classes: PREFIX-SD-XXX
+    Domain entities here came from: domain-model/domain-model.puml
+    DI interfaces justified in: container-mapping/PREFIX-UC-XXX-containers.md
+end note
+
+@enduml
