@@ -9,9 +9,12 @@
 
 ## Summary
 
-- **From version:** v<X.Y.Z> (detected via <kit_version field | heuristic markers>)
+- **From version:** v<X.Y.Z> (detected via <kit_version field | Pass 1 canonical paths | Pass 2 content-based fallback | --from override>)
 - **To version:** v<A.B.C>
 - **Mode:** dry-run | applied
+- **Layers run:** <A,B,C,D,E> | <subset, e.g., D only>
+- **Config file used:** `iconix.config.yaml` | `<other matched filename>`
+- **Layout:** canonical | non-canonical (Pass 2 found artifacts at non-standard paths — see "Detected for review")
 - **Result:** OK | partial (some auto-applies blocked) | failed
 
 ## 1. Auto-applied changes

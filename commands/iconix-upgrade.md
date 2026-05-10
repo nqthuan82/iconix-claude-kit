@@ -1,6 +1,6 @@
 ---
 description: "Migrate an existing iconix-kit installation to the current version. Auto-applies safe additive changes (folders, config sections with conservative defaults, reference templates, CI files); produces a detect-and-report for project artifacts. Read-only on UCs / source / tests / bug reports."
-argument-hint: "[--dry-run] [--from <version>] [--source <kit-path>]"
+argument-hint: "[--dry-run] [--from <version>] [--source <kit-path>] [--layers <A,B,C,D,E>]"
 ---
 
 Invoke the iconix-upgrade agent with: $ARGUMENTS
@@ -27,6 +27,13 @@ The agent should:
 
 If `$ARGUMENTS` includes `--dry-run`, do all the analysis but apply nothing — only the report is written. Useful for previewing.
 
+If `$ARGUMENTS` includes `--layers <list>` (comma-separated subset of `A,B,C,D,E`), restrict the diff to only those layers. Default: all layers. Useful combinations:
+- `--dry-run --layers D` — detection-only preview (CI scheduled scans)
+- `--layers A,B` — structural setup only (folders + config); skip templates, artifacts, CI
+- `--layers A,B,C,D` — everything except CI (when CI is handled separately)
+
 If the detected version is older than v0.9.0, refuse and tell the user to run a fresh `iconix-init` instead. v0.9.x is the supported upgrade range.
+
+If no `iconix.config.yaml` is found at the project root, refuse with a clear message — see the agent's Step 1a for resolution rules. The upgrade agent operates on installed projects only; kit examples (`iconix.config.example.yaml`) are not valid targets.
 
 Do not modify any project artifacts. The agent's safety guarantee is: running `/iconix-upgrade` cannot corrupt your authored UCs, source code, tests, or bug reports.

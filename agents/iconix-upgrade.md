@@ -34,9 +34,24 @@ You are distinct from `iconix-migration` (which retrofits ICONIX onto legacy cod
 The kit source path is supplied as `$ARGUMENTS` (or the user's local kit clone). Read its `CHANGELOG.md` to determine the latest version. Read its `templates/iconix.config.yaml` to know the current shape of the seeded config.
 
 ## Step 1 — Detect current installed version
-Read `iconix.config.yaml` for a `kit_version: "X.Y.Z"` field.
 
-If the field is missing (project predates v0.9.9), use **heuristic detection** based on file presence. Take the maximum version where evidence exists:
+### Step 1a — Resolve the project's config file
+
+Look for the project's config file at the project root, in this order:
+
+1. **`iconix.config.yaml`** (canonical) — proceed to Step 1b.
+2. **No canonical file, but other `iconix.config*.yaml` matches exist:**
+   - If the only match is `iconix.config.example.yaml` (or any `*.example.yaml` variant) → **refuse**: this looks like a kit example or demo, not an installed project. Print: *"This directory contains an example config (`iconix.config.example.yaml`) but no `iconix.config.yaml`. The upgrade agent operates on installed projects, not demos. Run `iconix-init` first to produce a real `iconix.config.yaml`."*
+   - Otherwise, list the matches found (e.g., `iconix.config.dev.yaml`) and ask the user which to use. Default-accept only after explicit confirmation.
+3. **No matches at all** → **refuse**: print *"No `iconix.config.yaml` found at the project root. Run `iconix-init` to install the kit before upgrading."*
+
+### Step 1b — Detect installed version
+
+Read the resolved config for a `kit_version: "X.Y.Z"` field.
+
+If the field is missing (project predates v0.9.9), use **two-pass heuristic detection**:
+
+**Pass 1 — canonical paths.** Take the maximum version where evidence exists:
 
 | Evidence | Implies version ≥ |
 |---|---|
@@ -45,15 +60,42 @@ If the field is missing (project predates v0.9.9), use **heuristic detection** b
 | `concurrent-touch-template.md` OR `concurrent_check:` section | v0.9.6 |
 | `.ci/validate-traceability.sh` OR `git:` section | v0.9.5 |
 | `bug-report-template.md` OR `commands/iconix-bug.md` | v0.9.4 |
-| `domain-model/` populated by PO (initial) | v0.9.3 |
+| `domain-model/` populated (initial draft) | v0.9.3 |
 | `migration/` outputs from migration agent | v0.9.2 |
-| `examples/write-customer-review/` referenced | v0.9.1 |
 | `use-case-packages/` folder | v0.9.0 |
 | `knowledge_graph:` section in config | v0.3.0 |
 
-Default to the most conservative match (e.g., if only the v0.9.0 marker is present, treat as v0.9.0). Record which detection method was used in the report.
+**Pass 2 — content-based fallback** (run only when Pass 1 returns no evidence above v0.3.0; for projects with customized or non-canonical layouts):
 
-If `--from <version>` is in `$ARGUMENTS`, use that explicitly (override detection). Useful when heuristics are unreliable.
+| Content pattern | Implies version ≥ |
+|---|---|
+| Any `*REQ*.md` with `Intakes:` field in Traceability (not `Source:`) | v0.9.11 |
+| Any `*UC*.md` with `Invokes:` field in Traceability | v0.9.11 |
+| Any `*UC*.md` with `Intakes:` field in Traceability | v0.9.10 |
+| Any source file with `Traceability:` comment in first 30 lines | v0.9.5 |
+| Any `*UC*.md` containing both `## Basic Course` and `## Traceability` blocks | v0.9.0 (UC-driven authoring active) |
+
+Use Glob + Grep to search; bound depth to avoid scanning unrelated directories.
+
+If Pass 2 finds higher version evidence than Pass 1, prefer it AND record this as a **layout discrepancy** in the report's "Detected for review" section: the project has v0.9.x features but uses a non-canonical layout. The agent does not try to "fix" the layout — that's a project-specific decision.
+
+Default to the most conservative match across both passes. Record which detection method was used (Pass 1 path, Pass 2 content, or `--from` override) in the report.
+
+If `--from <version>` is in `$ARGUMENTS`, use that explicitly (override both passes). Useful when heuristics are unreliable.
+
+## Step 1.5 — Filter layers (optional)
+
+If `$ARGUMENTS` includes `--layers <list>`, restrict the diff computation to only those layers. Format: comma-separated subset of `A,B,C,D,E`. Examples:
+
+- `--layers D` — detection-only run; useful for CI scheduled scans where you want findings without auto-applying anything
+- `--layers A,B` — structural setup only (folders + config); skip templates, artifacts, CI
+- `--layers A,B,C,D` — everything except CI; useful when CI is handled by a separate workflow
+
+Default (when `--layers` is not specified): all layers (`A,B,C,D,E`).
+
+Combining with `--dry-run` is allowed and useful (e.g., `--dry-run --layers D` produces a detection report without writing or applying anything).
+
+The layer filter MUST appear in the report's Summary section so reviewers know which layers were considered.
 
 ## Step 2 — Compute the diff (per layer)
 
@@ -77,30 +119,56 @@ For each config section in `templates/iconix.config.yaml` from the target versio
 ### Layer C: reference templates in `docs/iconix/templates/`
 For each template file in `<kit-source>/templates/` not present in `docs/iconix/templates/` (or older), refresh it. These are reference docs the user reads; they're not project artifacts.
 
-### Layer D: project artifacts (DETECT ONLY)
-Scan existing artifacts for differences from the current template format. Do NOT modify them. Sections to detect for the report:
+**If `docs/iconix/templates/` does not exist** in the project: create it (`mkdir -p`). It's harmless — the directory just adds reference docs the user can ignore. If a project deliberately doesn't use the docs/ pattern, the user can opt out via `--layers` (e.g., `--layers A,B,D,E`).
 
-1. **Use cases** — read each `use-cases/UC-*.md`:
+**If a reference template has been hand-edited** in the project (file content differs from any prior kit-version's shipped template): preserve the user's version with a `.backup` suffix and copy the new one alongside. Log as "kept user customization with .backup; review and merge if needed" in the report.
+
+### Layer D: project artifacts (DETECT ONLY)
+Scan existing artifacts for differences from the current template format. Do NOT modify them.
+
+**Pass 1 — canonical paths.** Read files at standard locations:
+
+1. **Use cases** — `use-cases/UC-*.md`:
    - Missing `## Traceability` block?
    - Missing M1 checklist references? (e.g., does it cite a UC package overview?)
    - Two-column format intact (basic + alternate course)?
+   - **Missing `Intakes:` field** (v0.9.10+)?
+   - **Missing `Invokes:` field** (v0.9.11+)?
+   - **Missing `Domain entities introduced or used:` field** (v0.9.11+)?
+   - Postconditions structured as Success/Rejection (v0.9.11+) or single string?
+   - Alt course preamble uses "At step N, if `<condition>`:" (v0.9.10+)?
 
-2. **Source files under `src/`** — sample (don't read all if the project is large; spot-check 20 files at random plus all files in `Implementation` PRs from the last 30 days):
+2. **Requirements** — `requirements/REQ-*.md`:
+   - Has `## Traceability` block?
+   - **Uses `Intakes:` field** (v0.9.11+) or older `Source:` field?
+
+3. **Source files under `src/`** — sample (don't read all if the project is large; spot-check 20 files at random plus all files in `Implementation` PRs from the last 30 days):
    - Has `Traceability:` comment?
    - Format matches current convention (e.g., `Traceability: UC-XXX | RB-XXX | SD-XXX`)?
 
-3. **Bug reports** — read each `bug-reports/BUG-*.md`:
-   - If labelled Type 2: has `## Closure` section?
+4. **Bug reports** — `bug-reports/BUG-*.md`:
+   - If labelled Type 2: has `## Closure` section (v0.9.8+)?
    - Are referenced UC/RB/SD IDs still valid?
 
-4. **Milestone reports** — read each `milestone-reports/M*-*.md`:
+5. **Milestone reports** — `milestone-reports/M*-*.md`:
    - Do M2 reports include the concurrent-touch summary section (v0.9.6+)?
    - Do reports use the current "Recommendation" line format that `iconix-metrics` parses?
 
-5. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
+6. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
    - Do they follow the v0.9.5 naming convention (`bugfix/T1-<slug>` / `bugfix/T2-UC-XXX-<slug>`)?
 
-For each finding, record: artifact path, what's missing/different, suggested action (typically: "invoke `<agent>` to refresh" or "decide whether to retroactively apply").
+**Pass 2 — content-based fallback** (run when Pass 1 finds 0 artifacts in any category — e.g., the project uses a flat or renamed layout):
+
+Use Glob + Grep to find files by content pattern at any path:
+- **UCs:** `*UC*.md` containing both `## Basic Course` and `## Traceability` blocks
+- **REQs:** `*REQ*.md` containing both `## Statement` and `## Acceptance criteria` blocks
+- **Source:** `*.cs` / `*.ts` / `*.py` / `*.go` / `*.java` / `*.js` / `*.rb` / `*.kt` / `*.rs` containing `Traceability:` in the first 30 lines
+
+If Pass 2 finds artifacts that Pass 1 didn't, record this as a **layout-non-canonical finding** in the report's "Detected for review" section. Apply the same Pass-1 content checks (missing fields, format mismatches) to the files found in Pass 2.
+
+If both passes find nothing in a category, skip that category with a note ("project doesn't appear to use <category>") — don't treat empty as a finding.
+
+For each finding (in either pass), record: artifact path, what's missing/different, suggested action (typically: "invoke `<agent>` to refresh" or "decide whether to retroactively apply"), and which pass detected it.
 
 ### Layer E: CI / git integration files
 Read `iconix.config.yaml` `git.provider`:

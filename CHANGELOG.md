@@ -5,6 +5,94 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.12] — 2026-05-10
+
+The v0.9.9 dogfood test we owed. We pointed `/iconix-upgrade
+--dry-run` at the Write Customer Review example to exercise the
+upgrade agent for the first time on a real-world target. The
+forcing function found bugs in `/iconix-upgrade` itself — the
+upgrade was designed for "freshly iconix-init'd standard project"
+and didn't account for either tutorial structures (the example) or
+projects with custom layouts (renamed config, custom doc paths,
+flat directories). v0.9.12 closes all five issues found.
+
+Issues #U-#1 through #U-#5:
+
+  U-#1 Agent assumed config file is `iconix.config.yaml`. Wouldn't
+       find `iconix.config.example.yaml` (the example) or any
+       project-specific variant. Fix: explicit Step 1a config
+       resolution with refusal messages — refuses on example-only
+       configs ("this looks like a kit demo, not an installed
+       project"); refuses on no-config-at-all; asks for choice on
+       multiple variants.
+
+  U-#2 Heuristic detection was path-exact, brittle to renames.
+       The example has `domain-model.example.puml` (equivalent to
+       v0.9.x's `domain-model/domain-model.puml`); heuristic only
+       saw the latter and detected v0.3.0 even though the example
+       was authored in v0.9.1+. Fix: two-pass detection — Pass 1
+       canonical paths (existing), Pass 2 content-based search
+       (UCs by `## Basic Course` content; REQs by `## Statement`
+       content; source by `Traceability:` comment). When Pass 2
+       finds higher version evidence, it's used AND recorded as a
+       layout discrepancy in the report.
+
+  U-#3 Layer C (template refresh) didn't handle missing parent
+       directory. If `docs/iconix/templates/` doesn't exist, the
+       agent's prompt was silent on what to do. Fix: explicit
+       create-the-directory rule (it's harmless reference docs);
+       opt-out via `--layers` for projects deliberately not using
+       the docs/ pattern. Hand-edited templates now preserved with
+       `.backup` suffix instead of overwritten.
+
+  U-#4 Layer D (artifact detection) scanned canonical paths only.
+       A project with flat or renamed structure returned "0
+       artifacts found" even when artifacts clearly existed. Fix:
+       same two-pass approach as U-#2 — Pass 1 canonical paths,
+       Pass 2 content-based fallback. Layer D additionally now
+       checks for v0.9.10+ and v0.9.11+ field gaps (Intakes, Invokes,
+       Domain entities, Postconditions multi-state, alt-course
+       preamble) which were missing from the agent's check list
+       even though Layer-D's purpose was exactly this.
+
+  U-#5 No per-layer opt-in. The upgrade was "all layers or
+       dry-run" — no way to run "just the detection report." Fix:
+       new `--layers <A,B,C,D,E>` flag (any subset). Combinable
+       with `--dry-run`. Layers run is now surfaced in the
+       report's Summary so reviewers know the scope.
+
+Methodology audit: tooling-only change per CLAUDE.md (same as
+v0.9.9). `/iconix-upgrade` is kit-version maintenance, not
+methodology. Theory audit consciously skipped.
+
+### Changed
+- `agents/iconix-upgrade.md`:
+  - Step 1 split into Step 1a (config-file resolution with refusal
+    rules) and Step 1b (two-pass version detection) (U-#1, U-#2)
+  - New Step 1.5 — `--layers <list>` filter handling (U-#5)
+  - Layer C now handles missing `docs/iconix/templates/` parent;
+    .backup suffix policy for hand-edited templates (U-#3)
+  - Layer D now has Pass 1 canonical + Pass 2 content-based
+    detection; expanded check list to include v0.9.10+ and v0.9.11+
+    field gaps (Intakes, Invokes, Domain entities, multi-state
+    Postconditions, alt-course preamble) (U-#4)
+- `commands/iconix-upgrade.md`:
+  - `argument-hint` advertises `--layers <A,B,C,D,E>` flag
+  - Body explains useful `--dry-run --layers D` and similar combos
+  - Explicit refusal-on-missing-config rule referenced (U-#1)
+- `templates/upgrade-report-template.md` — Summary section
+  expanded to surface: detection method (Pass 1 / Pass 2 / override),
+  layers run, config-file used, layout (canonical / non-canonical).
+
+### Note on the WCR example test run
+This commit also serves as a record that `/iconix-upgrade --dry-run`
+was first exercised on `examples/write-customer-review/` and that
+the example deliberately remains a tutorial layout (flat numbered
+files; `iconix.config.example.yaml` not `iconix.config.yaml`). With
+v0.9.12 fixes, future upgrade attempts on similar non-canonical
+projects will refuse cleanly (example case) or fall back to content-
+based detection (real projects with custom layouts).
+
 ## [0.9.11] — 2026-05-10
 
 Round 2 forcing-function fixes. We continued the real-world test
