@@ -25,24 +25,33 @@
 ## Outbound integrations (system sends data)
 
 > One row per surface where this system *initiates* external communication.
+> **Failure handling lives in the per-touchpoint section below**, not in this
+> table — keeping the column out avoids the prose-vs-keyword tension and
+> the duplication trap.
 
-| Touchpoint | Protocol | Reason | Triggered by UC | NFRs | Auth | Failure handling |
-|---|---|---|---|---|---|---|
-| `<system / endpoint, e.g., Pending Reviews Queue>` | `<AMQP / HTTPS / SDK>` | `<why this system calls out, e.g., "submitted review enqueued for moderation">` | `<UC-XXX>` | `<NFR-XXX>` | `<auth scheme, e.g., "managed identity">` | `<retry / dead-letter / circuit-breaker>` |
+| Touchpoint | Protocol | Reason | Triggered by UC | NFRs | Auth |
+|---|---|---|---|---|---|
+| `<system / endpoint, e.g., Pending Reviews Queue>` | `<AMQP / HTTPS / SDK>` | `<why this system calls out, e.g., "submitted review enqueued for moderation">` | `<UC-XXX>` | `<NFR-XXX>` | `<auth scheme, e.g., "managed identity">` |
 
+<!--
 ## Bidirectional integrations
 
-> Surfaces where the system both sends and receives — e.g., webhooks where we
-> register an endpoint and a third-party calls back. Document both directions.
+> Add this section ONLY if the system has bidirectional touchpoints:
+> webhooks where we register an endpoint and a third-party calls back,
+> long-lived WebSockets with inbound + outbound semantics, etc.
+> Most projects don't — omit the section entirely rather than ship an
+> empty placeholder. Uncomment the block below and fill if needed.
 
 | Touchpoint | Direction-out | Direction-in | UCs | Notes |
 |---|---|---|---|---|
-| … | … | … | … | … |
+| ... | ... | ... | ... | ... |
+-->
 
 ## Per-touchpoint failure modes
 
-> For each integration above, document what happens when it's unavailable,
-> slow, or returns errors. Drives circuit-breaker / fallback ADRs.
+> One sub-section per inbound and outbound touchpoint listed above (and
+> bidirectional, if applicable). Failure handling can be prose, not just
+> keywords — capture what actually happens when the touchpoint fails.
 
 ### `<touchpoint name>`
 - **When unavailable:** `<system response, e.g., return 503 with retry-after, or queue locally>`

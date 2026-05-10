@@ -22,13 +22,23 @@
 | `<PREFIX>-NFR-001` | Performance | `<measurable, e.g., <2s p95 from request to response>` | `<Container.Class>` (e.g., `Bookstore.Web.RequestTimerMiddleware`) | `<observable signal, e.g., HTTP response time logged per request; assertion in integration test>` |
 | `<PREFIX>-NFR-002` | Compliance | `<measurable, e.g., 100% of submissions enter pending state>` | `<Container.Class>` | `<observable signal>` |
 
-## Out-of-scope NFRs (intentionally not applied)
+## Out-of-scope NFRs
 
-> NFRs from the catalog that *could* apply to this UC but the Architect
-> decided don't. Document the reason — silent omission is a smell.
+> Catalog NFRs that the Architect determined don't apply to this UC.
+> Whether out-of-scope is the common case or the rare case depends on
+> the project's NFR-catalog size:
+>
+> - **Small catalog (≤5 NFRs):** most NFRs typically apply to most UCs;
+>   `(none)` is a common answer here.
+> - **Large catalog (regulatory / security suites — 20+ NFRs):** explicit
+>   out-of-scope is the common case; document each non-applicable NFR.
+>
+> The rule (in either size): if an NFR is in the catalog but not applied
+> to this UC, list it here with a one-line reason. Silent omission of an
+> applicable NFR is a smell; explicit out-of-scope is fine.
 
 - `<PREFIX>-NFR-XXX` — `<reason this NFR was excluded for this UC>`
-- (or "(none)")
+- (or `(none)` when all catalog NFRs apply)
 
 ## Test-design hints for the Tester
 

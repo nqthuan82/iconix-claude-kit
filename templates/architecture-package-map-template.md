@@ -11,7 +11,11 @@
 ## Package list
 
 > One row per code package. The "Layer" column distinguishes the architectural
-> tier (boundary / domain / persistence / cross-cutting / external-integration).
+> tier. Use **`Infrastructure (external)`** for containers owned by another team
+> or external infrastructure (queues, identity providers, payment processors,
+> third-party APIs) that appear in `iconix.config.yaml` `architecture.containers`
+> but are **not implemented by this codebase**. External packages are exempt
+> from the cross-package rules below — they're contracts, not source.
 
 | Package name | Responsibility | Layer | Owns | Allowed dependencies |
 |---|---|---|---|---|
@@ -19,6 +23,7 @@
 | `<Application>` | Use-case orchestration | Application service | Command handlers, DTOs, application-level interfaces | `<Domain>`, `<Infrastructure>` (via interfaces) |
 | `<Domain>` | Business logic | Entity / domain | Entities, value objects, domain services, validation | (none — domain is dependency-free) |
 | `<Infrastructure>` | External integrations | Persistence / I/O | Repositories, external service clients, file/queue adapters | `<Domain>` (implements its interfaces) |
+| `<PendingReviewsQueue>` | Async-output queue used by Moderate Customer Reviews | **Infrastructure (external)** | (owned by INFRA-88; this codebase publishes only) | n/a — not implemented here; cross-package rules don't apply |
 
 ## Cross-package rules
 
@@ -44,6 +49,8 @@
 - [ ] Cross-package rules above are enforceable (e.g., NetArchTest, ArchUnit, dependency-cruiser, or equivalent for the stack)
 - [ ] Architecture-test fixture exists in `tests/Architecture` (or stack-equivalent) that fails the build on rule violation
 - [ ] Each package's responsibility is one-sentence-describable; multi-clause descriptions are a smell
+- [ ] Every container in `iconix.config.yaml` `architecture.containers` appears here as an internal package OR as `Infrastructure (external)` with the owning team / system referenced
+- [ ] `Infrastructure (external)` packages are explicitly excluded from architecture-test rules (otherwise the build fails because the package has no source)
 
 ## Traceability
 - **Drives:** `container-mapping/<PREFIX>-UC-XXX-containers.md` (per-UC; should be consistent with the allocation table above)

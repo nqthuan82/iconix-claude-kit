@@ -29,7 +29,8 @@
 - **Category:** `<one of the categories above>`
 - **Statement:** `<observable, measurable target. NO implementation specifics. Example: "Customer Review submissions return a Confirmation page within 2 seconds at the 95th percentile">`
 - **Source:** `<stakeholder name + date | regulation reference | business need>`
-- **Owner:** `<role responsible for this NFR — typically Architect or Product Owner>`
+- **Defined by:** `<role that owns the target — typically Product Owner for compliance / business NFRs, Architect for technical NFRs>`
+- **Enforced by:** `<role that owns the architectural enforcement — typically Architect; same as "Defined by" when there's no split>`
 - **Applies to UCs:** `<comma-separated UC-IDs, or "all" for cross-cutting>`
 - **Covering ADR:** `<ADR-XXX when an architectural decision exists for this NFR, or "(none)">`
 

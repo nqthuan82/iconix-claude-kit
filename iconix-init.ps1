@@ -108,6 +108,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\nfr-catalog-template.md")                  "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\architecture-package-map-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\integration-surface-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\milestone-report-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\use-case-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\use-case-diagram-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\domain-model-initial-template.puml") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue

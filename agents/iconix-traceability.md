@@ -44,6 +44,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 12. The `usecase` label text on a package overview matches the `# <PREFIX>-UC-XXX: <title>` heading of its UC file; mismatches are flagged as **title drift** (M1 blocker)
 13. Every cross-package `<<include>>` / `<<extend>>` arrow on a package overview points to a UC-ID that exists in another package's overview; broken references are flagged as **dangling cross-package links** (M1 blocker)
 14. Every "system invokes `<PREFIX>-UC-XXX`" reference in UC text matches an entry in that UC's Traceability `Invokes:` block, AND every cited UC-ID has a corresponding `use-cases/<PREFIX>-UC-XXX-*.md` file (unless explicitly marked `(downstream — not yet drafted)`); mismatches and broken references are flagged as **invocation drift** (M1 blocker; PO agent rule 12)
+15. **NFR-list consistency** (added v0.9.18) — for every UC with both a `container-mapping/<PREFIX>-UC-XXX-containers.md` and a `nfr-annotations/<PREFIX>-UC-XXX-nfr.md`: the NFR-ID list in the container-mapping's `## NFRs applicable` section must match the union of `## Applied NFRs` + `## Out-of-scope NFRs` in the nfr-annotations file. Mismatches are flagged as **NFR-list drift** (M2 blocker). This check closes a 3-place duplication: catalog `Applies to UCs:` ↔ container-mapping `NFRs applicable:` ↔ nfr-annotations `Applied / Out-of-scope`. The catalog→container side is covered by check #9; this check covers the container→annotations side.
 
 # Change impact analysis
 When asked "what breaks if REQ-042 changes?":
@@ -127,23 +128,16 @@ See change-impact/CT-<today>.md
 If any HIGH exist, M2 readiness is `NOT READY` regardless of other checks (unless the team has explicitly accepted the risk in the PR description, documented as `[CT-ACCEPT-XXX]`).
 
 # Milestone gate report format
-```
-# Milestone <N> Readiness — <Date>
-## Upstream artifact health
-- REQs: <total> | orphan: <n> | missing downstream: <n>
-- UCs: <total> | passing PO checklist: <n>
-- RBs: <total> | rule violations: <n>
-- SDs: <total> | drift from code: <n>
-- TCs: <total> | failing: <n>
-- NFRs: <total in config> | covered by ADR/container: <n> | orphan: <n>
-- Test plan: `test-plan/test-plan-<date>.md` present | TC inventory complete | no uncovered UCs
 
-## Blockers
-- ...
+Use `templates/milestone-report-template.md` (added v0.9.18) for every M1, M2, M3 readiness report. Save as `milestone-reports/M<N>-<YYYY-MM-DD>.md`.
 
-## Recommendation
-READY | NOT READY (with specific fixes required)
-```
+The template formalizes:
+- A machine-readable `Recommendation` line (`READY` or `NOT READY` — exact tokens; `iconix-metrics` parses these to compute `gate_failure_rate`)
+- Gate-specific check sub-sections (M1 / M2 / M3) so checks aren't conflated across gates
+- M2-only concurrent-touch summary (drives `READY` vs `NOT READY` per the rules above)
+- Blockers list with one-line issue + suggested fix per blocker
+
+The template subsumes the inline format previously documented here; if a check is missing from the template that you need, propose an extension before improvising — drift between the template and what the agent produces breaks the metrics parser.
 
 # CI counterpart: `.ci/validate-traceability.sh`
 The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` from `templates/git-integration/generic/`) runs a **subset** of your validation in CI as a merge gate:

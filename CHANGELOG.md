@@ -5,6 +5,145 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.18] — 2026-05-10
+
+Round 5 — first **real M2 Architect** forcing-function run.
+Followed the v0.9.14 Architect prompt to actually produce all 5
+Architect artifact categories for BS-UC-001 (container-mapping,
+nfr-annotations, NFR catalog, package-map, integration-surface),
+then diffed against the example's BS-ADR-001 (the only Architect
+artifact the example ships) plus the stack info in
+`iconix.config.example.yaml`.
+
+**Ten issues** only visible by producing artifacts — the largest
+real-run finding count yet, matching v0.9.14's prompt-review count.
+Architect templates were brand-new in v0.9.14 and untested under
+real input; this run exercises all 5 of them at once.
+
+Pattern continues:
+  - M1 PO: prompt review 13 + real run 7 (v0.9.10/11 + v0.9.15)
+  - M2 Analyst: prompt review 8 + real run 6 (v0.9.13 + v0.9.17)
+  - M2 Architect: prompt review 10 + real run 10 (v0.9.14 + v0.9.18)
+
+Ten fixes:
+
+  M2A-R-#1 Example pre-dates v0.9.14 catalog template (NFRs are in
+        config comments instead of `docs/nfr-catalog.md`). Known
+        retrofit gap; deferred to example refresh.
+
+  M2A-R-#2 Container-mapping testability column doesn't model
+        "indirect seam via upstream container" (e.g., Database
+        tested through Infrastructure adapter). Fix: explicit
+        `(out of scope — covered via <upstream-container>'s seam)`
+        convention added to template's testability values list.
+
+  M2A-R-#3 NFR applicability duplicated across catalog ↔
+        container-mapping ↔ nfr-annotations with no consistency
+        check. Fix: new Traceability check #15 — per-UC NFR-list
+        match between container-mapping and nfr-annotations is an
+        M2 blocker. Closes the duplication trap.
+
+  M2A-R-#4 nfr-annotations "Out-of-scope NFRs" framing biased
+        toward expecting exclusions. For small catalogs, all NFRs
+        usually apply; for large regulatory/security suites,
+        explicit out-of-scope is the common case. Reworded to be
+        size-aware.
+
+  M2A-R-#5 package-map template has no convention for cross-team /
+        infra-owned containers (e.g., PendingReviewsQueue owned by
+        INFRA-88). Fix: new `Infrastructure (external)` layer
+        marker; external packages exempt from cross-package /
+        architecture-test rules.
+
+  M2A-R-#6 integration-surface "Bidirectional integrations"
+        section almost always empty for typical UCs. Fix: moved to
+        commented-out optional block; uncomment-and-fill only if
+        actually needed. Same pattern as v0.9.13's Alternate Course
+        handling.
+
+  M2A-R-#7 container-mapping "Open architectural questions"
+        section had unclear format. Fix: standardized to
+        `<question>. [Proposed ADR-XXX]` so future Traceability
+        checks can mechanically validate the link.
+
+  M2A-R-#8 nfr-catalog `Owner:` field couldn't model split
+        ownership (PO defines target, Architect enforces). Common
+        in regulated environments. Fix: split into `Defined by:`
+        and `Enforced by:` fields.
+
+  M2A-R-#9 integration-surface had a redundant `Failure handling`
+        column AND a per-touchpoint failure-modes sub-section.
+        Fix: dropped the column; kept the prose-friendly
+        sub-sections. Failure handling needs prose, not keywords.
+
+  M2A-R-#10 No template for the M2 milestone report (Traceability
+        produces these but format was inline-prompt-only — same
+        gap Architect had pre-v0.9.14). Fix: new
+        `templates/milestone-report-template.md` formalizing
+        gate-specific checks (M1/M2/M3 sub-sections), the
+        machine-readable `Recommendation` token (`READY` /
+        `NOT READY` — parsed by `iconix-metrics` for
+        `gate_failure_rate`), and concurrent-touch summary
+        section. Traceability agent's inline format pointer now
+        delegates to this template.
+
+Methodology audit per CLAUDE.md: methodology-surface change
+(template + Traceability validation rule additions). All cited
+rules already approved; v0.9.18 enriches kit-location citations
+and closes the per-UC NFR-consistency gap. No status shifts.
+Cited Ch7 Top 10 (architecture decisions, cross-cutting concerns,
+testability seams), Ch6 PDR, Ch4 #5 (REQ traceability — extended
+via NFR-list check #15).
+
+Cumulative: 8 forcing-function rounds, 60 issues fixed
+(13+8+10+5+7+6+1[v0.9.16]+10). Real-run methodology continues to
+match or exceed prompt-review counts.
+
+### Added
+- `templates/milestone-report-template.md` — M1/M2/M3 readiness
+  format. Machine-readable Recommendation token; gate-specific
+  check sub-sections; M2 concurrent-touch summary. Subsumes the
+  inline format previously in `iconix-traceability.md`.
+
+### Changed
+- `templates/container-mapping-template.md`:
+  - Testability seam values list adds `(out of scope — covered
+    via <upstream-container>'s seam)` for indirect seams (M2A-R-#2)
+  - Open architectural questions section formalized to
+    `<question>. [Proposed ADR-XXX]` format with usage example
+    (M2A-R-#7)
+- `templates/nfr-annotations-template.md` — Out-of-scope NFRs
+  section reworded to be size-aware (M2A-R-#4)
+- `templates/nfr-catalog-template.md` — `Owner:` field split into
+  `Defined by:` + `Enforced by:` for split-ownership NFRs
+  (M2A-R-#8)
+- `templates/architecture-package-map-template.md`:
+  - Package list table gains `Infrastructure (external)` example
+    row + Layer-column note explaining the convention (M2A-R-#5)
+  - Quality checks add the external-package coverage check and
+    the architecture-test exclusion check
+- `templates/integration-surface-template.md`:
+  - Outbound integrations table drops the `Failure handling`
+    column (M2A-R-#9)
+  - Bidirectional integrations section moved to a commented
+    optional block (M2A-R-#6)
+- `agents/iconix-traceability.md`:
+  - New validation check #15 — per-UC NFR-list consistency
+    between container-mapping and nfr-annotations is an M2 blocker
+    (M2A-R-#3)
+  - `# Milestone gate report format` section now delegates to
+    `templates/milestone-report-template.md` instead of carrying
+    the inline format (M2A-R-#10)
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers copy `milestone-report-template.md` to
+  `docs/iconix/templates/`.
+- `.github/workflows/validate.yml` — smoke test asserts the new
+  template is installed.
+- `README.md` — `milestone-report-template.md` added to the
+  templates listing.
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.18 with the Round-5-real audit summary.
+
 ## [0.9.17] — 2026-05-10
 
 Round 4 — first **real M2 Analyst** forcing-function run. Followed
