@@ -58,6 +58,79 @@ jobs:
             exit 1
           fi
 
+  validate-plantuml:
+    # Catches PlantUML rendering bugs that previously slipped past prompt review
+    # and only surfaced when a human opened the file in a previewer:
+    #   - v0.9.13: bare <...> in arrow labels / unclosed <PREFIX> tags in notes
+    #   - v0.9.15: "empty" diagram (only comments between @startuml/@enduml)
+    # See CHANGELOG entries for v0.9.13 and v0.9.15.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PlantUML
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y plantuml
+
+      - name: Validate PlantUML files (syntax + content)
+        run: |
+          set +e   # collect all failures, don't stop on first
+          fail=0
+          # Find every .puml in the repo (templates/, examples/, root, etc.)
+          # Skip .git internals and anything in node_modules if present.
+          files=$(find . -name '*.puml' -not -path './.git/*' -not -path './node_modules/*' | sort)
+
+          if [ -z "$files" ]; then
+            echo "No .puml files found — nothing to validate."
+            exit 0
+          fi
+
+          echo "Validating $(echo "$files" | wc -l | tr -d ' ') .puml file(s)..."
+          echo ""
+
+          for f in $files; do
+            echo "── $f"
+
+            # 1. Syntax check via plantuml -checkonly.
+            #    Some PlantUML versions return exit 0 even on parse warnings,
+            #    so we also grep stdout/stderr for known error markers.
+            output=$(plantuml -checkonly "$f" 2>&1)
+            rc=$?
+            if [ $rc -ne 0 ] || echo "$output" | grep -qiE '(syntax error|error: )' ; then
+              echo "  SYNTAX FAIL"
+              echo "$output" | sed 's/^/    /'
+              fail=1
+              continue
+            fi
+
+            # 2. Content check: file must contain at least one diagram
+            #    declaration or arrow between @startuml/@enduml. Catches the
+            #    v0.9.15 class of bug (every line a comment; PlantUML renders
+            #    nothing).
+            decls=$(grep -cE '^[[:space:]]*(class|abstract|interface|enum|actor|usecase|boundary|entity|control|rectangle|package|database|note|state|participant|component|object|frame|cloud|node|artifact)[[:space:]]+' "$f" 2>/dev/null || echo 0)
+            arrows=$(grep -cE '(\-+\>|\<\-+|\.\.\>|\<\.\.|\-\-\|\>|\-\->|\<\-\-|--o |--\* )' "$f" 2>/dev/null || echo 0)
+            content=$((decls + arrows))
+            if [ "$content" -eq 0 ]; then
+              echo "  CONTENT FAIL: file has no diagram declarations or arrows."
+              echo "    Add at least one element (class/actor/usecase/...) or"
+              echo "    arrow between @startuml and @enduml — or remove this"
+              echo "    file. Empty-but-syntactically-valid diagrams render"
+              echo "    nothing in PlantUML previewers."
+              fail=1
+              continue
+            fi
+
+            echo "  OK ($decls declarations, $arrows arrows)"
+          done
+
+          echo ""
+          if [ $fail -ne 0 ]; then
+            echo "PlantUML validation FAILED. See errors above."
+            exit 1
+          fi
+          echo "✓ All PlantUML files validated."
+
   smoke-test-installer:
     runs-on: ubuntu-latest
     steps:

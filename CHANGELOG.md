@@ -5,6 +5,45 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.16] — 2026-05-10
+
+PlantUML validation in CI. The forcing-function-within-forcing-
+function pattern hit twice — v0.9.13 caught a robustness-template
+bug at preview time (bare `<...>` in arrow labels), and v0.9.15
+caught a domain-model-template bug (every line commented out;
+PlantUML rendered nothing). Both were invisible to prompt review;
+both got past every CI check we had until a human opened the file
+in a previewer. v0.9.16 adds the missing CI step.
+
+The new `validate-plantuml` job runs on every push and PR. It:
+
+  1. Installs PlantUML on the runner (`apt-get install plantuml`).
+  2. For every `.puml` file in the repo (templates/, examples/,
+     root): runs `plantuml -checkonly` for syntax, AND counts
+     diagram declarations + arrows for content.
+  3. Fails the build with file-pinned errors if either check fails.
+
+The content check specifically catches the v0.9.15 class of bug
+(empty-but-syntactically-valid diagrams). Some PlantUML versions
+return exit 0 even on parse warnings, so the syntax check also
+greps output for known error markers as a safety net.
+
+This is a tooling-only commit. No methodology changes, no
+template additions, no new agents. Theory audit consciously
+skipped per CLAUDE.md (same convention as v0.9.9 and v0.9.12).
+
+### Added
+- `.github/workflows/validate.yml` — new `validate-plantuml` job
+  parallel to `validate-agents` and `smoke-test-installer`.
+  Catches the two classes of rendering bug we hit in v0.9.13
+  and v0.9.15.
+
+### Carry-forward note
+This was carried over as a robustness item across multiple
+recent commits (v0.9.13, v0.9.15). Closing it now means future
+PlantUML template work doesn't need preview-by-human as the
+last line of defense.
+
 ## [0.9.15] — 2026-05-10
 
 Round 3 — the **first real forcing-function run**. v0.9.10–v0.9.14
