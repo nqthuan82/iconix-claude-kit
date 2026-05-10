@@ -1,6 +1,11 @@
 # ICONIX project configuration
 # Each project drops this file at its root to parameterize the agent kit.
 
+# Kit version that installed / last upgraded this project.
+# Set automatically by iconix-init (fresh install) and /iconix-upgrade.
+# Used by iconix-upgrade for version detection; do not edit by hand.
+kit_version: "0.9.9"
+
 project:
   name: "YourProject"
   prefix: "PRJ"           # ID prefix, e.g., RGS-UC-017

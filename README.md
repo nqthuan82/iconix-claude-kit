@@ -21,6 +21,7 @@ iconix-kit/
 │   ├── iconix-reviewer.md     # code ↔ design drift detection
 │   ├── iconix-git.md          # branch/PR/commit hygiene; provider-agnostic (v0.9.5+)
 │   ├── iconix-metrics.md      # project metrics + audit-friendly snapshots (v0.9.7+)
+│   ├── iconix-upgrade.md      # kit-version migration; never modifies project artifacts (v0.9.9+)
 │   ├── iconix-docs.md         # user / dev / API doc generation
 │   └── iconix-migration.md    # retrofit ICONIX onto legacy code (Graphify-aware in v0.3.0+)
 ├── commands/                # Claude Code slash commands
@@ -33,6 +34,7 @@ iconix-kit/
 │   ├── iconix-trace-check.md  # local trace validation, mirrors CI gate (v0.9.5+)
 │   ├── iconix-concurrent.md   # detect class-level conflicts between in-flight UCs (v0.9.6+)
 │   ├── iconix-metrics.md      # produce metrics snapshot (markdown + JSON) (v0.9.7+)
+│   ├── iconix-upgrade.md      # migrate kit installation to current version (v0.9.9+)
 │   ├── iconix-docs.md
 │   ├── iconix-migrate.md
 │   └── iconix-graphify.md     # bootstrap Graphify integration (optional)
@@ -57,6 +59,7 @@ iconix-kit/
     ├── phase9-cycle-template.md        # optional Phase 9 cycle log format (v0.9.8+)
     ├── metrics-snapshot-template.md    # markdown format for metrics snapshots (v0.9.7+)
     ├── metrics-schema.json             # JSON schema for snapshot output (v0.9.7+)
+    ├── upgrade-report-template.md      # kit-version upgrade report format (v0.9.9+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -146,6 +149,7 @@ issue is resolved.
 | `/iconix-trace-check [<base>]` | Git | Run the traceability validator locally (same checks as the CI merge-gate) |
 | `/iconix-concurrent [<UC-ID>]` | Traceability (concurrent-touch mode) | Detect class- and container-level conflicts between in-flight UCs at M2 (or any time) |
 | `/iconix-metrics [trend]` | Metrics | Produce snapshot (markdown + JSON) of throughput, cycle time, quality, process compliance; `trend` arg for delta vs. prior snapshot |
+| `/iconix-upgrade [--dry-run]` | Upgrade | Migrate the project's installed kit version to current; auto-applies safe additive changes; produces detect-and-report for project artifacts |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
@@ -310,6 +314,54 @@ Reviewer (triage → Type 2)
 > **Review checklist:** After each review the Reviewer appends recurring defect patterns
 > to `reviews/review-checklist.md`. Over time this becomes a project-specific checklist
 > of the most common drift types, used to front-load future reviews.
+
+### Upgrading an existing installation (v0.9.9+) — `iconix-upgrade` agent
+
+When the kit evolves (new templates, new agents, new config sections), existing projects can pick up the new features without losing their state. `/iconix-upgrade` does the migration safely.
+
+**What it auto-applies** (additive, can't break existing behaviour):
+
+- **Folders** — `mkdir -p` for any missing structural folder (e.g., `metrics/`, `phase9-cycles/`, `upgrades/`)
+- **Config sections** — adds missing sections to `iconix.config.yaml` with **conservative defaults** (every new boolean toggle defaults to `false`, even if the kit's seeded template has `true`). The principle: the upgrade itself must not change runtime behaviour. You opt in by editing the config after reading the report.
+- **Reference templates** in `docs/iconix/templates/` — refreshes the team-reference docs (warns before overwriting any user-edited copy)
+- **CI / git integration files** — copied from kit source based on `git.provider` (skip if not set)
+
+**What it never touches** (your authored content):
+
+- `requirements/`, `use-cases/`, `robustness/`, `sequence/`, `class-model/`, `test-cases/`, `bug-reports/` — your artifacts
+- `src/`, `tests/` — your code
+- Existing values in `iconix.config.yaml` — only ADDS missing sections
+
+**What it detects-and-reports** (Layer D — for human review):
+
+- UCs missing newer `## Traceability` blocks or M1 checklist references
+- Source files missing or using older `Traceability:` comment format
+- Type 2 bug reports missing the `## Closure` section (introduced v0.9.8)
+- Bug-fix branches not following the v0.9.5 naming convention
+- Milestone reports in older formats
+
+**Version detection:**
+
+- Reads `iconix.config.yaml` `kit_version: "X.Y.Z"` field if present
+- Otherwise, heuristic detection by feature presence (e.g., `phase9-cycles/` → v0.9.8+; `metrics/` → v0.9.7+; `concurrent-touch-template.md` → v0.9.6+)
+- Override with `/iconix-upgrade --from 0.9.5` if heuristics are ambiguous
+
+**Usage:**
+
+```bash
+# Preview the upgrade — produces report, applies nothing
+/iconix-upgrade --dry-run
+
+# Apply (writes to upgrades/upgrade-<from>-to-<to>-<date>.md)
+/iconix-upgrade
+
+# Override version detection
+/iconix-upgrade --from 0.9.5
+```
+
+**Supported range:** v0.9.0 → current. Pre-v0.9.0 installations should do a fresh `iconix-init` instead.
+
+**Distinct from `iconix-migration`:** the migration agent retrofits ICONIX *onto legacy code* (reverse-engineers source). Upgrade migrates the *kit version itself*. Different problems, different agents.
 
 ### Phase 9 — the implementation loop (v0.9.8+)
 

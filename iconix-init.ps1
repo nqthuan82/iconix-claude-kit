@@ -95,7 +95,7 @@ try {
             "requirements","use-cases","use-case-packages","robustness","domain-model",
             "class-model","sequence","container-mapping","nfr-annotations",
             "adrs","test-cases","features","test-matrices","milestone-reports",
-            "metrics","phase9-cycles",
+            "metrics","phase9-cycles","upgrades",
             "docs\architecture","docs\iconix","docs\iconix\templates"
         )
         foreach ($f in $folders) { New-Item -ItemType Directory -Force -Path $f | Out-Null }
@@ -118,6 +118,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\bug-report-template.md")              "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\concurrent-touch-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\phase9-cycle-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\upgrade-report-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-snapshot-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
@@ -189,6 +190,7 @@ try {
     Write-Host "  - iconix-reviewer        (code vs design drift detection, bug triage)"
     Write-Host "  - iconix-git             (branch/PR/commit hygiene; provider-agnostic)"
     Write-Host "  - iconix-metrics         (project metrics + audit-friendly snapshots)"
+    Write-Host "  - iconix-upgrade         (kit-version migration; never modifies project artifacts)"
     Write-Host "  - iconix-docs            (user / dev / API docs generation)"
     Write-Host "  - iconix-migration       (reverse-engineer ICONIX onto legacy code)"
     Write-Host ""
@@ -202,6 +204,7 @@ try {
     Write-Host "  /iconix-trace-check run the traceability validator locally"
     Write-Host "  /iconix-concurrent  detect class-level conflicts between in-flight UCs (M2)"
     Write-Host "  /iconix-metrics     produce ICONIX metrics snapshot (markdown + JSON)"
+    Write-Host "  /iconix-upgrade     migrate kit installation to current version"
     Write-Host "  /iconix-docs        generate user/dev/api docs"
     Write-Host "  /iconix-migrate     reverse-engineer from existing code"
     Write-Host "  /iconix-graphify    bootstrap Graphify integration (optional, for migration)"

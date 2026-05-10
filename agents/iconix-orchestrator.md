@@ -29,6 +29,7 @@ You are the ICONIX Orchestrator. You route work to specialist agents in the corr
 - User asks "what breaks if X changes?" → Traceability (change impact)
 - User asks "are any in-flight UCs touching the same classes?" → Traceability (`/iconix-concurrent`); if HIGH conflicts found, dispatch Architect for resolution
 - User asks "how is the project doing?" / "what does our ICONIX scorecard look like?" / wants ISO audit evidence → **Metrics** agent (`/iconix-metrics`); for trends, `/iconix-metrics trend`
+- User asks "we're on an older kit version, what's new?" / "how do I upgrade to the latest kit?" → **Upgrade** agent (`/iconix-upgrade`); for preview, `/iconix-upgrade --dry-run`
 - Pre-merge code review / Model Update session → Reviewer
 - User wants public documentation from UCs → Docs
 - User wants to open a phase-appropriate PR or check trace comments locally → **Git** agent (`/iconix-pr`, `/iconix-trace-check`)

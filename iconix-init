@@ -118,7 +118,7 @@ if [[ "${SCOPE}" == "project" ]]; then
     requirements use-cases use-case-packages robustness domain-model \
     class-model sequence container-mapping nfr-annotations \
     adrs test-cases features test-matrices milestone-reports \
-    metrics phase9-cycles \
+    metrics phase9-cycles upgrades \
     docs/architecture docs/iconix
   echo "  created ICONIX folder structure"
 
@@ -141,6 +141,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/bug-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/concurrent-touch-template.md"             "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/phase9-cycle-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/upgrade-report-template.md"               "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-snapshot-template.md"             "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-schema.json"                      "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true
@@ -209,6 +210,7 @@ Agents installed:
   - iconix-reviewer        (code vs design drift detection, bug triage)
   - iconix-git             (branch/PR/commit hygiene; provider-agnostic)
   - iconix-metrics         (project metrics + audit-friendly snapshots)
+  - iconix-upgrade         (kit-version migration; never modifies project artifacts)
   - iconix-docs            (user / dev / API docs generation)
   - iconix-migration       (reverse-engineer ICONIX onto legacy code)
 
@@ -222,6 +224,7 @@ Commands installed:
   /iconix-trace-check run the traceability validator locally
   /iconix-concurrent  detect class-level conflicts between in-flight UCs (M2)
   /iconix-metrics     produce ICONIX metrics snapshot (markdown + JSON)
+  /iconix-upgrade     migrate kit installation to current version
   /iconix-docs        generate user/dev/api docs
   /iconix-migrate     reverse-engineer from existing code
   /iconix-graphify    bootstrap Graphify integration (optional, for migration)

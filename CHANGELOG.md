@@ -5,6 +5,94 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.9] — 2026-05-10
+
+Closes the kit-version-evolution loop that v0.9.5–v0.9.8 implicitly
+opened: every minor version added new templates, folders, or config
+sections, but existing projects had no way to pick those up without
+re-running `iconix-init --force` (which works for templates and
+config but doesn't surface what's *different* about authored
+artifacts). v0.9.9 adds `/iconix-upgrade` — a kit-version migration
+agent that auto-applies safe additive changes and produces a
+detect-and-report for project artifacts.
+
+Three-layer migration model:
+
+  Layer A (folders)     — auto-apply via mkdir -p
+  Layer B (config)      — auto-apply with conservative defaults
+                          (every new boolean toggle = false on upgrade,
+                          even if the kit's seeded template has true)
+  Layer C (templates)   — auto-apply, refresh reference docs
+  Layer D (artifacts)   — DETECT ONLY. Never touch UCs / source /
+                          tests / bug reports. Report what differs.
+  Layer E (CI / git)    — auto-apply based on git.provider
+
+The "conservative defaults during upgrade" rule is deliberate: the
+upgrade itself must not change runtime behaviour. The user opts in
+by editing iconix.config.yaml after reading the report.
+
+Distinct from iconix-migration (which retrofits ICONIX onto legacy
+CODE). Upgrade migrates the kit VERSION. Same word, different
+problems; intentionally separate agents.
+
+This is a **tooling-only** change per CLAUDE.md (no ICONIX rules
+introduced; no methodology shifts). Theory audit consciously skipped
+and noted here for clarity.
+
+### Added
+- `agents/iconix-upgrade.md` — new agent. Detects current installed
+  version (from `kit_version` field, or heuristic feature-presence),
+  computes the diff, applies layers A/B/C/E, produces a
+  detect-and-report for layer D, updates `kit_version`. Read-only on
+  project artifacts. Idempotent. Refuses if detected version < 0.9.0
+  (recommends fresh install instead).
+- `commands/iconix-upgrade.md` — new slash command. Supports
+  `--dry-run` for preview-only, `--from <version>` to override
+  detection, `--source <path>` to specify a kit-source path
+  different from the original install.
+- `templates/upgrade-report-template.md` — report format. Sections:
+  Summary, Auto-applied (per layer), Detected for review (per
+  artifact category), Suggested config flips, Recommended manual
+  actions, Rollback notes, Traceability footer.
+- `templates/iconix.config.yaml` — new `kit_version: "0.9.9"` field
+  at the top of the config. Set automatically by `iconix-init` on
+  fresh install; bumped by `/iconix-upgrade` after a successful
+  migration. Used by `iconix-upgrade` for version detection (with
+  heuristic fallback for pre-v0.9.9 projects).
+- New folder seed: `upgrades/` — where upgrade reports are written.
+
+### Changed
+- `iconix-init` (bash) and `iconix-init.ps1` (PowerShell) — both
+  installers now create `upgrades/` folder, copy
+  `upgrade-report-template.md` to `docs/iconix/templates/`, and
+  list the new agent + command in the Next-steps output.
+- `agents/iconix-orchestrator.md` — routing heuristic for "we're on
+  an older kit version" / "how do I upgrade" → Upgrade agent
+  (`/iconix-upgrade` or `/iconix-upgrade --dry-run`).
+- `README.md` — `iconix-upgrade.md` in agents and commands listings;
+  `upgrade-report-template.md` in templates listing; new full
+  **Upgrading an existing installation** section explaining the
+  three-layer model, what's auto-applied, what's never touched,
+  what gets detected-and-reported, version detection logic, and
+  the distinction from `iconix-migration`.
+- `.github/workflows/validate.yml` — smoke test asserts
+  `kit_version` field present in seeded `iconix.config.yaml`,
+  `upgrade-report-template.md` installed, `upgrades/` folder exists.
+
+### Methodology audit (per CLAUDE.md `# Auditing kit changes against ICONIX Theory`)
+- **Tooling-only change.** `/iconix-upgrade` is kit-version
+  maintenance — it does not introduce ICONIX rules, does not change
+  any phase semantics, does not modify the matrix's coverage.
+  Theory audit consciously skipped per CLAUDE.md's guidance: *"Tooling-
+  only changes (installer scripts, CI workflow, version bumps, typo
+  fixes, methodology-neutral bug fixes, formatting) do not require
+  a theory audit."*
+- The agent's "detect-and-report" of artifacts that don't match
+  current template format is methodology-aware (it knows what
+  current templates require) but doesn't change the rules — it
+  surfaces drift between authored artifacts and the kit's evolved
+  templates, leaving remediation to the user.
+
 ## [0.9.8] — 2026-05-10
 
 Closes the largest remaining behavioural gap from the v0.9.4 kit
