@@ -1,7 +1,15 @@
 @startuml DomainModel
 ' ──────────────────────────────────────────────────────────────────────
-' Initial domain model — drafted by the Product Owner at M1.
-' Refined by the Analyst at M2 through robustness analysis.
+' Domain model — single project-wide diagram, continuously evolved.
+'
+' Ownership over time (v0.9.3+):
+'   - INITIAL DRAFT: Product Owner at M1, time-boxed ~1 hour. Drafts from
+'     intakes / REQs only. Real-world entities only; no GUI; attributes only.
+'   - REFINEMENT: Analyst at M2, time-boxed ~2 hours per UC. Adds entities
+'     discovered via robustness analysis; types untyped attributes; prunes
+'     state-machine entities; updates relationships.
+'   - MAINTENANCE: Analyst on every change-impact event (REQ change flow,
+'     Type 2 bug fix). M1 and M2 gates re-validate.
 '
 ' Save as `domain-model/domain-model.puml` at the project root.
 '
@@ -35,37 +43,66 @@
 '
 '   7. TIME-BOX: ~1 hour for typical scope. This is a glossary-as-
 '      diagram, not a finished class model. The Analyst refines it.
+'
+'   8. MARK PO AMBIGUITIES with `' VERIFY:` comments placed IMMEDIATELY
+'      ABOVE the ambiguous class declaration (not inside the `{ }`
+'      block — PlantUML treats `'` mid-block lines inconsistently).
+'      When you (the PO) are unsure whether something is a real entity
+'      or a state/value/noun-from-the-business, write a `' VERIFY:`
+'      comment block explaining your reasoning and what the Analyst
+'      should validate at M2. Mirrors the `[VERIFY]` convention from
+'      intake templates. See the PendingReviewsQueue example below.
 ' ──────────────────────────────────────────────────────────────────────
 
-' ── Replace the placeholder content below with your domain entities. ──
-' ── Delete this template's example block before committing.           ──
+' ──────────────────────────────────────────────────────────────────────
+' >>> REPLACE THE EXAMPLE BELOW WITH YOUR PROJECT'S DOMAIN ENTITIES. <<<
+' >>> The Customer / Book / CustomerReview classes below are a worked  <<<
+' >>> example (Internet Bookstore). Delete them and write your own.    <<<
+' ──────────────────────────────────────────────────────────────────────
 
-' Example (delete and rewrite for your domain):
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class Customer {
+  + id : int
+  + email : string
+}
+
+class Book {
+  + id : int
+  + title : string
+}
+
+class CustomerReview {
+  + id : int
+  + bookId : int
+  + customerId : int
+  + reviewText : string
+  + rating : int
+  + status : ReviewStatus
+}
+
+enum ReviewStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+' Example of `' VERIFY:` convention (rule 8) — delete this block when
+' you replace the example. Keep the convention itself in your real
+' domain model whenever you (the PO) are unsure about an entity.
 '
-' class Customer {
-'   + id: int
-'   + email: string
-' }
-'
-' class Book {
-'   + id: int
-'   + title: string
-' }
-'
-' class CustomerReview {
-'   + id: int
-'   + text: string
-'   + rating: int
-'   + status: ReviewStatus     ' <- enum, not a separate Queue class
-' }
-'
-' enum ReviewStatus {
-'   Pending
-'   Approved
-'   Rejected
-' }
-'
-' Customer "1" -- "0..*" CustomerReview : writes
-' Book     "1" -- "0..*" CustomerReview : has
+' VERIFY: Is PendingReviewsQueue a real entity (separate infrastructure
+' container per iconix.config.yaml) or just the "pending" state of
+' CustomerReview.status? The heuristic returns both. Analyst:
+' resolve at M2 — keep as entity OR collapse into status enum on
+' CustomerReview.
+class PendingReviewsQueue {
+}
+
+' Relationships
+Customer "1" -- "0..*" CustomerReview : writes
+Book     "1" -- "0..*" CustomerReview : has
+CustomerReview "0..*" -- "1" PendingReviewsQueue : queued in
 
 @enduml

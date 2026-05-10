@@ -5,6 +5,139 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.15] — 2026-05-10
+
+Round 3 — the **first real forcing-function run**. v0.9.10–v0.9.14
+called themselves "forcing-function rounds" but were actually prompt
+review: read the agent prompt, read the example, find gaps, fix.
+v0.9.15 went further — produced fresh REQ + initial domain model +
+UC by following the v0.9.14 PO prompt as if running it for the first
+time, then diffed the fresh artifacts against the example's. Seven
+issues that prompt review couldn't have caught surfaced — they only
+became visible when actually producing artifacts and comparing.
+
+The methodology shift matters: prompt review catches *prompt clarity*
+problems; only artifact production catches *agent-execution* problems
+(places where the prompt is clear but executing it on real input
+reveals format gaps, missing fields, or arbitrary-judgment
+requirements). v0.9.15 closes seven such gaps.
+
+Seven fixes:
+
+  R3-#1 REQ template gains `Related NFRs:` and `Related BRs:`
+        fields. The example uses both; the kit had never
+        standardized them. NFR linkage at REQ time means the
+        Architect doesn't have to re-derive applicable NFRs at M2.
+        BR linkage anticipates the deferred BR-NNN feature with
+        a clean migration path ("(none — Business Rules not yet
+        adopted)" until BR-NNN ships).
+
+  R3-#2 Domain model template gains an "ownership over time"
+        header (PO drafts initial at M1; Analyst refines at M2;
+        both gates re-validate). The example's domain-model.example.puml
+        has a similar header but with stale (pre-v0.9.3) "PO +
+        Analyst joint initial pass" wording. The kit's template now
+        ships the correct version.
+
+  R3-#3 PO rule 9 + domain model template now formalize a
+        `' VERIFY:` convention for PO-introduced ambiguities.
+        When the PO is unsure whether a noun is a real entity or
+        a state/value (e.g., "PendingQueue" in the WCR example),
+        the PO marks the class with a `' VERIFY:` comment block
+        for the Analyst to resolve at M2. Mirrors intake `[VERIFY]`.
+
+  R3-#4 UC template's `Invokes:` field SPLIT into three sub-fields
+        (`Invokes (UC calls)`, `UI dependencies (page/component
+        reuse)`, `Downstream consumers`). The fresh-run UC for
+        WCR exposed three meaningfully different cross-UC
+        dependencies that v0.9.11's single `Invokes:` field
+        conflated: alt A invokes Login (true call); alt E reuses
+        the Book Not Found page (UI reuse, no flow invocation);
+        Moderate Customer Reviews consumes the queue this UC
+        writes to (downstream handoff, not invocation). PO rule 12
+        rewritten with the three categories and the mirror rule
+        per sub-field.
+
+  R3-#5 PO rule 13 added: row granularity for the Basic Course
+        table. One row per (a) user action + immediate system
+        response, OR (b) system-only step that the Analyst would
+        model as a separate controller at M2. Multiple system
+        steps mapping to ONE controller collapse; multiple
+        steps mapping to DIFFERENT controllers stay separate.
+        "When in doubt, expand" — the Analyst can collapse but
+        splitting later is harder.
+
+  R3-#6 UC template's `Domain entities introduced or used:` field
+        SPLIT into `introduced` (net-new on the domain model) and
+        `used` (already on the model). The Analyst at M2 needs to
+        know which entities are new vs reused; the prior single
+        list didn't say.
+
+  R3-#7 REQ acceptance criteria checkbox lifecycle documented
+        (deferred from v0.9.11 / R2-#7). Tester ticks per TC pass
+        (M3 / Phase 9); PO confirms at M3→Implementation merge
+        during PR review; an unticked criterion at merge time is a
+        Reviewer finding / blocker on the Implementation PR.
+
+Methodology audit per CLAUDE.md: methodology-surface change. All
+cited rules already approved; v0.9.15 enriches kit-location
+citations. No status shifts. Cited rules: Ch3 #4 (UC in context
+of object model), Ch3 #7 (event/response flow), Ch4 #5 (REQ
+traced to UCs), Ch5 #1 (no GUI on domain model).
+
+Cumulative: forcing-function arc has now produced 6 rounds
+(prompt review v0.9.10/0.9.11/0.9.13/0.9.14, dogfood v0.9.12, real
+run v0.9.15) and 43 issues fixed (7+6+5+8+10+7). v0.9.15 marks the
+methodology shift to actual artifact production going forward.
+
+### Changed
+- `templates/req-template.md`:
+  - `## Acceptance criteria` gets a checkbox-lifecycle note (R3-#7)
+  - `## Traceability` gains `Related NFRs:` and `Related BRs:`
+    fields (R3-#1)
+- `templates/domain-model-initial-template.puml`:
+  - New "Ownership over time" header explaining the v0.9.3+
+    PO/Analyst split (R3-#2)
+  - New rule 8 in the rules block: `' VERIFY:` convention for
+    PO-introduced ambiguities (R3-#3); the rule places VERIFY
+    comments IMMEDIATELY ABOVE the ambiguous class declaration
+    (PlantUML treats `'` lines mid-class-block inconsistently)
+  - **PlantUML rendering hardening** (caught at preview time —
+    same forcing-function-within-forcing-function as v0.9.13's
+    robustness template): the v0.9.10 file shipped with
+    everything between `@startuml` and `@enduml` commented out,
+    so PlantUML had no diagram content to render. v0.9.15 ships
+    a worked example (Customer / Book / CustomerReview / status
+    enum + PendingReviewsQueue with VERIFY example) that
+    actually renders, with a loud "DELETE AND REPLACE" header
+    instructing users to substitute their own domain entities.
+    Lesson: kit-shipped PlantUML files must *render* on first
+    open — empty-but-syntactically-valid `@startuml/@enduml`
+    blocks aren't actually valid for users.
+- `templates/use-case-template.md`:
+  - `Invokes:` field replaced by three sub-fields:
+    `Invokes (UC calls):`, `UI dependencies (page/component reuse):`,
+    `Downstream consumers:` (R3-#4)
+  - `Domain entities introduced or used:` split into
+    `Domain entities introduced (new on domain model):` and
+    `Domain entities used (already on domain model):` (R3-#6)
+- `agents/iconix-product-owner.md`:
+  - Rule 9 gains "Mark your ambiguities for the Analyst" sub-section
+    on the `' VERIFY:` convention (R3-#3)
+  - Rule 12 rewritten — now distinguishes three sub-categories
+    of cross-UC dependency (Invokes/UI dependencies/Downstream
+    consumers) with mirror rule per sub-field (R3-#4)
+  - New rule 13: "Basic course row granularity" (R3-#5)
+- `docs/iconix/iconix-process-reference.md` — "Last reviewed"
+  bumped to v0.9.15 with the Round-3-real audit summary
+
+### Note on the WCR example
+The fresh-run M1 artifacts produced during this round were used as
+diff input only; they were not committed. The example's existing
+artifacts remain in their pre-v0.9.10 state and will surface as
+Layer-D findings when `/iconix-upgrade` is run on the example.
+Example refresh remains a deferred task.
+
 ## [0.9.14] — 2026-05-10
 
 Round 2 forcing-function fixes (M2 Architect phase). We continued

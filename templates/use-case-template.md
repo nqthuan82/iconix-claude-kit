@@ -48,12 +48,21 @@
 ## Traceability
 - **Intakes:** <comma-separated list of intake files this UC consolidates — see PO agent `# When multiple intakes describe the same goal`>
 - **Requirements:** REQ-XXX, REQ-YYY
-- **Invokes:** <list of UCs this UC's basic or alternate courses invoke — format: `<PREFIX>-UC-XXX | <Title> | <Package> (course-ref)`; "(none)" if no invocations. See PO agent rule 12.>
-  <!-- Example:
-  - BS-UC-005 | Login | Auth (alt A)
-  - BS-UC-012 | Moderate Customer Reviews | Reviews (downstream — separate thread)
-  -->
-- **Domain entities introduced or used:** <comma-separated list — must match nouns appearing in this UC's text and on the domain model>
+- **Invokes (UC calls):**
+  <!-- This UC's basic or alternate course CALLS another UC's flow and waits for its
+       result (control transfers and returns). Format: `<PREFIX>-UC-XXX | <Title> | <Package> (course-ref)`.
+       Write `(none)` if this UC invokes no others. See PO agent rule 12. -->
+  - <PREFIX>-UC-XXX | <Title> | <Package> (alt A)
+- **UI dependencies (page/component reuse):**
+  <!-- This UC reuses a UI element (page, component, dialog) owned by another UC,
+       but does NOT invoke that UC's flow. Common case: error pages, shared chrome. -->
+  - <PREFIX>-UC-XXX | <Title> | <Package> (alt E reuses <Page Name>)
+- **Downstream consumers:**
+  <!-- Other UCs that consume artifacts this UC produces (queued items, events, side
+       effects). NOT an invocation — handoff is async/decoupled. -->
+  - <PREFIX>-UC-XXX | <Title> | <Package> (consumes <produced thing>)
+- **Domain entities introduced (new on domain model):** <comma-separated list of entities this UC adds to the domain model for the first time, or "(none — all already present)">
+- **Domain entities used (already on domain model):** <comma-separated list of entities this UC references but didn't introduce>
 - **Robustness diagram:** (filled by Analyst)
 - **Sequence diagram:** (filled by Developer)
 - **Test cases:** (filled by Tester)
