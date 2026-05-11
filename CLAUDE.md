@@ -137,10 +137,15 @@ Same applicability as the sync rule below: this fires while Claude is actively m
 
 ## Keeping README and state machine in sync
 
-Whenever a change in this conversation touches the kit's user-facing surface — files under `agents/`, `commands/`, `templates/`, the installers (`iconix-init`, `iconix-init.ps1`), `templates/iconix.config.yaml`, the directory layout, or the agent pipeline / milestone gates — review both of these before treating the change as complete:
+Whenever a change in this conversation touches the kit's user-facing surface — files under `agents/`, `commands/`, `templates/`, the installers (`iconix-init`, `iconix-init.ps1`), `templates/iconix.config.yaml`, the directory layout, or the agent pipeline / milestone gates — review all three of these before treating the change as complete:
 
-1. **`README.md`** — confirm it still accurately states the agent count, the command list, installer flags, the directory layout it advertises, and any examples that reference renamed or removed items.
+1. **`README.md`** — confirm it still accurately states the agent count, the command list, installer flags, and any examples that reference renamed or removed items.
 2. **`iconix-state-machine.puml`** (root) — confirm states, transitions, M1/M2/M3 gates, and agent labels still match the pipeline. If a new agent, gate, or transition was introduced or one was renamed/removed, update the diagram in the same change.
+3. **`README.md` `## Project layout` section** — confirm it still reflects every directory that `iconix-init` creates, every directory any agent writes to, and every file the installer drops. Update in the same change when any of these fire:
+   - Installer `$folders` array or `Copy-Item` calls change (new folder or template destination)
+   - An agent starts writing to a directory not already listed in the layout
+   - A new git-integration provider path is added
+   - A new template file is added to `docs/iconix/templates/`
 
 If a mismatch is found, fix it in the same change rather than deferring. Mention in the response which files were updated and why.
 

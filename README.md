@@ -121,6 +121,153 @@ Edit `iconix.config.yaml` at your project root:
 - `architecture.containers` — list of containers the Architect maps UCs to
 - `milestones.max_revisions_per_artifact` — anti-analysis-paralysis guardrail
 
+## Project layout
+
+After `iconix-init` the project gains two layers: **kit machinery** (agents, commands, templates installed once) and **artifact scaffolding** (empty directories the pipeline fills over time).
+
+### Kit machinery — installed by `iconix-init`
+
+```
+.claude/
+├── agents/                          ← 13 agent definitions
+│   ├── iconix-orchestrator.md
+│   ├── iconix-product-owner.md
+│   ├── iconix-analyst.md
+│   ├── iconix-architect.md
+│   ├── iconix-developer.md
+│   ├── iconix-tester.md
+│   ├── iconix-traceability.md
+│   ├── iconix-reviewer.md
+│   ├── iconix-git.md
+│   ├── iconix-metrics.md
+│   ├── iconix-upgrade.md
+│   ├── iconix-docs.md
+│   └── iconix-migration.md
+└── commands/                        ← 13 slash commands
+    ├── iconix-next.md               /iconix-next
+    ├── iconix-status.md             /iconix-status
+    ├── iconix-impact.md             /iconix-impact
+    ├── iconix-review.md             /iconix-review
+    ├── iconix-bug.md                /iconix-bug
+    ├── iconix-pr.md                 /iconix-pr
+    ├── iconix-trace-check.md        /iconix-trace-check
+    ├── iconix-concurrent.md         /iconix-concurrent
+    ├── iconix-metrics.md            /iconix-metrics
+    ├── iconix-upgrade.md            /iconix-upgrade
+    ├── iconix-docs.md               /iconix-docs
+    ├── iconix-migrate.md            /iconix-migrate
+    └── iconix-graphify.md           /iconix-graphify
+
+docs/iconix/
+├── metrics-glossary.md
+└── templates/                       ← all kit templates (reference copies for agents)
+    ├── req-template.md
+    ├── use-case-template.md
+    ├── use-case-diagram-template.puml
+    ├── domain-model-initial-template.puml
+    ├── robustness-template.puml
+    ├── sequence-template.puml
+    ├── class-model-template.puml
+    ├── container-mapping-template.md
+    ├── nfr-annotations-template.md
+    ├── nfr-catalog-template.md
+    ├── architecture-package-map-template.md
+    ├── integration-surface-template.md
+    ├── adr-template.md
+    ├── milestone-report-template.md
+    ├── cdr-report-template.md
+    ├── test-case-template.md
+    ├── test-matrix-template.md
+    ├── test-plan-template.md
+    ├── edge-case-report-template.md
+    ├── change-impact-template.md
+    ├── concurrent-touch-template.md
+    ├── bug-report-template.md
+    ├── phase9-cycle-template.md
+    ├── metrics-snapshot-template.md
+    ├── metrics-schema.json
+    ├── system-architecture-template.md
+    ├── upgrade-report-template.md
+    ├── graphify-setup.md
+    ├── intake-transcript-template.md
+    ├── intake-brd-template.md
+    ├── intake-email-template.md
+    ├── intake-feature-request-template.md
+    └── git-integration/
+        ├── README.md
+        ├── branch-conventions.md
+        └── commit-conventions.md
+
+.ci/
+└── validate-traceability.sh         ← CI merge-gate (always installed)
+
+.github/                             ← only if git.provider = github
+├── workflows/
+│   └── iconix-validate.yml
+└── PULL_REQUEST_TEMPLATE/
+    ├── m1.md
+    ├── m2.md
+    ├── m3.md
+    └── implementation.md
+
+.azuredevops/                        ← only if git.provider = azure-devops
+└── pull_request_templates/
+    ├── default.md
+    ├── m1.md / m2.md / m3.md / implementation.md
+
+docs/architecture/
+└── system-architecture.md           ← seeded from template; fill in before running Architect
+
+iconix.config.yaml                   ← project config (root)
+```
+
+### Artifact directories — created empty at install; filled by agents during the pipeline
+
+```
+Phase 1 — Requirements (M1)
+  requirements/              REQ-XXX-<slug>.md
+  use-cases/                 <PREFIX>-UC-XXX-<slug>.md
+  use-case-packages/         <package-slug>.puml
+
+Phase 2 — Analysis / Preliminary Design (M2)
+  domain-model/              domain-model.puml
+  robustness/                RB-XXX-<slug>.puml
+  container-mapping/         <PREFIX>-UC-XXX-containers.md
+  nfr-annotations/           <PREFIX>-UC-XXX-nfr.md
+  adrs/                      <PREFIX>-ADR-XXX-<slug>.md
+  docs/architecture/         package-map.md, integration-surface.md
+
+Phase 3 — Detailed Design (M3)
+  sequence/                  SD-XXX-<slug>.puml
+  class-model/               class-model.puml
+  test-cases/                TC-XXX-<slug>.md
+  features/                  UC-XXX.feature      ← BDD projects or acceptance-bdd TCs
+  test-plan/                 test-plan-<date>.md
+  edge-case-reports/         <PREFIX>-UC-XXX-edge-cases.md
+  test-matrix.md             (root level)
+
+Phase 9 — Implementation
+  src/<container-name>/      source files; one folder per container; language per Effective stack
+  tests/<container-name>.Tests/   mirrors src; test framework per Effective stack
+
+Audit trail and tracking
+  reviews/                   REVIEW-<date>-<scope>.md, review-checklist.md
+  change-impact/             CI-<date>.md (REQ change), CT-<date>.md (concurrent-touch)
+  bug-reports/               BUG-<date>-<slug>.md
+  milestone-reports/         M1-<date>.md, M2-<date>.md, M3-<date>.md
+  phase9-cycles/             UC-XXX-cycle.md     ← optional Phase 9 audit log per UC
+  metrics/                   snapshot-<date>.md, snapshot-<date>.json, trend-<date>.md
+  upgrades/                  upgrade-<from>-to-<to>-<date>.md
+
+Traceability (root level — accessible by all agents without path resolution)
+  ids.registry.md
+  traceability-matrix.md
+  orphan-report.md
+
+Migration (legacy codebases only — produced by /iconix-migrate)
+  migration/                 survey-<date>.md, coverage-gaps.md, handoff-<date>.md
+```
+
 ## Usage
 
 In Claude Code:

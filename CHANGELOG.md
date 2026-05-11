@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.39] — 2026-05-11
+
+**Docs: add full project layout section to README; add layout-maintenance rule to CLAUDE.md.**
+
+New `## Project layout` section in README.md documents the complete directory structure
+of a project after `iconix-init`: kit machinery (agents, commands, templates, CI scripts,
+provider-specific git integration) and artifact directories organized by pipeline phase
+(M1 requirements → M2 analysis → M3 detailed design → Phase 9 implementation → audit
+trail, traceability, metrics, migration). CLAUDE.md sync rule extended from 2 to 3 items;
+item 3 requires the Project layout section to be updated in the same change whenever
+installer folders, agent output directories, template destinations, or git-integration
+paths change.
+
+Changes:
+- **`README.md`**: new `## Project layout` section between Per-project configuration and Usage
+- **`CLAUDE.md`**: sync rule extended to item 3 — Project layout maintenance triggers documented
+
 ## [0.9.38] — 2026-05-11
 
 **Fix: four follow-on gaps in per-container stack support.**
