@@ -117,7 +117,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   mkdir -p \
     requirements use-cases use-case-packages robustness domain-model \
     class-model sequence container-mapping nfr-annotations \
-    adrs test-cases features test-matrices milestone-reports \
+    adrs test-cases features milestone-reports \
     metrics phase9-cycles upgrades \
     docs/architecture docs/iconix
   echo "  created ICONIX folder structure"

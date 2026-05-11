@@ -202,6 +202,7 @@ docs/iconix/
 └── validate-traceability.sh         ← CI merge-gate (always installed)
 
 .github/                             ← only if git.provider = github
+├── pull_request_template.md         ← default PR template
 ├── workflows/
 │   └── iconix-validate.yml
 └── PULL_REQUEST_TEMPLATE/
@@ -221,51 +222,53 @@ docs/architecture/
 iconix.config.yaml                   ← project config (root)
 ```
 
-### Artifact directories — created empty at install; filled by agents during the pipeline
+### Artifact directories
+
+Directories marked **[install]** are created empty by `iconix-init`. Directories marked **[agent]** are created on demand the first time the relevant agent runs — they will not exist until that phase is reached.
 
 ```
 Phase 1 — Requirements (M1)
-  requirements/              REQ-XXX-<slug>.md
-  use-cases/                 <PREFIX>-UC-XXX-<slug>.md
-  use-case-packages/         <package-slug>.puml
+  requirements/    [install]  REQ-XXX-<slug>.md
+  use-cases/       [install]  <PREFIX>-UC-XXX-<slug>.md
+  use-case-packages/ [install] <package-slug>.puml
 
 Phase 2 — Analysis / Preliminary Design (M2)
-  domain-model/              domain-model.puml
-  robustness/                RB-XXX-<slug>.puml
-  container-mapping/         <PREFIX>-UC-XXX-containers.md
-  nfr-annotations/           <PREFIX>-UC-XXX-nfr.md
-  adrs/                      <PREFIX>-ADR-XXX-<slug>.md
-  docs/architecture/         package-map.md, integration-surface.md
+  domain-model/    [install]  domain-model.puml
+  robustness/      [install]  RB-XXX-<slug>.puml
+  container-mapping/ [install] <PREFIX>-UC-XXX-containers.md
+  nfr-annotations/ [install]  <PREFIX>-UC-XXX-nfr.md
+  adrs/            [install]  <PREFIX>-ADR-XXX-<slug>.md
+  docs/architecture/ [install] package-map.md, integration-surface.md
 
 Phase 3 — Detailed Design (M3)
-  sequence/                  SD-XXX-<slug>.puml
-  class-model/               class-model.puml
-  test-cases/                TC-XXX-<slug>.md
-  features/                  UC-XXX.feature      ← BDD projects or acceptance-bdd TCs
-  test-plan/                 test-plan-<date>.md
-  edge-case-reports/         <PREFIX>-UC-XXX-edge-cases.md
-  test-matrix.md             (root level)
+  sequence/        [install]  SD-XXX-<slug>.puml
+  class-model/     [install]  class-model.puml
+  test-cases/      [install]  TC-XXX-<slug>.md
+  features/        [install]  UC-XXX.feature      ← BDD projects or acceptance-bdd TCs
+  test-plan/       [agent]    test-plan-<date>.md
+  edge-case-reports/ [agent]  <PREFIX>-UC-XXX-edge-cases.md
+  test-matrix.md   [agent]    root level; single living document
 
 Phase 9 — Implementation
-  src/<container-name>/      source files; one folder per container; language per Effective stack
-  tests/<container-name>.Tests/   mirrors src; test framework per Effective stack
+  src/<container-name>/  [agent]  source files; one folder per container; language per Effective stack
+  tests/<container-name>.Tests/ [agent]  mirrors src; test framework per Effective stack
 
 Audit trail and tracking
-  reviews/                   REVIEW-<date>-<scope>.md, review-checklist.md
-  change-impact/             CI-<date>.md (REQ change), CT-<date>.md (concurrent-touch)
-  bug-reports/               BUG-<date>-<slug>.md
-  milestone-reports/         M1-<date>.md, M2-<date>.md, M3-<date>.md
-  phase9-cycles/             UC-XXX-cycle.md     ← optional Phase 9 audit log per UC
-  metrics/                   snapshot-<date>.md, snapshot-<date>.json, trend-<date>.md
-  upgrades/                  upgrade-<from>-to-<to>-<date>.md
+  reviews/         [agent]    REVIEW-<date>-<scope>.md, review-checklist.md
+  change-impact/   [agent]    CI-<date>.md (REQ change), CT-<date>.md (concurrent-touch)
+  bug-reports/     [agent]    BUG-<date>-<slug>.md
+  milestone-reports/ [install] M1-<date>.md, M2-<date>.md, M3-<date>.md
+  phase9-cycles/   [install]  UC-XXX-cycle.md     ← optional Phase 9 audit log per UC
+  metrics/         [install]  snapshot-<date>.md, snapshot-<date>.json, trend-<date>.md
+  upgrades/        [install]  upgrade-<from>-to-<to>-<date>.md
 
 Traceability (root level — accessible by all agents without path resolution)
-  ids.registry.md
-  traceability-matrix.md
-  orphan-report.md
+  ids.registry.md  [agent]
+  traceability-matrix.md [agent]
+  orphan-report.md [agent]
 
 Migration (legacy codebases only — produced by /iconix-migrate)
-  migration/                 survey-<date>.md, coverage-gaps.md, handoff-<date>.md
+  migration/       [agent]    survey-<date>.md, coverage-gaps.md, handoff-<date>.md
 ```
 
 ## Usage

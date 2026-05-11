@@ -5,6 +5,34 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.40] — 2026-05-11
+
+**Fix: four mismatches between README Project layout and actual kit.**
+
+Audit of README.md against the actual kit revealed four discrepancies introduced when the
+Project layout section was added in v0.9.39:
+
+1. **`test-matrices/` removed** — the installer created this folder, the upgrade agent
+   protected it, but no agent writes there. The Tester writes `test-matrix.md` at the
+   project root, not inside this subfolder. Removed from `iconix-init`, `iconix-init.ps1`,
+   and `iconix-upgrade.md`'s never-touch list.
+2. **Artifact-directory labels corrected** — the subtitle "created empty at install" was
+   wrong for eight directories (`reviews/`, `change-impact/`, `bug-reports/`,
+   `edge-case-reports/`, `test-plan/`, `migration/`, `src/`, `tests/`) that are created
+   on-demand by agents, not by the installer. Every directory now carries an `[install]`
+   or `[agent]` label.
+3. **`.github/pull_request_template.md` added** — the GitHub default PR template is
+   installed by `iconix-init` (for `git.provider = github`) but was missing from the
+   README layout tree.
+4. **README's `.github/` comment text** was also missing the `pull_request_template.md`
+   file reference, which is now corrected.
+
+Changes:
+- **`iconix-init`**: removed `test-matrices` from `mkdir -p`
+- **`iconix-init.ps1`**: removed `"test-matrices"` from `$folders` array
+- **`agents/iconix-upgrade.md`**: removed `test-matrices/` from "What you NEVER touch" list
+- **`README.md`**: `[install]`/`[agent]` labels on all artifact directories; `pull_request_template.md` added to `.github/` tree
+
 ## [0.9.39] — 2026-05-11
 
 **Docs: add full project layout section to README; add layout-maintenance rule to CLAUDE.md.**

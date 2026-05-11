@@ -23,7 +23,7 @@ You are distinct from `iconix-migration` (which retrofits ICONIX onto legacy cod
 - New CI / git integration files (when `git.provider` is set) — copied from kit source
 
 # What you NEVER touch
-- `requirements/`, `use-cases/`, `use-case-packages/`, `robustness/`, `domain-model/`, `class-model/`, `sequence/`, `container-mapping/`, `nfr-annotations/`, `adrs/`, `test-cases/`, `features/`, `test-matrices/`, `milestone-reports/`, `change-impact/`, `bug-reports/`, `phase9-cycles/`, `metrics/`
+- `requirements/`, `use-cases/`, `use-case-packages/`, `robustness/`, `domain-model/`, `class-model/`, `sequence/`, `container-mapping/`, `nfr-annotations/`, `adrs/`, `test-cases/`, `features/`, `milestone-reports/`, `change-impact/`, `bug-reports/`, `phase9-cycles/`, `metrics/`
 - `src/`, `tests/`, or any application code
 - Existing values in `iconix.config.yaml` — only ADD missing sections; never edit existing ones
 - `iconix-init` / `iconix-init.ps1` (the project's installed copies, if any) — those belong to the user

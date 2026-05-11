@@ -94,7 +94,7 @@ try {
         $folders = @(
             "requirements","use-cases","use-case-packages","robustness","domain-model",
             "class-model","sequence","container-mapping","nfr-annotations",
-            "adrs","test-cases","features","test-matrices","milestone-reports",
+            "adrs","test-cases","features","milestone-reports",
             "metrics","phase9-cycles","upgrades",
             "docs\architecture","docs\iconix","docs\iconix\templates"
         )
