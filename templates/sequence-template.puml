@@ -45,9 +45,8 @@ boundary "Login redirect\n(cookie auth challenge)" as LoginRedir
 ' Framework controller lifeline (orchestrator) — named per stack convention:
 control  "WriteCustomerReview\nController"        as Ctrl
 
-' Framework-helper lifeline (only when non-trivial — e.g., it invokes
-' IValidatableObject):
-control  "ASP.NET Core\nModelBinder + ModelState" as MVC
+' Framework-helper lifeline (only when non-trivial — e.g., it invokes IValidatableObject):
+' control  "ASP.NET Core\nModelBinder + ModelState" as MVC
 
 ' Application-layer DI interface (per Developer rule 4 — justify in
 ' class-model annotation or cdr-report):
@@ -118,24 +117,18 @@ group Step N - [Save and enqueue]
   CR     ..> Mod   : (downstream - read by PREFIX-UC-XXX Moderate; async)
 end
 
-note over Cust, Mod
-  Class model derived from this diagram (PREFIX-CLS-*):
-    PREFIX-CLS-WriteCustomerReviewController <<controller>>
-       - WriteAsync(bookId)
-       - SubmitAsync(review)
-    PREFIX-CLS-CustomerReview <<entity>>
-       - DataAnnotations + Validate(ValidationContext)
-    PREFIX-CLS-ICurrentUserService <<service>>
-       - GetSession(HttpContext) : CustomerSession
-
-  Code skeleton paths (per architecture-package-map.md):
-    src/Bookstore.Web/Controllers/WriteCustomerReviewController.cs
-    src/Bookstore.Domain/CustomerReview.cs
-    src/Bookstore.Application/ICurrentUserService.cs
-    src/Bookstore.Infrastructure/Repositories/EfBookRepository.cs
-
-  Traceability:
-    PREFIX-REQ-XXX -> PREFIX-UC-XXX -> PREFIX-RB-XXX -> PREFIX-SD-XXX (this) -> CLS-* -> PREFIX-TC-*
-end note
+' ── Class model derived from this diagram (fill in PREFIX-CLS-* IDs) ──
+' PREFIX-CLS-WriteCustomerReviewController  WriteAsync(bookId), SubmitAsync(review)
+' PREFIX-CLS-CustomerReview                 DataAnnotations + Validate(ValidationContext)
+' PREFIX-CLS-ICurrentUserService            GetSession(HttpContext) : CustomerSession
+'
+' Code skeleton paths (per architecture-package-map.md):
+'   src/Bookstore.Web/Controllers/WriteCustomerReviewController.cs
+'   src/Bookstore.Domain/CustomerReview.cs
+'   src/Bookstore.Application/ICurrentUserService.cs
+'   src/Bookstore.Infrastructure/Repositories/EfBookRepository.cs
+'
+' Traceability:
+'   PREFIX-REQ-XXX -> PREFIX-UC-XXX -> PREFIX-RB-XXX -> PREFIX-SD-XXX (this) -> CLS-* -> PREFIX-TC-*
 
 @enduml

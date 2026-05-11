@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.33] — 2026-05-11
+
+**Fix: sequence-template.puml still fails to preview — two remaining causes.**
+
+(1) `note over` block contained `<<controller>>` etc. which PlantUML misparsed even
+inside a note. Moved the class-model reference block to `'` comments instead.
+(2) Unused `MVC` lifeline declaration commented out; some PlantUML versions reject
+declared-but-never-messaged lifelines.
+
+Changes:
+- **`templates/sequence-template.puml`**: `note over` replaced with comment block; unused MVC lifeline commented out
+
 ## [0.9.32] — 2026-05-11
 
 **Fix: sequence-template.puml fails to preview in VS Code.**
