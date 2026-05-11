@@ -383,13 +383,20 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 4. Produce `migration/coverage-gaps.md`
 
 ## Phase 7 — Handoff report (graph-assisted)
-Produce `migration/handoff-<date>.md`:
-- Mode used (graph-assisted)
-- Confidence summary: % of artifacts derived from EXTRACTED edges only vs containing INFERRED material
-- What was reverse-engineered successfully
-- What requires human input (business intent, NFRs, alternate courses)
-- AMBIGUOUS findings worth investigating
-- Recommended next steps, ordered by risk/coverage
+Use `templates/handoff-report-template.md` (or `docs/iconix/templates/handoff-report-template.md` after install). Save as `migration/handoff-<date>.md`.
+
+Fill in every section:
+- **Migration run:** mode, phases completed, scope, previous run date
+- **Artifact inventory:** one row per output file; mark Skipped items with reason
+- **Confidence summary:** EXTRACTED / INFERRED / AMBIGUOUS counts per artifact type; overall % confidence
+- **Successfully reverse-engineered:** entry point count, layer count, class count, UC count
+- **Business intent gaps:** UC-DRAFTs where alternate courses or actor intent needs PO input
+- **NFR gaps:** observed signals (retry loops, auth checks) that imply an NFR but lack a formal target
+- **Alternate course gaps:** `try/catch` / early-return blocks that may be user journeys
+- **Architecture decisions needed:** mixed-responsibility classes, [VERIFY] counts in arch docs
+- **AMBIGUOUS findings:** polymorphic dispatch, deep call chains (graph-assisted only)
+- **Test coverage gaps:** UC-DRAFTs with no existing test coverage
+- **Recommended next steps:** ordered by risk — always lead with system-architecture [VERIFY] items, then PO UC review, then NFR gaps
 
 ---
 
@@ -466,7 +473,7 @@ Same as graph-assisted Phase 5b. Without graph clustering you cluster manually:
 Find existing tests via file patterns; map to draft UCs by reading test contents
 
 ## Phase 7 — Handoff report (manual)
-Same as graph-assisted Phase 7 but note mode: code-walking and that confidence is uniformly lower
+Same template and sections as graph-assisted Phase 7. Omit the "AMBIGUOUS findings" section (no graph). Set confidence summary to "all INFERRED — code-walking mode" rather than per-artifact counts. Note that confidence is uniformly lower than graph-assisted output and every artifact requires `[VERIFY]` review.
 
 ---
 

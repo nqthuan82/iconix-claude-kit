@@ -5,6 +5,30 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.44] — 2026-05-12
+
+**Fix: add missing handoff-report-template.md for iconix-migration Phase 7.**
+
+The migration agent's Phase 7 (Handoff report) instructed the agent to produce
+`migration/handoff-<date>.md` but provided no template — unlike every other agent
+in the kit which references a specific template file. This meant the agent had to
+improvise the structure each run, producing inconsistent handoff reports.
+
+New `templates/handoff-report-template.md` covers: migration run metadata, artifact
+inventory with skip reasons, confidence summary (EXTRACTED/INFERRED/AMBIGUOUS per
+artifact type), successfully reverse-engineered summary, four human-input gap
+categories (business intent, NFRs, alternate courses, architecture decisions),
+AMBIGUOUS findings table (graph-assisted only), test coverage gaps, and recommended
+next steps ordered by risk. Phase 7 in both workflows (graph-assisted and
+code-walking) now reference the template with per-section filling instructions.
+
+Changes:
+- **`templates/handoff-report-template.md`**: new template
+- **`agents/iconix-migration.md`**: Phase 7 (graph-assisted + code-walking) reference template and list required sections
+- **`iconix-init`**: copy handoff-report-template.md to `docs/iconix/templates/`
+- **`iconix-init.ps1`**: same
+- **`README.md`**: handoff-report-template.md added to Project layout (both kit machinery and artifact directories sections)
+
 ## [0.9.43] — 2026-05-11
 
 **Enhancement: hot-spot ranking in concurrent-touch detection.**

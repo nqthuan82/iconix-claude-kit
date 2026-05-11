@@ -72,6 +72,7 @@ iconix-kit/
     ├── metrics-snapshot-template.md    # markdown format for metrics snapshots (v0.9.7+)
     ├── metrics-schema.json             # JSON schema for snapshot output (v0.9.7+)
     ├── upgrade-report-template.md      # kit-version upgrade report format (v0.9.9+)
+    ├── handoff-report-template.md      # migration handoff report format (v0.9.44+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -188,6 +189,7 @@ docs/iconix/
     ├── metrics-schema.json
     ├── system-architecture-template.md
     ├── upgrade-report-template.md
+    ├── handoff-report-template.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md
     ├── intake-brd-template.md

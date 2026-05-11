@@ -130,6 +130,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\concurrent-touch-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\phase9-cycle-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\upgrade-report-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\handoff-report-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-snapshot-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\system-architecture-template.md")       "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
