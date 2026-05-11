@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.25] — 2026-05-11
+
+**Fix: feature branch never created in the pipeline — added branch creation as Phase 0.**
+
+`branch-conventions.md` stated "Created at M1 entry" but the orchestrator never
+dispatched the Git agent to do it. Phase 9.1 assumed the branch existed but nothing
+created it. All phases ran on whatever branch was currently active.
+
+Changes:
+- **`agents/iconix-orchestrator.md`**: Added step 0 to the phase order list; added new
+  `# Phase entry — branch creation protocol` section (Git agent suggests
+  `feature/UC-XXX-<slug>` → STOP for user confirmation → `git checkout -b`); updated
+  Phase 9.1 to reference the already-existing branch and add a Git agent branch
+  validation check before dispatching Developer + Tester.
+- **`iconix-state-machine.puml`**: Added `BranchCreate` state between `Idle` and
+  `Requirements`.
+- **`README.md`**: Added Git Agent step to the `/iconix-next` pipeline diagram.
+
+No Rosenberg rule affected — kit infrastructure extension.
+
 ## [0.9.24] — 2026-05-11
 
 **Fix: /iconix-next missing confirmation stops at M1 and M2.**

@@ -14,7 +14,11 @@ skinparam ArrowColor #2C3E50
 [*] --> Idle
 
 state "Idle" as Idle
-Idle --> Requirements : raw input\n(BRD / transcript / feature request)
+Idle --> BranchCreate : raw input\n(BRD / transcript / feature request)
+
+' ── Phase 0 : Branch creation (Git Agent) ──────────────────────────────
+state "Branch creation\n(Git Agent — user confirms)" as BranchCreate <<agent>>
+BranchCreate --> Requirements : feature/UC-XXX-<slug>\ncreated + confirmed
 
 ' ── Phase 1 : Requirements ─────────────────────────────────────────────
 state "Product Owner" as Requirements <<agent>> {

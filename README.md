@@ -177,6 +177,9 @@ incomplete. It never produces artifacts itself.
           ▼
    [phase detection]
           │
+          ├─► Git Agent        — suggest feature/UC-XXX-<slug> branch name; STOP for user
+          │                      confirmation; git checkout -b (once per UC, at M1 entry)
+          │
           ├─► Product Owner    — intake checklist → draft REQs, initial domain model, UCs, glossary
           │        │
           │    [M1 gate] ── Traceability ── validates REQ→UC links; freezes on failure
