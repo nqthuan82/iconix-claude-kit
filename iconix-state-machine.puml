@@ -83,7 +83,7 @@ state "Implementation Loop" as Implementation <<agent>> {
   state "9.1 Implementation kickoff\n(Developer + Tester in parallel)" as Phase9_1
   state "9.2 Pre-merge drift check\n(Reviewer)" as Phase9_2
   state "9.3 Drift fix iteration\n(Developer + Tester)" as Phase9_3
-  state "9.4 Implementation merge\n(/iconix-pr → CI green → main)" as Phase9_4
+  state "9.4 Implementation merge\n(STOP: PR confirm → draft PR → STOP: CI confirm → manual merge)" as Phase9_4
   state "Escalate to Architect / PO\n(iteration cap hit)" as Phase9_Escalate <<change>>
 
   [*]        --> Phase9_1

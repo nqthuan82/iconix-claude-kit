@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.26] — 2026-05-11
+
+**Fix: Phase 9.4 auto-opened PR and listed "Merge to main" with no confirmation.**
+
+Both are consequential, externally visible actions. PR creation is visible to
+teammates and triggers CI; merge to main is irreversible.
+
+Changes:
+- **`agents/iconix-orchestrator.md`**: Rewrote Phase 9.4 as 5 explicit steps:
+  (1) STOP — Git agent prints PR details, waits for user confirmation;
+  (2) open draft PR after approval;
+  (3) STOP — wait for user to confirm CI green + PR approved;
+  (4) print merge command for user to run manually — never auto-merge;
+  (5) exit bookkeeping after user confirms merge done.
+- **`iconix-state-machine.puml`**: Updated Phase9_4 label to show the two STOP points.
+- **`README.md`**: Updated Phase 9.4 description in the implementation loop diagram.
+
+No Rosenberg rule affected — kit infrastructure extension.
+
 ## [0.9.25] — 2026-05-11
 
 **Fix: feature branch never created in the pipeline — added branch creation as Phase 0.**

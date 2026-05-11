@@ -133,11 +133,33 @@ Route back to Developer (drift fixes only — minimal change to close the findin
 - Either path effectively bumps a Type 1 bug to Type 2 (design defect) — follow the Type 2 flow
 
 ## 9.4 — Implementation merge
-- Open or mark ready PR via `/iconix-pr` (provider-aware via `iconix-git`)
-- CI green: `validate-traceability.sh` + tests
-- Merge to main
-- Fill in `## Exit` section of `phase9-cycles/UC-XXX-cycle.md`: final verdict token, implementation merge commit SHA + date, total iterations used, cap-hit flag, and any drift patterns worth copying to `reviews/review-checklist.md`.
-- UC moves to "Done" phase (visible in `/iconix-metrics` snapshots)
+
+**Step 1 — PR confirmation (STOP)**
+Dispatch **Git** agent to prepare the PR details: branch name, detected phase (`Implementation`), template (`implementation.md`), suggested title, and requested reviewers (from `iconix.config.yaml` if set). Print a summary block:
+```
+## PR ready — waiting for confirmation
+Branch:    feature/UC-XXX-<slug>
+Template:  implementation.md
+Title:     [UC-XXX] Impl: <summary>
+Reviewers: <list or "none configured">
+```
+Wait for the user to confirm or edit before proceeding. Do NOT open the PR automatically.
+
+**Step 2 — Open draft PR**
+After user confirmation, dispatch **Git** agent to run `/iconix-pr draft` (creates a draft PR using the configured `git.pr_cli`). Print the PR URL.
+
+**Step 3 — CI gate (STOP)**
+Wait for the user to confirm CI is green (`validate-traceability.sh` + tests pass). Do NOT proceed to merge automatically. Print:
+```
+## Merge gate — waiting for CI confirmation
+Confirm CI is green and the PR is approved, then reply to proceed with merge.
+```
+
+**Step 4 — Merge (manual)**
+After user confirms CI green + PR approved: print the merge command for the user to run themselves (e.g., `gh pr merge <number> --squash` or the equivalent for the configured provider). Do NOT execute the merge automatically.
+
+**Step 5 — Exit bookkeeping**
+After the user confirms the merge is done: fill in the `## Exit` section of `phase9-cycles/UC-XXX-cycle.md` (final verdict token, implementation merge commit SHA + date, total iterations used, cap-hit flag, and any drift patterns worth copying to `reviews/review-checklist.md`). UC moves to "Done" phase (visible in `/iconix-metrics` snapshots).
 
 ## Phase 9 exit
 The whole batch exits Phase 9 when every UC in the M3 cohort has reached 9.4. UCs hitting the iteration cap escalate but don't block the rest of the batch.

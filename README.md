@@ -398,7 +398,10 @@ After M3 / CDR passes, the implementation phase isn't a black box ("Developer + 
    │                                  (default 5); escalate to Architect (if
    │                                  architectural) or PO (if scope-shaped).
    ▼
-9.4 Merge      │  /iconix-pr ready-for-review; CI green; merged to main.
+9.4 Merge      │  STOP: Git agent prints PR details — user confirms before PR opens.
+               │  Draft PR opened via /iconix-pr.
+               │  STOP: user confirms CI is green + PR approved.
+               │  Orchestrator prints merge command — user runs it manually.
                │  UC moves to "Done" in /iconix-metrics.
 ```
 
