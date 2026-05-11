@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.37] — 2026-05-11
+
+**Enhancement: complete per-container stack support across Reviewer, Traceability, Migration, and package-map template.**
+
+Follow-on to v0.9.36. Closes the remaining gaps in polyglot stack support:
+
+- **Reviewer** gains check #7 — flags `[DRIFT]` when source files are placed in a directory that doesn't match their container, or whose language extension mismatches the container's "Effective stack"
+- **Traceability** gains validation check #16 — blank "Effective stack" cells in any `container-mapping/*` file are an M2 blocker
+- **Migration** emits a "Suggested per-container stack overrides" YAML snippet in the survey report (both modes), so the Architect can paste detected per-container languages straight into `iconix.config.yaml` without re-deriving them
+- **Package-map template** gains an "Effective stack" column and a matching quality check, keeping stack context consistent between the package map and container-mapping files
+
+Changes:
+- **`agents/iconix-reviewer.md`**: new check #7 — container placement and stack alignment
+- **`agents/iconix-traceability.md`**: new validation check #16 — "Effective stack" completeness (M2 blocker)
+- **`agents/iconix-migration.md`**: Phase 1 (both modes) now produces "Suggested per-container stack overrides" YAML snippet in the survey
+- **`templates/architecture-package-map-template.md`**: "Effective stack" column added to Package list table; matching quality check added
+
 ## [0.9.36] — 2026-05-11
 
 **Enhancement: per-container `stack.language` / `stack.test_framework` overrides in `iconix.config.yaml`.**

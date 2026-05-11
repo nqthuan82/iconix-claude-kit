@@ -17,13 +17,18 @@
 > but are **not implemented by this codebase**. External packages are exempt
 > from the cross-package rules below — they're contracts, not source.
 
-| Package name | Responsibility | Layer | Owns | Allowed dependencies |
-|---|---|---|---|---|
-| `<Web>` | HTTP entry point | Boundary | Controllers, model binding, view rendering | `<Domain>`, `<Application>` (no `<Infrastructure>`) |
-| `<Application>` | Use-case orchestration | Application service | Command handlers, DTOs, application-level interfaces | `<Domain>`, `<Infrastructure>` (via interfaces) |
-| `<Domain>` | Business logic | Entity / domain | Entities, value objects, domain services, validation | (none — domain is dependency-free) |
-| `<Infrastructure>` | External integrations | Persistence / I/O | Repositories, external service clients, file/queue adapters | `<Domain>` (implements its interfaces) |
-| `<PendingReviewsQueue>` | Async-output queue used by Moderate Customer Reviews | **Infrastructure (external)** | (owned by INFRA-88; this codebase publishes only) | n/a — not implemented here; cross-package rules don't apply |
+> **Effective stack** — resolve per package: container-level `stack.language` / `stack.test_framework`
+> from `iconix.config.yaml` if present; otherwise the top-level `stack.*` values. Format: `<language> / <test_framework>`.
+> Infrastructure (external) packages may use `n/a`. Must match the "Effective stack" column in every
+> `container-mapping/*` file that references this package.
+
+| Package name | Effective stack | Responsibility | Layer | Owns | Allowed dependencies |
+|---|---|---|---|---|---|
+| `<Web>` | csharp / xunit | HTTP entry point | Boundary | Controllers, model binding, view rendering | `<Domain>`, `<Application>` (no `<Infrastructure>`) |
+| `<Application>` | csharp / xunit | Use-case orchestration | Application service | Command handlers, DTOs, application-level interfaces | `<Domain>`, `<Infrastructure>` (via interfaces) |
+| `<Domain>` | csharp / xunit | Business logic | Entity / domain | Entities, value objects, domain services, validation | (none — domain is dependency-free) |
+| `<Infrastructure>` | csharp / xunit | External integrations | Persistence / I/O | Repositories, external service clients, file/queue adapters | `<Domain>` (implements its interfaces) |
+| `<PendingReviewsQueue>` | n/a | Async-output queue used by Moderate Customer Reviews | **Infrastructure (external)** | (owned by INFRA-88; this codebase publishes only) | n/a — not implemented here; cross-package rules don't apply |
 
 ## Cross-package rules
 
@@ -50,6 +55,7 @@
 - [ ] Architecture-test fixture exists in `tests/Architecture` (or stack-equivalent) that fails the build on rule violation
 - [ ] Each package's responsibility is one-sentence-describable; multi-clause descriptions are a smell
 - [ ] Every container in `iconix.config.yaml` `architecture.containers` appears here as an internal package OR as `Infrastructure (external)` with the owning team / system referenced
+- [ ] Every internal package row has a non-empty "Effective stack" column; derive from `iconix.config.yaml` (container-level `stack.*` → global `stack.*` fallback); must be consistent with the "Effective stack" column in every `container-mapping/*` file that references this package
 - [ ] `Infrastructure (external)` packages are explicitly excluded from architecture-test rules (otherwise the build fails because the package has no source)
 
 ## Traceability
