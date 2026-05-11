@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.34] — 2026-05-11
+
+**Fix: sequence-template.puml rewritten as a minimal renderable scaffold.**
+
+Previous attempts at incremental fixes still hit version-specific PlantUML edge
+cases. Rewrote the template following the same approach as robustness-template.puml:
+minimal working diagram with advanced patterns (invoked UC, UI dependency, downstream
+handoff) as commented-out blocks. All guidance moved to comments.
+
+Changes:
+- **`templates/sequence-template.puml`**: full rewrite — clean scaffold, advanced patterns commented out, traceability block in comments
+
 ## [0.9.33] — 2026-05-11
 
 **Fix: sequence-template.puml still fails to preview — two remaining causes.**

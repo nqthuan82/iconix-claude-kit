@@ -1,134 +1,114 @@
 @startuml SD-XXX
 ' ============================================================
+' Sequence Diagram: PREFIX-SD-XXX
 ' Traceability: PREFIX-REQ-XXX | PREFIX-UC-XXX | PREFIX-RB-XXX
-' PREFIX-UC-XXX: <Use Case Title>
-' Stack: <fill in from iconix.config.yaml — language, framework, test framework>
+' UC Title: <Use Case Title>
 '
-' Each numbered group below corresponds to a UC step from PREFIX-UC-XXX.
-' Each message becomes a method on a class in PREFIX-CLS-* (see note at bottom).
+' One group per UC step. Each message label becomes a method on
+' a class in the class model (PREFIX-CLS-*).
 '
-' Lifeline naming convention (v0.9.19+):
-'   - Use stack-anchored, multi-line labels (\n) for boundaries and entities:
-'       boundary "Razor View\nViews/Books/Detail.cshtml"
-'       entity   "Book\n(EF Core entity)"
-'   - Boundaries can carry stereotypes for UI dependencies (page reuse from
-'     another UC):
-'       boundary "Razor View\nViews/Shared/NotFound.cshtml" as BNFView <<from PREFIX-UC-XXX Show Book Details>>
-'   - Use concrete actor names from the UC; never generic "User".
+' Lifeline types:
+'   actor    -- human or external system actor
+'   boundary -- named screen / page / API surface / CLI entry point
+'   control  -- controller / service / handler (domain logic)
+'   entity   -- domain entity (from domain model)
 '
-' SD-rendering rules (v0.9.19) — see agents/iconix-developer.md:
-'   - Invoked UCs render as a synthetic boundary lifeline + explanatory note.
-'   - UI dependencies render with `<<from PREFIX-UC-XXX Title>>` stereotype.
-'   - Downstream consumers render as a lifeline at the right edge with a
-'     dashed `..>` message from the producing entity.
-'   - Framework helpers (e.g., MVC ModelBinder) render only when non-trivial.
+' Lifeline naming conventions:
+'   - Use concrete names from the UC (never generic "User")
+'   - Multi-line labels via \n are supported:
+'       boundary "ReviewPage\nViews/Reviews/Write.cshtml" as ReviewPage
+'   - UI dependency stereotype (page reused from another UC):
+'       boundary "NotFoundPage\nViews/Shared/NotFound.cshtml" as NFPage <<from_PREFIX-UC-XXX>>
+'
+' Arrow types:
+'   ->   synchronous call
+'   -->  return / response
+'   ..>  async / downstream handoff (use for queue / event handoffs)
+'
+' Group label format: "Step N - [UC step description]"
+' Alternate courses: append #Pink to the group header line
 ' ============================================================
 
 skinparam shadowing false
 skinparam ArrowColor #444444
 
-' ── Lifelines: actor + boundaries + control + entities + DI interfaces ──
+' ── Lifelines ──
 
-' Actor (concrete name from the UC; never generic "User"):
-actor    "Customer (browser)"                      as Cust
+actor    "ActorName"           as Actor
+boundary "BoundaryName"        as Bnd
+control  "ControllerName"      as Ctrl
+entity   "EntityName"          as Ent
 
-' Boundaries (named pages, API surfaces; multi-line label allowed via \n):
-boundary "Razor View\nViews/Books/Detail.cshtml"   as BDView
-boundary "Razor View\nViews/Reviews/Write.cshtml"  as WRView
+' Additional lifelines (uncomment and rename as needed):
+' boundary "OtherPage"         as Bnd2
+' control  "OtherService"      as Svc2
+' entity   "OtherEntity"       as Ent2
+' actor    "DownstreamConsumer" as Consumer
 
-' UI dependency from another UC (stereotype shows reuse):
-boundary "Razor View\nViews/Shared/NotFound.cshtml" as BNFView <<from_PREFIX-UC-XXX>>
+' ── Basic course ──
 
-' Synthetic boundary for an invoked UC (when invocation surfaces a redirect):
-boundary "Login redirect\n(cookie auth challenge)" as LoginRedir
-
-' Framework controller lifeline (orchestrator) — named per stack convention:
-control  "WriteCustomerReview\nController"        as Ctrl
-
-' Framework-helper lifeline (only when non-trivial — e.g., it invokes IValidatableObject):
-' control  "ASP.NET Core\nModelBinder + ModelState" as MVC
-
-' Application-layer DI interface (per Developer rule 4 — justify in
-' class-model annotation or cdr-report):
-control  "ICurrentUserService"                    as CurUser
-
-' Domain entities (came from domain-model.puml, refined at M2):
-entity   "CustomerSession"                        as CS
-entity   "Book\n(EF Core entity)"                 as Book
-entity   "CustomerReview\n: IValidatableObject"   as CR
-
-' Repository pattern (visible per Developer rule 8):
-entity   "IBookRepository\n(EfBookRepository)"    as BookRepo
-
-' Downstream consumer (lifeline at right edge; dashed message from producer):
-actor    "Moderator"                              as Mod
-
-' ── Step 1 — UC step 1 — basic course ──
-group Step 1 - [Customer action / system response] (RB controllers: CheckLogin, LoadBook)
-  Cust    -> BDView : GET /resource
-  BDView  -> Ctrl   : RouteAction()
-  Ctrl    -> CurUser : GetSession(httpContext)
-  CurUser -> CS     : new(claims)
-  CS      --> CurUser : session
-  CurUser --> Ctrl  : session
-  Ctrl    -> CS     : IsLoggedIn
-  CS      --> Ctrl  : true
-  Ctrl    -> BookRepo : GetByIdAsync(id)
-  BookRepo -> Book  : query
-  Book    --> BookRepo : entity
-  BookRepo --> Ctrl : Book (non-null)
+group Step 1 - [UC step 1 description]
+  Actor  -> Bnd  : action
+  Bnd    -> Ctrl : method()
+  Ctrl   -> Ent  : operation()
+  Ent   --> Ctrl : result
+  Ctrl  --> Bnd  : response
+  Bnd   --> Actor : 200 OK
 end
 
-' ── Step 2 — system response ──
-group Step 2 - [System response] (RB controller: DisplayWriteReviewPage)
-  Ctrl   --> WRView : View("Write", review)
-  WRView --> Cust   : 200 OK
+group Step 2 - [UC step 2 description]
+  Actor  -> Bnd  : next action
+  Bnd    -> Ctrl : method()
+  Ctrl   -> Ent  : operation()
+  Ent   --> Ctrl : result
+  Ctrl  --> Bnd  : response
+  Bnd   --> Actor : 200 OK
 end
 
-' ── Alternate Course A — invoked UC pattern ──
-group Alternate A - [e.g., not logged in] #Pink
-  Cust    -> BDView : GET /resource
-  BDView  -> Ctrl   : RouteAction()
-  Ctrl    -> CS     : IsLoggedIn
-  CS      --> Ctrl  : false
-  Ctrl    --> LoginRedir : Challenge() - 302 to /login
-  LoginRedir --> Cust    : 302 redirect
-  note right of Ctrl
-    With [Authorize] on the action, the cookie-auth handler
-    issues the 302 automatically. On successful login, Step 1
-    re-executes. (Invoked UC: PREFIX-UC-XXX Login.)
-  end note
+' ── Alternate course (repeat block for each alternate course) ──
+
+group Alternate A - [description, e.g. validation fails] #Pink
+  Actor  -> Bnd  : action
+  Bnd    -> Ctrl : method()
+  Ctrl  --> Bnd  : error
+  Bnd   --> Actor : 4xx / error page
 end
 
-' ── Alternate Course B — UI dependency pattern (Book Not Found page) ──
-group Alternate B - [e.g., Book ID does not exist] #Pink
-  Cust    -> BDView : GET /resource with unknown id
-  BDView  -> Ctrl   : RouteAction()
-  Ctrl    -> BookRepo : GetByIdAsync(id)
-  BookRepo --> Ctrl : null
-  Ctrl    --> BNFView : View("NotFound") - 404
-  BNFView --> Cust    : 404
-end
+' ── Invoked UC pattern (delete if not applicable) ──
+' When this UC redirects into another UC, use a synthetic boundary lifeline:
+' boundary "LoginRedirect\n(cookie auth challenge)" as LoginRedir
+' group Alternate B - [not authenticated] #Pink
+'   Ctrl --> LoginRedir : Challenge() - 302
+'   LoginRedir --> Actor : redirect
+'   note right of Ctrl
+'     On successful login the flow re-enters Step 1.
+'     (Invoked UC: PREFIX-UC-XXX Login)
+'   end note
+' end
 
-' ── Step N — downstream consumer pattern (queue handoff) ──
-group Step N - [Save and enqueue]
-  Ctrl   -> CR     : new(book, customer, text, rating)
-  Ctrl   -> BookRepo : (persist via repository)
-  CR     ..> Mod   : (downstream - read by PREFIX-UC-XXX Moderate; async)
-end
+' ── UI dependency pattern (delete if not applicable) ──
+' boundary "NotFoundPage\nViews/Shared/NotFound.cshtml" as NFPage <<from_PREFIX-UC-XXX>>
+' group Alternate C - [resource not found] #Pink
+'   Ctrl  --> NFPage : View("NotFound") - 404
+'   NFPage --> Actor : 404
+' end
 
-' ── Class model derived from this diagram (fill in PREFIX-CLS-* IDs) ──
-' PREFIX-CLS-WriteCustomerReviewController  WriteAsync(bookId), SubmitAsync(review)
-' PREFIX-CLS-CustomerReview                 DataAnnotations + Validate(ValidationContext)
-' PREFIX-CLS-ICurrentUserService            GetSession(HttpContext) : CustomerSession
+' ── Downstream / async handoff (delete if not applicable) ──
+' actor "DownstreamConsumer" as Consumer
+' group Step N - [save and publish]
+'   Ctrl -> Ent    : save()
+'   Ent  ..> Consumer : downstream - read by PREFIX-UC-XXX
+' end
+
+' ── Traceability ──
+' PREFIX-REQ-XXX -> PREFIX-UC-XXX -> PREFIX-RB-XXX -> PREFIX-SD-XXX (this) -> PREFIX-CLS-* -> PREFIX-TC-*
 '
-' Code skeleton paths (per architecture-package-map.md):
-'   src/Bookstore.Web/Controllers/WriteCustomerReviewController.cs
-'   src/Bookstore.Domain/CustomerReview.cs
-'   src/Bookstore.Application/ICurrentUserService.cs
-'   src/Bookstore.Infrastructure/Repositories/EfBookRepository.cs
+' Class model derived from this diagram (PREFIX-CLS-*):
+'   PREFIX-CLS-ControllerName   method(), otherMethod()
+'   PREFIX-CLS-EntityName       operation() : ResultType
 '
-' Traceability:
-'   PREFIX-REQ-XXX -> PREFIX-UC-XXX -> PREFIX-RB-XXX -> PREFIX-SD-XXX (this) -> CLS-* -> PREFIX-TC-*
+' Code skeleton paths (per docs/architecture/package-map.md):
+'   src/<BoundaryPackage>/ControllerName.cs
+'   src/<DomainPackage>/EntityName.cs
 
 @enduml
