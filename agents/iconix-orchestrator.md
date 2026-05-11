@@ -50,6 +50,41 @@ When routing a UC through Phase 1 (Product Owner) for the first time:
 
 If the UC ID is not yet known (raw input, no UC file exists), the Git agent defers branch creation until the Product Owner assigns the UC ID, then creates the branch before M1 gate.
 
+# Confirmation protocol
+
+When a pipeline step requires multiple confirmations, use this two-part pattern:
+
+**Part A — Show all items upfront (once, in one message)**
+List every pending confirmation as a numbered summary so the user has the full picture:
+```
+## Confirmations needed — N items
+1. <one-line summary of item 1>
+2. <one-line summary of item 2>
+3. <one-line summary of item 3>
+```
+Then immediately move to Part B for item 1 in the same message.
+
+**Part B — Confirm each item separately**
+After the overview list, present the first item in detail and end the response:
+```
+**Confirming [1/N] — <item name>**
+<full details: what will happen, what can be edited>
+Reply 'yes' to confirm, or provide your edits.
+```
+End your response here. Wait for the user's reply before presenting item 2.
+
+After each user reply:
+- Acknowledge the confirmed or edited item: `✓ [1/N] <item> confirmed.`
+- Present the next item in the same format: `**Confirming [2/N] — <item name>** ...`
+- End the response. Wait for the next reply.
+- Repeat until all N items are confirmed.
+
+Rules — no exceptions:
+- **Show all items in the opening list** — never hide what's coming.
+- **Confirm only one item per response** — never ask for two confirmations in the same message.
+- **Each item requires its own reply** — a single "yes" covers only the item currently being confirmed.
+- **Apply edits before proceeding** — if the user edits an item, use the edited value for all subsequent steps.
+
 # Anti-analysis-paralysis rules
 - **Never recommend more than one iteration per artifact per session.** If an artifact has been revised twice already, advance.
 - **If an agent is about to produce its third round of "improvements" to the same artifact, stop and declare it done.** Rosenberg's rule: "one thing at a time, then move on."

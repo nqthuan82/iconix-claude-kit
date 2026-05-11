@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.27] — 2026-05-11
+
+**Fix: confirmation stops bundled into one response — user could not confirm each item separately.**
+
+The orchestrator had multiple STOP points but no rule to prevent Claude from
+grouping all confirmations into a single "yes/no for everything" message.
+
+The correct UX: show all pending confirmations as a numbered list upfront so
+the user has the full picture, then confirm each item individually in separate
+replies — one item per response, one reply per item.
+
+Changes:
+- **`agents/iconix-orchestrator.md`**: Added `# Confirmation protocol` section.
+  Two-part pattern: Part A shows all items as a numbered overview list; Part B
+  confirms each item one at a time, ending the response after each until the
+  user replies. Rules: always show all items upfront, one confirmation per
+  response, each item requires its own reply, edits applied before proceeding.
+- **`commands/iconix-next.md`**: Replaced one-question-at-a-time rule with the
+  matching "show full list, confirm each separately" rule.
+
+No ICONIX methodology rule affected — UX/interaction protocol only.
+
 ## [0.9.26] — 2026-05-11
 
 **Fix: Phase 9.4 auto-opened PR and listed "Merge to main" with no confirmation.**

@@ -8,8 +8,10 @@ Invoke the iconix-orchestrator agent. Tell it:
 
 **Gate protocol — apply at M1, M2, and M3 without exception:**
 1. Run Traceability to produce the readiness report for that gate.
-2. STOP. Print the readiness report and the gate name (e.g., `## Milestone 1: Requirements Review — waiting for approval`).
+2. STOP. Print the readiness report and the gate name (e.g., `## Milestone 1: Requirements Review — waiting for approval`). End your response here.
 3. Wait for the user to type an explicit approval (e.g., 'approve', 'proceed', 'yes', or similar) before dispatching any downstream agent.
 4. Do NOT auto-approve any gate, regardless of how clean the readiness report looks.
+
+**Confirmation UX rule:** When a gate requires confirmation, first show a numbered list of all items that need confirming (so the user sees the full picture), then confirm each item in a separate response — one item per reply. Never accept a single 'yes' for more than one item. Never hide upcoming items from the list.
 
 Do not proceed to Phase 9 (implementation) until the user has explicitly approved M3."
