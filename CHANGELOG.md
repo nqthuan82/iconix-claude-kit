@@ -5,6 +5,40 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.31] — 2026-05-11
+
+**Enhancement: iconix-migration now drafts `docs/architecture/package-map.md` during Phase 4b/5b.**
+
+For migration (legacy code), the package structure already exists — the migration agent
+now documents it rather than leaving it for the Architect to design from scratch. Phase 4b
+drafts the package list, layers, responsibilities, and cross-package rules using robustness
+classification; Phase 5b fills in the UC → package allocation table once UC-DRAFTs exist.
+Both modes (graph-assisted and code-walking) produce the draft. File is skipped if it
+already exists. Also added a C4 Level 3 cross-reference section to the architecture
+template pointing at `package-map.md`.
+
+Changes:
+- **`agents/iconix-migration.md`**: Phase 4b (both modes) drafts `docs/architecture/package-map.md`; Phase 5b (both modes) fills in UC → package allocation; file added to idempotency check; output structure updated
+- **`templates/system-architecture-template.md`**: added C4 Level 3 section cross-referencing `package-map.md`
+
+No ICONIX methodology rule affected — tooling enhancement only.
+
+## [0.9.30] — 2026-05-11
+
+**Enhancement: iconix-migration now drafts `docs/architecture/system-architecture.md` during Phase 1.**
+
+The migration agent already observes the information needed for the architecture doc
+(entry points, layer clusters, outbound infrastructure, external systems) but
+previously discarded it. It now writes a DRAFT `system-architecture.md` at the end
+of Phase 1 in both graph-assisted and code-walking modes, using the new template
+structure. The file is skipped if it already exists (human-authored docs are never
+overwritten). Added to the idempotency check so re-runs respect human edits.
+
+Changes:
+- **`agents/iconix-migration.md`**: Phase 1 (both modes) produces draft `docs/architecture/system-architecture.md`; file added to idempotency check Step 3; output structure updated
+
+No ICONIX methodology rule affected — tooling enhancement only.
+
 ## [0.9.29] — 2026-05-11
 
 **Add `system-architecture-template.md` — scaffold for the canonical architecture doc.**

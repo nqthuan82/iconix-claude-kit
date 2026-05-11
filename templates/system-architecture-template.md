@@ -105,6 +105,13 @@ It integrates with `<list key external systems>`.
 
 ---
 
+## C4 Level 3 — Components
+Component-level decomposition (what's inside each container) is documented separately in
+`docs/architecture/package-map.md`, produced by the Architect agent at M2 (or drafted by
+the Migration agent when retrofitting ICONIX onto existing code).
+
+---
+
 ## Traceability
 - **Read by:** Architect agent (input for M2 — container mapping, ADRs, integration surface)
 - **Kept in sync with:** `iconix.config.yaml` `architecture.containers` (container names must match)
