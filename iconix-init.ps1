@@ -131,8 +131,16 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\phase9-cycle-template.md")            "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\upgrade-report-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-snapshot-template.md")        "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\system-architecture-template.md")       "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
+
+        # Seed canonical architecture doc if not present
+        $archDoc = "docs\architecture\system-architecture.md"
+        if (-not (Test-Path $archDoc)) {
+            Copy-Item (Join-Path $WorkDir "templates\system-architecture-template.md") $archDoc -Force -ErrorAction SilentlyContinue
+            Write-Host "  seeded docs\architecture\system-architecture.md (fill in before running the Architect agent)"
+        }
 
         # Git integration — branch + commit conventions (always)
         New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null
@@ -185,7 +193,7 @@ try {
     Write-Host ""
     Write-Host "Next steps:"
     Write-Host "  1. Review and edit iconix.config.yaml (project prefix, stack, containers, git provider, concurrent_check, metrics)"
-    Write-Host "  2. Drop your architecture doc at docs\architecture\"
+    Write-Host "  2. Fill in docs\architecture\system-architecture.md (seeded from template)"
     Write-Host "  3. Open Claude Code in this directory"
     Write-Host "  4. Run /agents to confirm agents are loaded"
     Write-Host "  5. Run /iconix-next to start the pipeline"

@@ -21,6 +21,10 @@ diagrams:
   output_dir: "docs/iconix"
 
 architecture:
+  # Path to your system architecture document (C4-flavoured .md or .pdf).
+  # Read by the Architect agent when mapping UCs to containers and raising ADRs.
+  # If the file doesn't exist yet, copy templates/system-architecture-template.md
+  # to this path and fill it in before running the Architect agent.
   canonical_doc: "docs/architecture/system-architecture.md"
   containers:
     # List the named containers in your architecture.

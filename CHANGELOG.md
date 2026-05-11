@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.29] — 2026-05-11
+
+**Add `system-architecture-template.md` — scaffold for the canonical architecture doc.**
+
+The `architecture.canonical_doc` path in `iconix.config.yaml` had no template,
+leaving users without guidance on what to write. Added a C4-flavoured template
+covering Context, Containers table, Container interactions, External systems,
+Architectural constraints, Scalability/deployment notes, and Open questions.
+
+Changes:
+- **`templates/system-architecture-template.md`**: new template
+- **`iconix-init`** / **`iconix-init.ps1`**: template copied to `docs/iconix/templates/`; also seeded to `docs/architecture/system-architecture.md` on fresh install (guarded — skipped if file already exists)
+- **`templates/iconix.config.yaml`**: added comment on `canonical_doc` pointing to the template
+- **`agents/iconix-architect.md`**: agent now tells the user to copy the template if the file is missing
+- **`README.md`**: added the new template to the directory listing
+
+No ICONIX methodology rule affected — tooling/documentation gap closure only.
+
 ## [0.9.28] — 2026-05-11
 
 **Enhancement: three-stage confirmation wizard with navigation and final submit.**

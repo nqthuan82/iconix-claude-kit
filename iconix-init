@@ -154,8 +154,15 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/phase9-cycle-template.md"                 "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/upgrade-report-template.md"               "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-snapshot-template.md"             "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/system-architecture-template.md"          "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-schema.json"                      "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true
+
+  # Seed canonical architecture doc if not present
+  if [[ ! -f "docs/architecture/system-architecture.md" ]]; then
+    cp "${WORKDIR}/templates/system-architecture-template.md" "docs/architecture/system-architecture.md" 2>/dev/null || true
+    echo "  seeded docs/architecture/system-architecture.md (fill in before running the Architect agent)"
+  fi
 
   # Seed git-integration: branch + commit conventions (always)
   mkdir -p "docs/iconix/templates/git-integration"
@@ -204,7 +211,7 @@ cat <<'EOF'
 
 Next steps:
   1. Review and edit iconix.config.yaml (project prefix, stack, containers)
-  2. Drop your architecture doc at docs/architecture/
+  2. Fill in docs/architecture/system-architecture.md (seeded from template)
   3. Open Claude Code in this directory
   4. Run /agents to confirm agents are loaded
   5. Run /iconix-next to start the pipeline, or invoke an agent explicitly:

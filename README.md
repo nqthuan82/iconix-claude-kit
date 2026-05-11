@@ -52,6 +52,7 @@ iconix-kit/
     ├── container-mapping-template.md       # per-UC container mapping (v0.9.14+)
     ├── nfr-annotations-template.md         # per-UC NFR enforcement (v0.9.14+)
     ├── nfr-catalog-template.md             # project-wide NFR catalog (v0.9.14+)
+    ├── system-architecture-template.md        # canonical architecture doc scaffold (C4-flavoured)
     ├── architecture-package-map-template.md  # CODE/deployment packages (v0.9.14+)
     ├── integration-surface-template.md     # external touchpoints (v0.9.14+)
     ├── milestone-report-template.md        # M1/M2/M3 readiness format (v0.9.18+)
