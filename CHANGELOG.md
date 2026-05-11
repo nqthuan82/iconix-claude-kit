@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.41] — 2026-05-11
+
+**Fix: sync Azure DevOps PR templates to parity with GitHub templates.**
+
+ADO templates had the same sections and checklist structure as their GitHub counterparts
+but were missing parenthetical explanations, examples, and minor wording improvements
+that make the templates self-contained for new team members:
+
+- `default.md`: phase checkboxes now include artifact descriptions (REQs/UCs/glossary for M1, etc.); reviewer checklist items include examples; work item field updated to reference `iconix.config.yaml`; CI reference changed from "build" to "CI"
+- `m1.md`: REQ rule now includes "those belong in ADRs"; removed "in Claude Code" from `/iconix-status` call; work item field updated
+- `m2.md`: robustness rules checklist item now lists all four constraints explicitly; container-mapping path added; traceability example added; work item field updated
+- `m3.md`: class model item clarified "not domain-model-only"; TC path added to test case item; typed attribute note expanded; "fix before merging" added; traceability example added; work item field updated
+- `implementation.md`: affected UCs note added; "Reviewer will verify" added to SD call-order item; reviewer notes expanded; traceability note clarified; work item field updated
+
+Changes:
+- **`templates/git-integration/azure-devops/pull_request_templates/default.md`**
+- **`templates/git-integration/azure-devops/pull_request_templates/m1.md`**
+- **`templates/git-integration/azure-devops/pull_request_templates/m2.md`**
+- **`templates/git-integration/azure-devops/pull_request_templates/m3.md`**
+- **`templates/git-integration/azure-devops/pull_request_templates/implementation.md`**
+
 ## [0.9.40] — 2026-05-11
 
 **Fix: four mismatches between README Project layout and actual kit.**
