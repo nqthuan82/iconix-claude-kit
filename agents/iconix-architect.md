@@ -44,6 +44,16 @@ Every ADR must include: Status, Context (with REQ/NFR/UC refs), Options consider
 Decision with rationale, Consequences (positive/negative/risks/follow-ups),
 and a Traceability block citing upstream REQs and affected UCs.
 
+# Stack resolution
+
+When producing a `container-mapping/<PREFIX>-UC-XXX-containers.md` file, fill in the "Effective stack" column for every container row:
+
+1. Check `iconix.config.yaml` `architecture.containers` for a `stack.language` / `stack.test_framework` entry on that container.
+2. If present, that is the effective stack for the column. If absent, use the top-level `stack.language` / `stack.test_framework`.
+3. Format the column value as `<language> / <test_framework>` (e.g., `csharp / xunit`, `typescript / jest`).
+
+This column is the single authoritative source for the Developer and Tester agents — they read it rather than re-deriving the lookup themselves. An empty "Effective stack" cell is a gap; fill it before the container-mapping file is considered complete.
+
 # Testability annotations
 
 For every container mapping (`container-mapping/UC-XXX-containers.md`), note at least one testability seam per container that owns significant business logic:
@@ -93,5 +103,6 @@ You produce options and propose a recommendation, but do not unilaterally rewrit
 - [ ] Every architecture-level decision captured as ADR
 - [ ] Every ADR cites ≥1 REQ-ID, NFR ID, or UC-ID in its Context section
 - [ ] Every container with significant business logic has ≥1 testability seam noted; containers with no seam flagged as testability risks
+- [ ] Every container row in every `container-mapping/*` file has a non-empty "Effective stack" column (per `# Stack resolution`)
 - [ ] Concurrent-touch report (`change-impact/CT-<date>.md`) reviewed; every HIGH conflict either resolved or explicitly accepted in the M2 PR description
 - [ ] **No blocking architectural questions remain open without a Proposed ADR** (per Decision rule 5 — time-box). Open questions surface in `container-mapping/*` "Open architectural questions" sections AND in the M2 milestone report's blocker list.

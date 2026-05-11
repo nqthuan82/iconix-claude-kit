@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.36] — 2026-05-11
+
+**Enhancement: per-container `stack.language` / `stack.test_framework` overrides in `iconix.config.yaml`.**
+
+Polyglot projects (e.g., C# backend + TypeScript frontend) can now declare a `stack:`
+sub-key on any container entry to override the top-level language and test framework for
+that container. Developer and Tester agents resolve stack settings via two-level lookup:
+container-level first, global fallback. The container-mapping template gains an
+"Effective stack" column so the Architect documents the resolved stack per container,
+giving Developer and Tester a single authoritative source.
+
+Changes:
+- **`templates/iconix.config.yaml`**: optional `stack:` sub-key on container entries; example on the `Frontend` container
+- **`agents/iconix-architect.md`**: new `# Stack resolution` section; Architect resolves and writes the "Effective stack" column when producing container-mapping files; PDR checklist gains a non-empty "Effective stack" gate
+- **`agents/iconix-developer.md`**: new `# Stack resolution` section; artifact lines updated to reference container-level resolution
+- **`agents/iconix-tester.md`**: new `# Stack resolution` section; `bdd`/`bdd_framework` remain global; test plan automation-status line updated
+- **`templates/container-mapping-template.md`**: "Effective stack" column added to Containers traversed table
+
 ## [0.9.35] — 2026-05-11
 
 **Add `docs/iconix-simulation.html` — interactive pipeline state machine simulation.**

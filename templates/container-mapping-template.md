@@ -17,13 +17,18 @@
 > `iconix.config.yaml` `architecture.containers`. The "Role" column says
 > what this container *does* in this UC's flow (boundary, processor,
 > persistence, external integration, etc.).
+>
+> **Effective stack** — resolve per container:
+> container-level `stack.language` / `stack.test_framework` from `iconix.config.yaml`
+> if present; otherwise the top-level `stack.*` values. The Developer and Tester agents
+> read this column — fill it in so they don't have to re-derive it.
 
-| Container | Role in this UC | What this UC does here | Testability seam |
-|---|---|---|---|
-| `<Container1>` | Boundary | Receives HTTP request; binds form data; redirects on validation failure | **System seam:** HTTP POST endpoint usable in WebApplicationFactory tests |
-| `<Container2>` | Domain entity + validation | Constructs and validates the entity per its DataAnnotations + IValidatableObject | **Unit seam:** entity class instance + Validator.TryValidateObject |
-| `<Container3>` | Persistence | Saves entity to repository; enqueues for downstream | **Integration seam:** repository interface mockable in service-layer tests |
-| `<Container4 — pure I/O downstream>` | Persistence (read) | Database lookup via repository | **(out of scope — covered via `<Container3>`'s integration seam)** |
+| Container | Effective stack | Role in this UC | What this UC does here | Testability seam |
+|---|---|---|---|---|
+| `<Container1>` | csharp / xunit | Boundary | Receives HTTP request; binds form data; redirects on validation failure | **System seam:** HTTP POST endpoint usable in WebApplicationFactory tests |
+| `<Container2>` | csharp / xunit | Domain entity + validation | Constructs and validates the entity per its DataAnnotations + IValidatableObject | **Unit seam:** entity class instance + Validator.TryValidateObject |
+| `<Container3>` | csharp / xunit | Persistence | Saves entity to repository; enqueues for downstream | **Integration seam:** repository interface mockable in service-layer tests |
+| `<Container4 — pure I/O downstream>` | csharp / xunit | Persistence (read) | Database lookup via repository | **(out of scope — covered via `<Container3>`'s integration seam)** |
 
 > **Testability seam values** — pick one per row:
 > - **System seam** — HTTP/CLI/queue surface exercisable end-to-end

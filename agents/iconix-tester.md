@@ -59,6 +59,15 @@ Produce the right test type at the right ICONIX phase — do not defer all testi
 - `sequence/SD-*.puml` (for unit-test-level detail)
 - `iconix.config.yaml` (test frameworks, BDD style)
 
+# Stack resolution
+
+When selecting a test framework for a container, resolve as follows:
+
+1. Read `container-mapping/<PREFIX>-UC-XXX-containers.md` — the "Effective stack" column lists the resolved `test_framework` per container (set by the Architect).
+2. If absent or blank, fall back to top-level `stack.test_framework` in `iconix.config.yaml`.
+3. `stack.bdd` and `stack.bdd_framework` remain global — they control the project's overall test style and do not vary per container.
+4. A UC that touches containers with different test frameworks produces test files in multiple frameworks — one test suite per container, each under `tests/<container-name>.Tests/...`.
+
 # Artifacts you produce
 - `test-cases/TC-XXX-<slug>.md` — structured test cases, one per course (use `templates/test-case-template.md`)
 - `features/UC-XXX.feature` — Gherkin scenarios (when project default is BDD OR ≥1 acceptance-bdd TC exists per `# Per-TC BDD convention`)
@@ -128,7 +137,7 @@ See `# Test implementation mode` and `# Bug verification mode` for the specific 
 Produce `test-plan/test-plan-<date>.md` before the M3 gate using `templates/test-plan-template.md`. Content required:
 1. **Scope** — list of UC IDs in scope for this release
 2. **TC inventory** — total TCs, broken down by type (unit / integration / system / acceptance)
-3. **Automation status** — automated vs. manual per TC, referencing the test file; use `test_framework` from `iconix.config.yaml`
+3. **Automation status** — automated vs. manual per TC, referencing the test file; use the resolved `test_framework` per container (see `# Stack resolution`)
 4. **Coverage status** — summary of `test-matrix.md`; any UC with no TC is a gate blocker
 5. **Outstanding risks** — TCs not yet written, test environments not ready, known gaps
 

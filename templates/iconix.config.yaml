@@ -29,9 +29,15 @@ architecture:
   containers:
     # List the named containers in your architecture.
     # The Architect agent will map UCs to these.
+    # Optional: add a stack: sub-key to override the top-level stack for that container.
+    # Developer and Tester agents resolve language/test_framework as:
+    #   container stack.language → top-level stack.language (fallback)
     - name: "Backend"
     - name: "WebAPI"
     - name: "Frontend"
+      stack:                    # optional — overrides top-level stack for this container only
+        language: "typescript"
+        test_framework: "jest"
     - name: "Database"
 
 nfr_catalog: "docs/nfr-catalog.md"
