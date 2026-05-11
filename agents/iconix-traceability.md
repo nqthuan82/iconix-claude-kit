@@ -91,7 +91,20 @@ For each in-flight UC:
    - Extract DB containers the UC writes to (lookup via container `type: database` or `kind: db` markers)
    - Mark each DB container as **W** if any UC step writes to it
 
-## Step 3 — Load previously accepted conflicts
+## Step 3 — Compute hot-spot ranking
+After building the class-touch map for all in-flight UCs, aggregate across UCs (not pairs):
+1. For each class or resource that appears in **any** UC's touch map, count:
+   - `uc_count` — number of distinct in-flight UCs that touch it (W or R)
+   - `write_count` — number of those UCs that write (W) to it
+2. Classify hot spots (threshold: `uc_count ≥ 3`):
+   - `write_count ≥ 3` → **HIGH** — architectural bottleneck; class is being shaped by too many concurrent UCs and likely needs extraction or decomposition
+   - `write_count ≥ 1` AND `uc_count ≥ 3` → **MEDIUM** — coordination risk; one or more UCs are writing while others read, risk of semantic drift
+   - `write_count = 0` AND `uc_count ≥ 3` → **LOW** — informational; many UCs read this class but none write, low risk
+3. Rank by `write_count` descending, then `uc_count` descending
+4. Record this ranked list for rendering in the report's Hot classes section (Step 6)
+5. If fewer than 3 in-flight UCs exist, skip (hot-spot detection requires ≥3 UCs to be meaningful)
+
+## Step 4 — Load previously accepted conflicts
 Before classifying, check whether any conflicts were already explicitly accepted by the team:
 1. Read all `change-impact/CT-*.md` files created in the last 90 days (most recent first)
 2. In each file, find `[CT-ACCEPT-XXX]` tokens in the Recommendations section; for each token, read the corresponding `CONFLICT-XXX` block in the same file to extract the `(UC-A, UC-B, class-or-resource)` tuple
@@ -99,7 +112,7 @@ Before classifying, check whether any conflicts were already explicitly accepted
 4. Build an **accepted set**: a collection of `(UC-A, UC-B, class-or-resource)` tuples (order-insensitive on UC pair) with associated acceptance date and source CT file
 5. If no CT files exist and git integration is not configured: skip (accepted set is empty)
 
-## Step 4 — Detect conflicts
+## Step 5 — Detect conflicts
 For each pair of in-flight UCs `(A, B)`:
 1. Set intersection of their class-touch maps
 2. For each shared class `C`, classify severity using operation-level resolution:
@@ -113,7 +126,7 @@ For each pair of in-flight UCs `(A, B)`:
    - If the `(UC-A, UC-B, class-or-resource)` tuple matches an accepted entry, tag the conflict `[ACCEPTED — CT-<date>]`
    - Accepted conflicts appear in the report for transparency but are excluded from the **active** HIGH count used by `block_on_high_conflict` and M2 gate readiness
 
-## Step 5 — Recommend resolutions
+## Step 6 — Recommend resolutions
 For each **active** (non-accepted) HIGH conflict, produce 2–3 concrete options. Examples:
 - **Operation-name collision**: rename one UC's operation to disambiguate (preferred when semantics genuinely differ). OR extract a shared base class/interface that both UCs call. OR split the class if responsibilities are distinct.
 - **Entity write/write (distinct operations, escalated)**: extract a service class aggregating both operations; UCs depend on the service. OR land one UC first via `arch/<scope>` branch; the other rebases.
@@ -122,12 +135,12 @@ For each **active** (non-accepted) HIGH conflict, produce 2–3 concrete options
 
 You produce options, not the final decision — the Architect agent is the canonical resolver.
 
-## Step 6 — Render the report
+## Step 7 — Render the report
 Use `templates/concurrent-touch-template.md` (or `docs/iconix/templates/concurrent-touch-template.md` after install). Save as `change-impact/CT-<today>.md`.
 
-If `$ARGUMENTS` is a UC-ID (`/iconix-concurrent UC-017`), filter to conflicts involving that UC.
+If `$ARGUMENTS` is a UC-ID (`/iconix-concurrent UC-017`), filter to conflicts involving that UC. Hot-spot ranking is always global (not filtered) — it reflects the full in-flight picture regardless of the focus UC.
 
-## Step 7 — Exit semantics (when invoked from CI)
+## Step 8 — Exit semantics (when invoked from CI)
 - `block_on_high_conflict: false` → always exit 0; report findings only
 - `block_on_high_conflict: true` → exit non-zero if any **active** (non-accepted) HIGH conflict exists; accepted conflicts do not count
 
@@ -140,8 +153,9 @@ See change-impact/CT-<today>.md
 - HIGH (accepted): <count>
 - MEDIUM: <count>
 - LOW: <count>
+- Hot spots (HIGH): <count> — classes touched by ≥3 UCs with ≥3 writers
 ```
-If any **active** (non-accepted) HIGH conflicts exist, M2 readiness is `NOT READY`. Conflicts tagged `[CT-ACCEPT-XXX]` in a prior CT report or in the M2 PR description are excluded from the active HIGH count — they appear in the CT report tagged `[ACCEPTED]` for transparency.
+If any **active** (non-accepted) HIGH conflicts exist, M2 readiness is `NOT READY`. Conflicts tagged `[CT-ACCEPT-XXX]` in a prior CT report or in the M2 PR description are excluded from the active HIGH count — they appear in the CT report tagged `[ACCEPTED]` for transparency. HIGH hot spots are advisory (do not block M2 alone) but should be reviewed by the Architect before Implementation.
 
 # Milestone gate report format
 

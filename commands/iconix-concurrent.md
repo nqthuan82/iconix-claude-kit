@@ -12,7 +12,7 @@ The agent should follow its `# Concurrent touch detection` workflow:
    - Open `feature/UC-XXX-*` branches (via `git branch -r --list 'origin/feature/UC-*'`)
    - Unpromoted DRAFT artifacts in `use-cases/`, `robustness/`, `sequence/`
    - UCs past M2 with no Implementation PR merged
-3. For each in-flight UC, build the class-touch map:
+3. For each in-flight UC, build the class-touch map (Step 2); then aggregate across all UCs to rank hot classes — any class touched by ≥3 UCs, ranked by write count (Step 3).
    - Parse robustness diagrams to extract referenced classes (entities, controllers)
    - Cross-reference `class-model.puml` to identify added operations / attributes (writes, recording specific names) vs unchanged references (reads)
    - For database touches, parse `container-mapping/` to identify DB-container writes
@@ -24,7 +24,7 @@ The agent should follow its `# Concurrent touch detection` workflow:
    - **[ACCEPTED]** — previously accepted HIGH conflict; shown for transparency, excluded from active HIGH count
 6. If `$ARGUMENTS` is a UC-ID, filter the report to conflicts involving that UC.
 7. Produce `change-impact/CT-<today>.md` from `templates/concurrent-touch-template.md` (or its installed copy at `docs/iconix/templates/`).
-8. Print a summary: active HIGH / accepted HIGH / MEDIUM / LOW counts, with one-line teaser per active HIGH.
+8. Print a summary: active HIGH / accepted HIGH / MEDIUM / LOW conflict counts + hot-spot HIGH / MEDIUM counts, with one-line teaser per active HIGH conflict and per HIGH hot spot.
 9. If `block_on_high_conflict: true` and **active** HIGH conflicts exist, exit non-zero (so CI fails). Accepted conflicts do not trigger a non-zero exit.
 
 Do not modify code, artifacts, or branches. The Architect agent is the canonical resolver — recommend `/iconix-next` if HIGH conflicts need architectural resolution before M2 promotion.

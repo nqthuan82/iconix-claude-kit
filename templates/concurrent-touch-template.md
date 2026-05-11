@@ -36,6 +36,25 @@
 | <SharedController>  | W(save()) | W(save()) | -   |
 | db:<container>      | W    | W     | -     |
 
+## Hot classes
+
+> Classes or resources touched by ≥3 in-flight UCs. Ranked by write count descending.
+> Omit this section if fewer than 3 UCs are in-flight.
+> Hot spots are **advisory** — they signal architectural bottlenecks for the Architect to review.
+> They do not block M2 on their own.
+
+| Class / Resource | UCs touching | Writers | Risk | Involved UCs |
+|---|---|---|---|---|
+| <ClassName> | 5 | 4 | HIGH | UC-011, UC-014, UC-017, UC-020, UC-023 |
+| <EntityB>   | 3 | 1 | MEDIUM | UC-011, UC-014, UC-020 |
+
+**Risk legend:**
+- **HIGH** — ≥3 UCs write; likely needs extraction or decomposition before Implementation
+- **MEDIUM** — ≥3 UCs touch, ≥1 writes; coordination needed to avoid semantic drift
+- **LOW** — ≥3 UCs touch, all read; informational
+
+If a HIGH hot spot exists: recommend the Architect review whether the class should be split or a service layer introduced before M2 promotion. Use the Architect agent (`/iconix-next`) for resolution.
+
 ## Conflicts detected
 
 > One section per conflict, ordered by: active HIGH → active MEDIUM → active LOW → accepted.
@@ -101,6 +120,8 @@ UC-XXX and UC-YYY both reference `<Resource>` but neither modifies it. Informati
 - Accepted HIGH conflicts: <N>
 - MEDIUM: <N>
 - LOW: <N>
+- Hot spots (HIGH risk): <N>
+- Hot spots (MEDIUM risk): <N>
 
 ## Configuration
 

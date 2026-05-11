@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.43] — 2026-05-11
+
+**Enhancement: hot-spot ranking in concurrent-touch detection.**
+
+After building the per-UC class-touch map, a new Step 3 aggregates across all in-flight UCs to identify architectural hot spots — classes touched by ≥3 UCs simultaneously. Results are ranked by write count and classified HIGH (≥3 writers), MEDIUM (≥1 writer, ≥3 touchers), or LOW (all readers). The hot-class table appears in the CT report before the pair-based conflict list, giving the Architect an immediate view of structural bottlenecks rather than having to infer them from individual conflict pairs.
+
+Hot spots are advisory: they do not block M2 on their own, but HIGH hot spots trigger a recommendation to review extraction or decomposition before Implementation. The M2 gate report now includes hot-spot counts alongside the conflict summary. Hot-spot ranking is always global (not filtered by `$ARGUMENTS` UC-ID focus).
+
+Changes:
+- **`agents/iconix-traceability.md`**: new Step 3 (hot-spot ranking); existing Steps 3–7 renumbered to 4–8; Step 7 note about global hot-spot scope; M2 gate section includes hot-spot counts and Architect advisory
+- **`commands/iconix-concurrent.md`**: Step 3 references hot-spot aggregation; Step 8 summary includes hot-spot counts
+- **`templates/concurrent-touch-template.md`**: new "Hot classes" section with ranked table, risk legend, and Architect recommendation; Summary section includes hot-spot HIGH/MEDIUM counts
+
 ## [0.9.42] — 2026-05-11
 
 **Enhancement: operation-name collision detection and CT-ACCEPT suppression in concurrent-touch check.**
