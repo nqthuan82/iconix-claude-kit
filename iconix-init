@@ -246,6 +246,7 @@ Commands installed:
   /iconix-upgrade     migrate kit installation to current version
   /iconix-docs        generate user/dev/api docs
   /iconix-migrate     reverse-engineer from existing code
+  /iconix-promote     promote reviewed DRAFTs to permanent IDs
   /iconix-graphify    bootstrap Graphify integration (optional, for migration)
 
 EOF

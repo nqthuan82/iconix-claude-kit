@@ -227,6 +227,7 @@ try {
     Write-Host "  /iconix-upgrade     migrate kit installation to current version"
     Write-Host "  /iconix-docs        generate user/dev/api docs"
     Write-Host "  /iconix-migrate     reverse-engineer from existing code"
+    Write-Host "  /iconix-promote     promote reviewed DRAFTs to permanent IDs"
     Write-Host "  /iconix-graphify    bootstrap Graphify integration (optional, for migration)"
 }
 finally {

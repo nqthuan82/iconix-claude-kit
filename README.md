@@ -157,6 +157,7 @@ After `iconix-init` the project gains two layers: **kit machinery** (agents, com
     ├── iconix-upgrade.md            /iconix-upgrade
     ├── iconix-docs.md               /iconix-docs
     ├── iconix-migrate.md            /iconix-migrate
+    ├── iconix-promote.md            /iconix-promote
     └── iconix-graphify.md           /iconix-graphify
 
 docs/iconix/
@@ -316,6 +317,7 @@ issue is resolved.
 | `/iconix-upgrade [--dry-run]` | Upgrade | Migrate the project's installed kit version to current; auto-applies safe additive changes; produces detect-and-report for project artifacts |
 | `/iconix-docs <type> [scope]` | Docs | Generate user / dev / API / release / ops docs |
 | `/iconix-migrate [path]` | Migration | Reverse-engineer ICONIX artifacts from legacy code |
+| `/iconix-promote [slug\|all]` | Migration | Promote reviewed DRAFTs to permanent IDs; runs after human review of migration output |
 | `/iconix-graphify` | Migration setup | Bootstrap Graphify graph and patch config |
 
 ### `/iconix-next` pipeline

@@ -5,6 +5,62 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.46] — 2026-05-12
+
+**Fix: document and implement DRAFT promotion process for iconix-migration.**
+
+After `iconix-migration` runs, the path from DRAFT artifacts to permanent ICONIX IDs
+was undocumented. The migration agent said "the traceability agent re-allocates
+permanent IDs" with no further guidance. Users had no command to trigger this, no
+algorithm to follow, and no explanation of what to do between migration output and the
+normal M1/M2/M3 pipeline.
+
+Three additions close this gap:
+
+- **New command `/iconix-promote`** — triggers DRAFT promotion via the Traceability
+  agent. Accepts an optional slug or `all`. Handles safety checks, ID assignment,
+  file rename, cross-reference updates, and `ids.registry.md` registration.
+
+- **New `# DRAFT promotion` section in `agents/iconix-traceability.md`** — 5-step
+  algorithm: identify candidates, safety checks (unresolved `[VERIFY]` → skip),
+  assign permanent IDs (highest existing + 1 per type), rename/update/register,
+  print summary.
+
+- **Expanded `# Naming conventions for drafts` in `agents/iconix-migration.md`** —
+  replaces the vague one-liner with a full 3-step lifecycle (human review → promote
+  → continue pipeline) including a diagram showing DRAFT filenames → permanent IDs.
+
+Changes:
+- **`commands/iconix-promote.md`**: new command
+- **`agents/iconix-traceability.md`**: `# DRAFT promotion` section added before CI counterpart section
+- **`agents/iconix-migration.md`**: naming conventions section expanded with DRAFT lifecycle
+- **`iconix-init`** + **`iconix-init.ps1`**: `/iconix-promote` added to printed command list
+- **`README.md`**: `/iconix-promote` added to command table and Project layout commands tree
+
+## [0.9.45] — 2026-05-12
+
+**Fix: flesh out Phase 6 (test coverage mapping) in iconix-migration.**
+
+Phase 6 in both modes was a stub with no actionable logic. Graph-assisted had
+4 vague bullet points; code-walking had a single sentence.
+
+Both modes now have concrete 4-step workflows:
+
+**Graph-assisted:** (1) locate test nodes via language-specific file patterns and
+class/function signals (table covering C#, Java, Python, TypeScript/JS, Go, Ruby);
+(2) trace graph `calls` edges to build a test→production map, classifying tests as
+integration (calls entry-point boundary) vs unit (calls controller/entity only);
+(3) map tests to UC-DRAFTs by cross-referencing RB-DRAFT class lists — Full / Partial
+/ No coverage; (4) produce `migration/coverage-gaps.md` with a defined format
+(summary counts + per-UC table + recommended M3 actions).
+
+**Code-walking:** same 4-step structure; replaces graph queries with Glob + import-
+statement reading; conservative coverage classification (unknown → Partial with
+`[VERIFY]`); coverage-gaps.md notes code-walking mode in header.
+
+Changes:
+- **`agents/iconix-migration.md`**: Phase 6 graph-assisted expanded to 4 concrete steps; Phase 6 code-walking expanded from one sentence to 4 concrete steps
+
 ## [0.9.44] — 2026-05-12
 
 **Fix: add missing handoff-report-template.md for iconix-migration Phase 7.**

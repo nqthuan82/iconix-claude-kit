@@ -377,10 +377,65 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 6. Fill in the **UC → package allocation** table in `docs/architecture/package-map.md` (drafted in Phase 4b): one row per UC-DRAFT, mapping it to the boundary, application, domain, and persistence packages it traverses. Use the entry-point cluster from Phase 1 as the primary signal; cross-check against the robustness diagram for that UC.
 
 ## Phase 6 — Test coverage mapping (graph-assisted)
-1. Query the graph for test nodes (files matching test patterns, classes annotated as tests)
-2. Trace `calls` edges from test nodes to production code nodes
-3. Map back to draft UCs: which UCs have test coverage, which don't
-4. Produce `migration/coverage-gaps.md`
+
+### Step 1 — Locate test nodes
+Query the graph for test nodes. Test nodes are files or classes that match the test-detection patterns for `stack.language`:
+
+| Language | File patterns | Class / function signals |
+|---|---|---|
+| C# | `**/*.Tests/**/*.cs`, `**/*Test*.cs`, `**/*Spec*.cs` | `[TestClass]`, `[Fact]`, `[Theory]`, `[Test]` attributes |
+| Java | `src/test/**/*.java`, `**/*Test*.java`, `**/*Spec*.java` | `@Test`, `@ParameterizedTest` |
+| Python | `test_*.py`, `*_test.py` | `pytest` functions, `unittest.TestCase` subclasses |
+| TypeScript/JS | `*.test.ts`, `*.spec.ts`, `*.test.js`, `*.spec.js` | `describe(`, `it(`, `test(` calls |
+| Go | `*_test.go` | `func Test*` |
+| Ruby | `spec/**/*_spec.rb`, `test/**/*_test.rb` | `describe`, `it`, `RSpec` |
+
+### Step 2 — Build test → production map
+For each test node, trace outbound `calls` edges to production code nodes. For each production node reached, record:
+- The test file path
+- The production class + method called
+- The call depth (depth 1 = direct call from test; depth > 1 = indirect via helpers)
+
+Classify each test by its entry depth:
+- **Integration / end-to-end**: test calls a boundary node (entry point from Phase 1) — highest coverage value
+- **Unit**: test calls a controller or entity node directly — covers a class but not the full UC flow
+
+### Step 3 — Map tests to UC-DRAFTs
+For each UC-DRAFT, collect all class nodes from its RB-DRAFT (boundary, controller, entity nodes identified in Phase 4). Cross-reference with the test → production map:
+- **Full coverage**: ≥1 integration test calls this UC's entry-point boundary AND exercises its controller chain
+- **Partial coverage**: ≥1 test calls at least one class in this UC's RB-DRAFT, but not the entry point, or only one layer deep
+- **No coverage**: zero tests call any class in this UC's RB-DRAFT
+
+### Step 4 — Produce `migration/coverage-gaps.md`
+
+```markdown
+# Test Coverage Gaps — <date>
+
+> Produced by iconix-migration Phase 6 (graph-assisted).
+> Identifies which UC-DRAFTs have existing test coverage and which need
+> new tests authored at M3.
+
+## Summary
+- UC-DRAFTs with full coverage:    <N>
+- UC-DRAFTs with partial coverage: <N>
+- UC-DRAFTs with no coverage:      <N>
+
+## Coverage by UC-DRAFT
+
+| UC-DRAFT | Title | Coverage | Tests found | Gap |
+|---|---|---|---|---|
+| UC-DRAFT-001 | <title> | Full | `tests/OrderControllerTests.cs` (integration) | — |
+| UC-DRAFT-002 | <title> | Partial | `tests/PaymentServiceTests.cs` (unit) | Entry point not tested |
+| UC-DRAFT-003 | <title> | None | — | No tests found for any class in RB-DRAFT |
+
+## Recommended actions for M3
+
+For each UC-DRAFT with No or Partial coverage, the Tester should author test cases
+at M3. Priority order: No coverage first, then Partial.
+
+- `UC-DRAFT-003` — no coverage; author integration test from entry point through controller chain
+- `UC-DRAFT-002` — entry point not tested; extend existing unit test to integration level
+```
 
 ## Phase 7 — Handoff report (graph-assisted)
 Use `templates/handoff-report-template.md` (or `docs/iconix/templates/handoff-report-template.md` after install). Save as `migration/handoff-<date>.md`.
@@ -470,7 +525,27 @@ Same as graph-assisted Phase 5b. Without graph clustering you cluster manually:
 - Fill in the **UC → package allocation** table in `docs/architecture/package-map.md` (same as graph-assisted Phase 5b step 6)
 
 ## Phase 6 — Test coverage mapping (manual)
-Find existing tests via file patterns; map to draft UCs by reading test contents
+
+### Step 1 — Locate test files
+Use Glob to find test files using the same language-specific patterns as graph-assisted Phase 6 Step 1. Read `stack.language` from `iconix.config.yaml` to select the right patterns.
+
+### Step 2 — Build test → production map (without graph)
+For each test file found:
+1. Read its import statements and instantiation lines to identify which production class names it references
+2. Cross-reference those class names against `class-model/class-model.puml` (Phase 2 output) to confirm they are production classes — filter out test helpers, mocks, and stubs (class names containing `Mock`, `Fake`, `Stub`, `Builder`, `Fixture` are typically not production classes)
+3. Classify test type by what it imports / instantiates:
+   - Imports a boundary class (entry-point type from Phase 1) → **integration / end-to-end**
+   - Only imports controllers or entities → **unit**
+
+### Step 3 — Map tests to UC-DRAFTs
+Same logic as graph-assisted Step 3: for each UC-DRAFT, collect class names from its RB-DRAFT, cross-reference with the test → production map, and classify as Full / Partial / None.
+
+In code-walking mode, coverage classification is conservative:
+- Mark as **Full** only when an integration test clearly exercises the entry-point boundary
+- When uncertain (test file content is ambiguous), default to **Partial** and add a `[VERIFY]` note
+
+### Step 4 — Produce `migration/coverage-gaps.md`
+Same format as graph-assisted Phase 6 Step 4. Note in the file header: `> Mode: code-walking — coverage classification is conservative; mark integration tests as Partial until confirmed.`
 
 ## Phase 7 — Handoff report (manual)
 Same template and sections as graph-assisted Phase 7. Omit the "AMBIGUOUS findings" section (no graph). Set confidence summary to "all INFERRED — code-walking mode" rather than per-artifact counts. Note that confidence is uniformly lower than graph-assisted output and every artifact requires `[VERIFY]` review.
@@ -479,8 +554,36 @@ Same template and sections as graph-assisted Phase 7. Omit the "AMBIGUOUS findin
 
 # Naming conventions for drafts
 - All reverse-engineered IDs carry the `DRAFT` prefix until human review
-- Once approved, the iconix-traceability agent re-allocates permanent IDs
 - In graph-assisted mode, include the Graphify node ID in artifact metadata for round-trip lookup
+
+## DRAFT lifecycle — from migration output to pipeline-ready artifact
+
+```
+iconix-migration produces         Human reviews          /iconix-promote runs
+UC-DRAFT-001-checkout.md    →   resolves [VERIFY]   →   PRJ-UC-001-checkout.md
+RB-DRAFT-001-checkout.puml      fills business intent    PRJ-RB-001-checkout.puml
+SD-DRAFT-001-checkout.puml      confirms alt courses     PRJ-SD-001-checkout.puml
+domain-model-DRAFT.puml         confirms entities        domain-model.puml
+class-model.puml (DRAFT)        confirms operations      class-model.puml
+                                                              ↓
+                                                    Normal pipeline (M1 → M2 → M3)
+```
+
+**Step 1 — Human review** (your job before invoking `/iconix-promote`):
+- Open each DRAFT and work through every `[VERIFY]` marker:
+  - Confirm or correct the reverse-engineered content
+  - Replace `[VERIFY]` with the confirmed value, or delete the line if not applicable
+- Add business intent to UC-DRAFTs: alternate courses, actor goals, and non-obvious pre/postconditions that code alone can't reveal
+- Fill NFR gaps identified in the handoff report (`migration/handoff-<date>.md`)
+- Confirm container boundaries and package-map entries in `docs/architecture/`
+
+**Step 2 — Promote** (run `/iconix-promote` or ask the Traceability agent explicitly):
+- The Traceability agent assigns permanent IDs (next available in sequence), renames files, updates cross-references, and registers IDs in `ids.registry.md`
+- DRAFTs with unresolved `[VERIFY]` markers are skipped — they must be cleaned up first
+- See the Traceability agent's `# DRAFT promotion` section for the full algorithm
+
+**Step 3 — Continue pipeline**:
+- Run `/iconix-next` — the Orchestrator will detect the promoted artifacts and route to the appropriate gate (M1 if only UCs exist, M2 if UCs + RBs are promoted)
 
 # Provenance discipline (graph-assisted mode)
 Every artifact you produce in graph-assisted mode must carry a provenance footer:
