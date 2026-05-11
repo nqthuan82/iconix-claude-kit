@@ -12,6 +12,6 @@ Invoke the iconix-orchestrator agent. Tell it:
 3. Wait for the user to type an explicit approval (e.g., 'approve', 'proceed', 'yes', or similar) before dispatching any downstream agent.
 4. Do NOT auto-approve any gate, regardless of how clean the readiness report looks.
 
-**Confirmation UX rule:** When a gate requires confirmation, first show a numbered list of all items that need confirming (so the user sees the full picture), then confirm each item in a separate response — one item per reply. Never accept a single 'yes' for more than one item. Never hide upcoming items from the list.
+**Confirmation UX rule:** Follow the three-stage wizard defined in `# Confirmation protocol` in the orchestrator: (1) show all items upfront + confirm item 1, (2) confirm each remaining item one per response with `edit N` / `back` navigation, (3) show a final summary and wait for `submit` before executing anything. Never execute any action before `submit` is received.
 
 Do not proceed to Phase 9 (implementation) until the user has explicitly approved M3."

@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.28] — 2026-05-11
+
+**Enhancement: three-stage confirmation wizard with navigation and final submit.**
+
+Extended the confirmation protocol with two new capabilities: the user can
+navigate between items at any point using `edit N` / `back` to change a previous
+answer, and after all items are confirmed a final summary is shown requiring an
+explicit `submit` before anything is executed.
+
+Changes:
+- **`agents/iconix-orchestrator.md`**: Rewrote `# Confirmation protocol` as a
+  three-stage wizard. Stage 1: overview list + item 1. Stage 2: sequential
+  confirmation with navigation table (`yes`, `<edit>`, `edit N`, `back`). Stage 3:
+  final summary block, waits for `submit`; `edit N` loops back to Stage 2.
+  Rule added: nothing executes until `submit`.
+- **`commands/iconix-next.md`**: Updated confirmation UX rule to reference the
+  three-stage wizard and the `submit` requirement.
+
+No ICONIX methodology rule affected — UX/interaction protocol only.
+
 ## [0.9.27] — 2026-05-11
 
 **Fix: confirmation stops bundled into one response — user could not confirm each item separately.**
