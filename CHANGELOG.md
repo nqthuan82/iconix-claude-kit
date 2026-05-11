@@ -5,6 +5,20 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.35] — 2026-05-11
+
+**Add `docs/iconix-simulation.html` — interactive pipeline state machine simulation.**
+
+Self-contained HTML file (no dependencies) that animates all 22 steps of the ICONIX
+pipeline: happy path, M1/M2/M3 gates, concurrent-touch conflict resolution, Phase 9
+implementation loop with drift-check alternates, escalation, bug triage, and REQ change
+flow. Each step highlights the active state(s), shows a description and artifact list,
+and marks previously-visited states. Includes Play/Pause auto-advance and Prev/Next
+step controls. Open directly in any browser — no server or build step required.
+
+Changes:
+- **`docs/iconix-simulation.html`**: new file
+
 ## [0.9.34] — 2026-05-11
 
 **Fix: sequence-template.puml rewritten as a minimal renderable scaffold.**

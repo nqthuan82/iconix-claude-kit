@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICONIX Kit — Pipeline Simulation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+header { background: #16213e; padding: 10px 20px; border-bottom: 1px solid #0f3460; flex-shrink: 0; }
+header h1 { font-size: 15px; font-weight: 600; color: #AED6F1; }
+header p  { font-size: 11px; color: #666; margin-top: 2px; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Diagram panel ── */
+.diagram { flex: 1; overflow-y: auto; padding: 14px 10px; }
+.pipeline { display: flex; flex-direction: column; gap: 3px; max-width: 340px; margin: 0 auto; }
+
+/* ── State boxes ── */
+.state-box {
+  border-radius: 6px; padding: 7px 11px; font-size: 12px; font-weight: 500;
+  text-align: center; border: 2px solid transparent;
+  transition: all 0.25s ease; opacity: 0.3; line-height: 1.4; user-select: none;
+}
+.state-box small { font-size: 10px; font-weight: 400; display: block; margin-top: 1px; }
+.state-box.agent  { background: #1a3a4a; color: #AED6F1; border-color: #2c5f7a; }
+.state-box.gate   { background: #3a2800; color: #FFD580; border-color: #6a4e00; }
+.state-box.change { background: #1a3a2a; color: #A9DFBF; border-color: #2c6040; }
+.state-box.bug    { background: #3a1a1a; color: #F1948A; border-color: #6a2c2c; }
+.state-box.plain  { background: #252538; color: #ccc;    border-color: #3a3a5a; }
+
+.state-box.active  { opacity: 1; transform: scale(1.03); }
+.state-box.agent.active  { border-color: #AED6F1; box-shadow: 0 0 14px rgba(174,214,241,0.45); }
+.state-box.gate.active   { border-color: #FFD580; box-shadow: 0 0 14px rgba(255,213,128,0.45); }
+.state-box.change.active { border-color: #A9DFBF; box-shadow: 0 0 14px rgba(169,223,191,0.45); }
+.state-box.bug.active    { border-color: #F1948A; box-shadow: 0 0 14px rgba(241,148,138,0.45); }
+.state-box.plain.active  { border-color: #aaa;    box-shadow: 0 0 14px rgba(200,200,200,0.3); }
+.state-box.visited { opacity: 0.6; }
+
+/* ── Phase containers ── */
+.phase-wrap { border: 1px solid #252540; border-radius: 8px; padding: 7px 7px 7px; background: rgba(255,255,255,0.015); transition: border-color 0.25s; }
+.phase-wrap.active { border-color: #3a3a6a; }
+.phase-lbl { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+.row { display: flex; gap: 5px; }
+.row .state-box { flex: 1; }
+
+/* ── Arrows ── */
+.arrow { text-align: center; color: #333; font-size: 15px; line-height: 1; padding: 1px 0; transition: color 0.25s; }
+.arrow.active { color: #5a8fb0; }
+
+/* ── Side flows ── */
+.side-flows { display: flex; gap: 10px; margin-top: 14px; justify-content: center; flex-wrap: wrap; }
+.side-col { display: flex; flex-direction: column; gap: 4px; width: 120px; }
+.side-lbl { font-size: 9px; color: #555; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+
+/* ── Info panel ── */
+.info { width: 270px; background: #16213e; border-left: 1px solid #0f3460; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.info-phase { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #AED6F1; font-weight: 700; }
+.info-title { font-size: 14px; font-weight: 600; color: #fff; margin-top: 3px; line-height: 1.35; }
+.info-desc  { font-size: 12px; color: #999; line-height: 1.65; margin-top: 6px; }
+.art-wrap h4 { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 5px; }
+.tag { display: inline-block; background: #0d2a47; color: #7ab8d9; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin: 2px 2px 0 0; font-family: 'Courier New', monospace; }
+
+.legend { margin-top: auto; padding-top: 12px; border-top: 1px solid #1a2a3a; }
+.legend h4 { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+.leg-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #777; margin-bottom: 4px; }
+.leg-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── Controls ── */
+.controls { background: #16213e; border-top: 1px solid #0f3460; padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.controls button { background: #0f3460; color: #AED6F1; border: 1px solid #1e4d80; padding: 5px 13px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.15s; white-space: nowrap; }
+.controls button:hover:not(:disabled) { background: #1a5276; }
+.controls button:disabled { opacity: 0.35; cursor: default; }
+.prog-bar { flex: 1; height: 3px; background: #0f3460; border-radius: 2px; }
+.prog-fill { height: 100%; background: #AED6F1; border-radius: 2px; transition: width 0.3s; }
+.ctr { font-size: 11px; color: #555; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ICONIX Kit — Pipeline State Machine</h1>
+  <p>Step-by-step simulation &nbsp;·&nbsp; Use ▶ Play or Next/Prev to navigate</p>
+</header>
+
+<div class="main">
+
+  <!-- ── Diagram ── -->
+  <div class="diagram">
+    <div class="pipeline">
+
+      <div id="s-idle" class="state-box plain">⏸&nbsp; Idle</div>
+      <div class="arrow" id="a0">↓</div>
+
+      <div id="s-branch" class="state-box agent">Branch Creation<br><small>Git Agent — Phase 0</small></div>
+      <div class="arrow" id="a1">↓</div>
+
+      <div class="phase-wrap" id="w-reqs">
+        <div class="phase-lbl">Phase 1 — Requirements</div>
+        <div id="s-reqs" class="state-box agent">Product Owner</div>
+        <div class="row" style="margin-top:5px;">
+          <div id="s-r1" class="state-box agent" style="font-size:10px;">Draft REQs</div>
+          <div id="s-r2" class="state-box agent" style="font-size:10px;">Domain Model</div>
+          <div id="s-r3" class="state-box agent" style="font-size:10px;">Use Cases</div>
+          <div id="s-r4" class="state-box agent" style="font-size:10px;">M1 Checklist</div>
+        </div>
+      </div>
+      <div class="arrow" id="a2">↓</div>
+
+      <div id="s-m1" class="state-box gate">⬡&nbsp; M1 Gate<br><small>Traceability</small></div>
+      <div class="arrow" id="a3">↓</div>
+
+      <div class="phase-wrap" id="w-prelim">
+        <div class="phase-lbl">Phase 2 — Preliminary Design</div>
+        <div class="row">
+          <div id="s-analyst"   class="state-box agent">Analyst<br><small>RBs + Domain</small></div>
+          <div id="s-architect" class="state-box agent">Architect<br><small>Containers + ADRs</small></div>
+        </div>
+      </div>
+      <div class="arrow" id="a4">↓</div>
+
+      <div id="s-m2" class="state-box gate">⬡&nbsp; M2 Gate / PDR<br><small>Traceability</small></div>
+      <div class="arrow" id="a5">↓</div>
+
+      <div class="phase-wrap" id="w-cdr">
+        <div class="phase-lbl">Phase 3 — Detailed Design (CDR)</div>
+        <div class="row">
+          <div id="s-dev"    class="state-box agent">Developer<br><small>SDs + Class Model</small></div>
+          <div id="s-tester" class="state-box agent">Tester<br><small>TCs + Test Plan</small></div>
+        </div>
+      </div>
+      <div class="arrow" id="a6">↓</div>
+
+      <div id="s-m3" class="state-box gate">⬡&nbsp; M3 Gate / CDR<br><small>Traceability</small></div>
+      <div class="arrow" id="a7">↓</div>
+
+      <div class="phase-wrap" id="w-impl">
+        <div class="phase-lbl">Phase 9 — Implementation Loop</div>
+        <div id="s-91" class="state-box agent">9.1 Kickoff<br><small>Developer + Tester</small></div>
+        <div class="arrow">↓</div>
+        <div id="s-92" class="state-box agent">9.2 Drift Check<br><small>Reviewer</small></div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <div id="s-93"  class="state-box change">9.3 Fix Iteration<br><small>Dev + Tester</small></div>
+          <div id="s-94"  class="state-box agent">9.4 Merge<br><small>PR → CI → Merge</small></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div id="s-9e" class="state-box change">Escalate to Architect / PO<br><small>iteration cap hit</small></div>
+      </div>
+      <div class="arrow" id="a8">↓</div>
+
+      <div id="s-done" class="state-box plain">✓&nbsp; Done</div>
+    </div>
+
+    <!-- Side flows -->
+    <div class="side-flows">
+      <div class="side-col">
+        <div class="side-lbl">Conflict</div>
+        <div id="s-conc" class="state-box change">Concurrent-touch<br>Resolution<br><small>Architect</small></div>
+      </div>
+      <div class="side-col">
+        <div class="side-lbl">Bug Flow</div>
+        <div id="s-bug" class="state-box bug">Bug Triage<br><small>Reviewer</small></div>
+      </div>
+      <div class="side-col">
+        <div class="side-lbl">Change Flow</div>
+        <div id="s-reqch" class="state-box change">REQ Change<br><small>/iconix-impact</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Info panel ── -->
+  <div class="info">
+    <div>
+      <div class="info-phase" id="i-phase">—</div>
+      <div class="info-title" id="i-title">Press Play or Next to begin</div>
+      <div class="info-desc"  id="i-desc">Step through each phase of the ICONIX pipeline to see which agent runs, what gets produced, and where gate checks happen.</div>
+    </div>
+    <div class="art-wrap" id="i-art" style="display:none">
+      <h4>Artifacts produced</h4>
+      <div id="i-tags"></div>
+    </div>
+    <div class="legend">
+      <h4>Legend</h4>
+      <div class="leg-row"><div class="leg-dot" style="background:#1a3a4a;border:1px solid #AED6F1;"></div>Agent (blue)</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#3a2800;border:1px solid #FFD580;"></div>Gate / milestone (amber)</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#1a3a2a;border:1px solid #A9DFBF;"></div>Change / escalation (green)</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#3a1a1a;border:1px solid #F1948A;"></div>Bug flow (red)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Controls ── -->
+<div class="controls">
+  <button id="b-prev" onclick="go(-1)" disabled>← Prev</button>
+  <button id="b-play" onclick="togglePlay()">▶ Play</button>
+  <button id="b-next" onclick="go(1)">Next →</button>
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div class="ctr" id="ctr">— / —</div>
+</div>
+
+<script>
+const steps = [
+  { phase:"Entry", title:"Idle — Awaiting Input",
+    active:["s-idle"], arrows:[],
+    desc:"The pipeline waits for raw input: a BRD, stakeholder transcript, feature request, or email intake document.",
+    art:[] },
+
+  { phase:"Phase 0 — Git", title:"Branch Creation",
+    active:["s-branch"], arrows:["a0"],
+    desc:"Git Agent creates a feature branch (feature/UC-XXX-<slug>). The pipeline halts until the user confirms the branch name before any design work begins.",
+    art:["feature/UC-XXX-<slug>"] },
+
+  { phase:"Phase 1 — Requirements", title:"Product Owner: Draft Requirements",
+    active:["s-reqs","s-r1"], arrows:["a1"],
+    desc:"Product Owner writes atomic requirement files. Each REQ has a stable ID, a clear testable statement, a stakeholder source, and a priority.",
+    art:["requirements/REQ-XXX.md"] },
+
+  { phase:"Phase 1 — Requirements", title:"Product Owner: Initial Domain Model",
+    active:["s-reqs","s-r2"], arrows:[],
+    desc:"Product Owner sketches the initial domain model — real-world entities and is-a / has-a relationships only. No methods, no implementation detail allowed at this stage.",
+    art:["domain-model/domain-model-initial.puml"] },
+
+  { phase:"Phase 1 — Requirements", title:"Product Owner: Use Cases",
+    active:["s-reqs","s-r3"], arrows:[],
+    desc:"Product Owner writes use cases in the ICONIX two-column format: actor action (left column) and system response (right column). Basic course + all alternate courses.",
+    art:["use-cases/UC-XXX.md","use-case-packages/*.puml"] },
+
+  { phase:"Phase 1 — Requirements", title:"Product Owner: M1 Readiness Checklist",
+    active:["s-reqs","s-r4"], arrows:[],
+    desc:"Product Owner self-checks the M1 criteria: every UC has a primary actor, basic course, at least one alternate course, and links to upstream REQs.",
+    art:[] },
+
+  { phase:"Gate", title:"M1 Gate — Traceability Validation",
+    active:["s-m1"], arrows:["a2"],
+    desc:"Traceability Agent validates all REQ→UC forward links. Orphan REQs (no UC) and orphan UCs (no REQ) block the gate. Failure sends work back to Product Owner.",
+    art:["milestone-reports/M1-report.md"] },
+
+  { phase:"Phase 2 — Preliminary Design", title:"Analyst: Robustness Diagrams",
+    active:["s-analyst"], arrows:["a3"],
+    desc:"Analyst draws robustness diagrams for each UC. Each diagram must satisfy the four ICONIX connection rules: Actor↔Boundary, Boundary↔Controller, Controller↔Controller, Controller↔Entity.",
+    art:["robustness/RB-XXX.puml","domain-model/domain-model.puml"] },
+
+  { phase:"Phase 2 — Preliminary Design", title:"Analyst + Architect (parallel)",
+    active:["s-analyst","s-architect"], arrows:[],
+    desc:"Architect maps UCs to architecture containers, annotates NFRs, and drafts ADRs for structural decisions. Runs in parallel with the Analyst once the first robustness diagrams exist.",
+    art:["container-mapping/*.md","nfr-annotations/*.md","adrs/*.md","docs/architecture/package-map.md"] },
+
+  { phase:"Gate", title:"M2 Gate / PDR — Traceability",
+    active:["s-m2"], arrows:["a4"],
+    desc:"Traceability validates UC→RB links and robustness diagram rules, then runs concurrent-touch detection across all in-flight UCs. HIGH conflicts must be resolved before the gate clears.",
+    art:["milestone-reports/M2-report.md","change-impact/CT-*.md"] },
+
+  { phase:"Gate — Alternate Path", title:"Concurrent-touch Conflict Detected",
+    active:["s-m2","s-conc"], arrows:[],
+    desc:"A HIGH concurrent-touch conflict was detected (write/write on the same entity, controller name collision, or two UCs writing the same DB container). Architect proposes resolution via ADRs. Gate re-runs after landing fixes.",
+    art:["adrs/*.md"] },
+
+  { phase:"Phase 3 — Detailed Design", title:"Developer: Sequence Diagrams + Class Model",
+    active:["s-dev"], arrows:["a5"],
+    desc:"Developer elaborates each robustness diagram into a full sequence diagram, allocates method responsibilities to classes, and produces the class model that implementation will follow.",
+    art:["sequence/SD-XXX.puml","class-model/*.puml"] },
+
+  { phase:"Phase 3 — Detailed Design", title:"Developer + Tester (parallel)",
+    active:["s-dev","s-tester"], arrows:[],
+    desc:"Tester writes test cases from UC alternate courses, produces Gherkin feature files, and assembles the test matrix. Runs in parallel with Developer once the first sequence diagrams exist.",
+    art:["test-cases/TC-XXX.md","features/*.feature","test-matrices/*.md"] },
+
+  { phase:"Gate", title:"M3 Gate / CDR — Traceability",
+    active:["s-m3"], arrows:["a6"],
+    desc:"Traceability validates the full SD→CLS→TC chain. Missing test cases, orphan sequence diagrams, or incomplete class model assignments fail the gate.",
+    art:["milestone-reports/M3-report.md","cdr-reports/*.md"] },
+
+  { phase:"Phase 9 — Implementation", title:"9.1 Implementation Kickoff",
+    active:["s-91"], arrows:["a7"],
+    desc:"Developer writes production code tracing directly to the approved sequence diagrams and class model. Tester writes automated tests in parallel. One UC per branch.",
+    art:["src/**","tests/**"] },
+
+  { phase:"Phase 9 — Implementation", title:"9.2 Pre-merge Drift Check",
+    active:["s-92"], arrows:[],
+    desc:"Reviewer compares the code implementation against the sequence diagrams and class model. Issues one of four verdicts: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES, or BLOCK MERGE.",
+    art:[] },
+
+  { phase:"Phase 9 — Alternate Path", title:"9.3 Drift Fix Iteration",
+    active:["s-93"], arrows:[],
+    desc:"Developer and Tester address the Reviewer's corrections. The loop repeats at 9.2 until APPROVED or until the iteration cap (phase9.max_iterations_per_uc) is reached.",
+    art:[] },
+
+  { phase:"Phase 9 — Implementation", title:"9.4 Implementation Merge",
+    active:["s-94"], arrows:[],
+    desc:"APPROVED: pipeline creates the PR (user confirms), CI runs (user confirms CI pass), then the PR is merged manually. Three explicit confirmation stops guard this phase.",
+    art:["PR merged to main branch"] },
+
+  { phase:"Phase 9 — Escalation", title:"Escalate: Iteration Cap Hit",
+    active:["s-9e"], arrows:[],
+    desc:"The iteration cap was reached. A problem that cannot be fixed in N rounds is a Type 2 (design) problem, not a Type 1 (code) problem. Architectural issues go back to Architect; requirements issues go back to Product Owner.",
+    art:[] },
+
+  { phase:"Complete", title:"Done — All UCs Shipped",
+    active:["s-done"], arrows:["a8"],
+    desc:"All use cases reached Phase 9.4 and were merged. The pipeline is complete. Bugs on shipped features re-enter via Bug Triage.",
+    art:[] },
+
+  { phase:"Bug Flow", title:"Bug Triage — Reviewer",
+    active:["s-bug"], arrows:[],
+    desc:"Triggered by /iconix-bug or the Orchestrator. Reviewer classifies the bug: Type 1 = code diverges from the sequence diagram → re-enters Implementation at 9.3. Type 2 = design is wrong → triggers REQ Change flow.",
+    art:["bug-reports/*.md"] },
+
+  { phase:"Change Flow", title:"REQ Change — /iconix-impact",
+    active:["s-reqch"], arrows:[],
+    desc:"/iconix-impact produces a change-impact report scoping which REQs, UCs, RBs, SDs, and TCs are affected. The scoped pipeline re-runs only the affected artifacts, re-entering from Phase 1.",
+    art:["change-impact/*.md"] }
+];
+
+let cur = -1, playing = false, timer = null;
+
+function clearStates() {
+  document.querySelectorAll('.state-box').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.arrow[id]').forEach(el => el.classList.remove('active'));
+}
+
+function applyStep(idx) {
+  clearStates();
+  const s = steps[idx];
+
+  // mark visited
+  for (let i = 0; i < idx; i++)
+    steps[i].active.forEach(id => { const el=document.getElementById(id); if(el){ el.classList.add('visited'); el.classList.remove('active'); } });
+
+  // activate current
+  s.active.forEach(id => { const el=document.getElementById(id); if(el){ el.classList.add('active'); el.classList.remove('visited'); } });
+  s.arrows.forEach(id => { const el=document.getElementById(id); if(el) el.classList.add('active'); });
+
+  // info panel
+  document.getElementById('i-phase').textContent = s.phase;
+  document.getElementById('i-title').textContent = s.title;
+  document.getElementById('i-desc').textContent  = s.desc;
+  const artEl = document.getElementById('i-art');
+  if (s.art.length) {
+    artEl.style.display = 'block';
+    document.getElementById('i-tags').innerHTML = s.art.map(a=>`<span class="tag">${a}</span>`).join('');
+  } else {
+    artEl.style.display = 'none';
+  }
+
+  // progress
+  document.getElementById('prog').style.width = ((idx+1)/steps.length*100)+'%';
+  document.getElementById('ctr').textContent = `${idx+1} / ${steps.length}`;
+  document.getElementById('b-prev').disabled = idx <= 0;
+  document.getElementById('b-next').disabled = idx >= steps.length-1;
+}
+
+function go(d) {
+  const n = cur + d;
+  if (n >= 0 && n < steps.length) { cur = n; applyStep(cur); }
+  if (cur >= steps.length-1 && playing) stopPlay();
+}
+
+function togglePlay() {
+  if (playing) { stopPlay(); return; }
+  playing = true;
+  document.getElementById('b-play').textContent = '⏸ Pause';
+  if (cur >= steps.length-1) cur = -1;
+  timer = setInterval(()=>go(1), 1900);
+}
+
+function stopPlay() {
+  playing = false; clearInterval(timer);
+  document.getElementById('b-play').textContent = '▶ Play';
+}
+
+// start on step 0
+cur = 0; applyStep(0);
+</script>
+</body>
+</html>
