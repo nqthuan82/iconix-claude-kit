@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.24] — 2026-05-11
+
+**Fix: /iconix-next missing confirmation stops at M1 and M2.**
+
+The command said "stop before any milestone gate" but that was vague enough
+that M1 and M2 were being auto-passed. Only the M3→Phase 9 transition
+reliably paused because dispatching developers and creating branches gave
+Claude a natural signal to confirm.
+
+Changes:
+- **`commands/iconix-next.md`**: Replaced the vague gate instruction with an
+  explicit 4-step gate protocol: run Traceability → STOP → print gate name
+  with `## Milestone N — waiting for approval` header → wait for explicit
+  user approval. Protocol applies equally to M1, M2, and M3.
+
+No ICONIX methodology rule affected — behavioral enforcement fix only.
+
 ## [0.9.23] — 2026-05-10
 
 **Fix: phase9-cycles/UC-XXX-cycle.md never created in normal pipeline flow.**
