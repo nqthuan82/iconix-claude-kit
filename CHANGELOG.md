@@ -5,6 +5,17 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.32] — 2026-05-11
+
+**Fix: sequence-template.puml fails to preview in VS Code.**
+
+Three causes: (1) angle brackets `<...>` in group labels — PlantUML interprets these
+as HTML markup and fails to parse; (2) em dashes `—` in message labels; (3) stereotype
+with spaces `<<from PREFIX-UC-XXX Other-UC-Title>>`. All replaced with safe equivalents.
+
+Changes:
+- **`templates/sequence-template.puml`**: replace `<...>` in group labels with `[...]`, em dashes with `-`, and stereotype `<<from PREFIX-UC-XXX Other-UC-Title>>` with `<<from_PREFIX-UC-XXX>>`
+
 ## [0.9.31] — 2026-05-11
 
 **Enhancement: iconix-migration now drafts `docs/architecture/package-map.md` during Phase 4b/5b.**

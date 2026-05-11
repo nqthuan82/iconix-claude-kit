@@ -37,7 +37,7 @@ boundary "Razor View\nViews/Books/Detail.cshtml"   as BDView
 boundary "Razor View\nViews/Reviews/Write.cshtml"  as WRView
 
 ' UI dependency from another UC (stereotype shows reuse):
-boundary "Razor View\nViews/Shared/NotFound.cshtml" as BNFView <<from PREFIX-UC-XXX Other-UC-Title>>
+boundary "Razor View\nViews/Shared/NotFound.cshtml" as BNFView <<from_PREFIX-UC-XXX>>
 
 ' Synthetic boundary for an invoked UC (when invocation surfaces a redirect):
 boundary "Login redirect\n(cookie auth challenge)" as LoginRedir
@@ -65,7 +65,7 @@ entity   "IBookRepository\n(EfBookRepository)"    as BookRepo
 actor    "Moderator"                              as Mod
 
 ' ── Step 1 — UC step 1 — basic course ──
-group Step 1 — <Customer action; system response> (RB controllers: CheckLogin, LoadBook)
+group Step 1 - [Customer action / system response] (RB controllers: CheckLogin, LoadBook)
   Cust    -> BDView : GET /resource
   BDView  -> Ctrl   : RouteAction()
   Ctrl    -> CurUser : GetSession(httpContext)
@@ -81,18 +81,18 @@ group Step 1 — <Customer action; system response> (RB controllers: CheckLogin,
 end
 
 ' ── Step 2 — system response ──
-group Step 2 — <System response> (RB controller: DisplayWriteReviewPage)
+group Step 2 - [System response] (RB controller: DisplayWriteReviewPage)
   Ctrl   --> WRView : View("Write", review)
   WRView --> Cust   : 200 OK
 end
 
 ' ── Alternate Course A — invoked UC pattern ──
-group Alternate A — <e.g., not logged in> #Pink
+group Alternate A - [e.g., not logged in] #Pink
   Cust    -> BDView : GET /resource
   BDView  -> Ctrl   : RouteAction()
   Ctrl    -> CS     : IsLoggedIn
   CS      --> Ctrl  : false
-  Ctrl    --> LoginRedir : Challenge() — 302 to /login
+  Ctrl    --> LoginRedir : Challenge() - 302 to /login
   LoginRedir --> Cust    : 302 redirect
   note right of Ctrl
     With [Authorize] on the action, the cookie-auth handler
@@ -102,20 +102,20 @@ group Alternate A — <e.g., not logged in> #Pink
 end
 
 ' ── Alternate Course B — UI dependency pattern (Book Not Found page) ──
-group Alternate B — <e.g., Book ID does not exist> #Pink
+group Alternate B - [e.g., Book ID does not exist] #Pink
   Cust    -> BDView : GET /resource with unknown id
   BDView  -> Ctrl   : RouteAction()
   Ctrl    -> BookRepo : GetByIdAsync(id)
   BookRepo --> Ctrl : null
-  Ctrl    --> BNFView : View("NotFound") — 404
+  Ctrl    --> BNFView : View("NotFound") - 404
   BNFView --> Cust    : 404
 end
 
 ' ── Step N — downstream consumer pattern (queue handoff) ──
-group Step N — <Save and enqueue>
+group Step N - [Save and enqueue]
   Ctrl   -> CR     : new(book, customer, text, rating)
   Ctrl   -> BookRepo : (persist via repository)
-  CR     ..> Mod   : (downstream — read by PREFIX-UC-XXX Moderate; async)
+  CR     ..> Mod   : (downstream - read by PREFIX-UC-XXX Moderate; async)
 end
 
 note over Cust, Mod
