@@ -86,7 +86,7 @@ For each in-flight UC:
 2. Parse `class-model/class-model.puml` (or per-UC entries):
    - For each class touched by the UC, list operations and attributes added by this UC vs already-present on `main`
    - "added" → **W** (write); "referenced but not modified" → **R** (read)
-3. If `detect_db_containers: true`, parse `container-mapping/<UC>-mapping.md`:
+3. If `detect_db_containers: true`, parse `container-mapping/<PREFIX>-UC-XXX-containers.md`:
    - Extract DB containers the UC writes to (lookup via container `type: database` or `kind: db` markers)
    - Mark each DB container as **W** if any UC step writes to it
 

@@ -50,7 +50,7 @@ Read `nfr-annotations/UC-XXX-nfr.md` for the UC and flag obvious violations:
 For each source file that carries a `Traceability: UC-XXX | RB-XXX | SD-XXX` comment:
 - The first path segment after `src/` (e.g., `src/Frontend/...` → `Frontend`) must match a container name in `container-mapping/<PREFIX>-UC-XXX-containers.md`; a mismatch is a `[DRIFT]` finding — the file is placed in a container the design never allocated to this UC
 - If the file is a **primary implementation language file** (extension is one of `.cs`, `.java`, `.py`, `.ts`, `.tsx`, `.go`, `.rb`), its extension must be consistent with the "Effective stack" `language` for that container row (e.g., a `.java` file under a container mapped `typescript / jest` is a mismatch); flag as `[DRIFT]`. Do **not** flag view templates, static assets, or config files — `.cshtml`, `.html`, `.jsx`, `.css`, `.json`, `.xml`, `.yml` are legitimate secondary artifacts in any container regardless of its primary language (e.g., Razor views in a C# MVC container, Thymeleaf templates in a Java container, Jinja templates in a Python container)
-- Same rule applies under `tests/`: directory segment must match a container name; primary language extension must be consistent with the container's "Effective stack" `test_framework` language
+- Same rule applies under `tests/`: directory segment must match a container name; the file extension must be consistent with the container's "Effective stack" `test_framework` using this mapping — `xunit`/`nunit` → `.cs`; `junit` → `.java`; `pytest` → `.py`; `jest`/`vitest` → `.ts`/`.tsx`/`.js`/`.jsx`; `rspec` → `.rb`; `gotest` → `.go`. Gherkin feature files (`.feature`) and config files (`.json`, `.xml`) are excluded from this check regardless of framework
 
 # Output format
 

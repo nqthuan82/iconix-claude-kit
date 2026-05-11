@@ -46,13 +46,15 @@ and a Traceability block citing upstream REQs and affected UCs.
 
 # Stack resolution
 
-When producing a `container-mapping/<PREFIX>-UC-XXX-containers.md` file, fill in the "Effective stack" column for every container row:
+Apply this two-level lookup whenever you write an "Effective stack" column — both the per-UC container-mapping files and the project-wide package map:
 
 1. Check `iconix.config.yaml` `architecture.containers` for a `stack.language` / `stack.test_framework` entry on that container.
-2. If present, that is the effective stack for the column. If absent, use the top-level `stack.language` / `stack.test_framework`.
-3. Format the column value as `<language> / <test_framework>` (e.g., `csharp / xunit`, `typescript / jest`).
+2. If present, that is the effective stack. If absent, use the top-level `stack.language` / `stack.test_framework`.
+3. Format the column value as `<language> / <test_framework>` (e.g., `csharp / xunit`, `typescript / jest`). Use `n/a` for Infrastructure (external) packages in the package map.
 
-This column is the single authoritative source for the Developer and Tester agents — they read it rather than re-deriving the lookup themselves. An empty "Effective stack" cell is a gap; fill it before the container-mapping file is considered complete.
+**`container-mapping/<PREFIX>-UC-XXX-containers.md`** — fill the "Effective stack" column for every container row. This is the single authoritative source the Developer and Tester agents read; an empty cell is a gap that blocks code generation in the right language.
+
+**`docs/architecture/package-map.md`** — fill the "Effective stack" column for every internal package row. Keep it consistent with the container-mapping files: if a container appears in both, its "Effective stack" value must be identical in both places. A mismatch between the two files is a traceability inconsistency.
 
 # Testability annotations
 
@@ -98,6 +100,7 @@ You produce options and propose a recommendation, but do not unilaterally rewrit
 - [ ] Every UC has a `container-mapping/<PREFIX>-UC-XXX-containers.md` file mapping it to ≥1 container
 - [ ] Every UC has a `nfr-annotations/<PREFIX>-UC-XXX-nfr.md` file (or explicitly marks "standard NFRs only — see catalog")
 - [ ] Project-wide `docs/architecture/package-map.md` exists and lists every UC in its allocation table
+- [ ] Every internal package row in `docs/architecture/package-map.md` has a non-empty "Effective stack" column; value must be consistent with the corresponding container-mapping files (per `# Stack resolution`)
 - [ ] Project-wide `docs/architecture/integration-surface.md` exists; every external call is in inbound, outbound, or bidirectional table
 - [ ] NFR catalog (`docs/nfr-catalog.md` or as configured) exists; every NFR ID referenced from `nfr-annotations/*` exists in the catalog
 - [ ] Every architecture-level decision captured as ADR

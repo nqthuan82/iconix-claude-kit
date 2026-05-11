@@ -96,5 +96,5 @@ UC-XXX and UC-YYY both reference `<Resource>` but neither modifies it. Informati
   - `robustness/RB-*.puml`
   - `class-model/class-model.puml`
   - `domain-model/domain-model.puml`
-  - `container-mapping/<UC>-mapping.md` (when present)
+  - `container-mapping/<PREFIX>-UC-XXX-containers.md` (when present)
   - Open feature branches via `git branch -r --list 'origin/feature/UC-*'`

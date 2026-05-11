@@ -9,6 +9,8 @@
 #   2. Every cited UC-XXX / RB-XXX / SD-XXX / REQ-XXX / TC-XXX ID exists in the
 #      corresponding artifact folder.
 #   3. No file references an ID that's been deleted or renamed.
+#   4. Every changed container-mapping/*.md file has a non-empty "Effective stack"
+#      column on every data row (M2 blocker per Traceability check #16).
 #
 # Usage:
 #   validate-traceability.sh [<base-ref>] [<head-ref>]
@@ -94,6 +96,32 @@ while IFS= read -r f; do
   done <<< "$cited_ids"
 
 done <<< "${CHANGED_FILES}"
+
+# ── Check 3: changed container-mapping files have Effective stack filled ─
+CHANGED_MAPS="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'container-mapping/*.md' 2>/dev/null || true)"
+
+while IFS= read -r f; do
+  [[ -z "$f" || ! -f "$f" ]] && continue
+
+  if ! grep -q "Effective stack" "$f"; then
+    echo "MISSING_STACK_COL: ${f} has no 'Effective stack' column — regenerate from templates/container-mapping-template.md" >&2
+    violations=$((violations + 1))
+    continue
+  fi
+
+  # Check each table data row for a blank Effective stack cell (column 2).
+  # Rows starting with | that are not the header or separator are data rows.
+  while IFS= read -r row; do
+    col2="$(echo "$row" | cut -d'|' -f3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    # Skip header row and separator row (all dashes/colons)
+    [[ "$col2" == "Effective stack" || "$col2" =~ ^[-:]+$ ]] && continue
+    if [[ -z "$col2" ]]; then
+      echo "BLANK_STACK: ${f} has a blank 'Effective stack' cell — Architect must resolve per Stack resolution rule" >&2
+      violations=$((violations + 1))
+    fi
+  done < <(grep '^|' "$f")
+
+done <<< "${CHANGED_MAPS}"
 
 # ── Summary ─────────────────────────────────────────────────────────────
 if [[ "$violations" -eq 0 ]]; then

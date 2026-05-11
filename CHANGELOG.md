@@ -5,6 +5,22 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.38] — 2026-05-11
+
+**Fix: four follow-on gaps in per-container stack support.**
+
+- **Architect** Stack resolution section extended to cover `package-map.md` alongside `container-mapping` files; PDR checklist gains a package-map Effective stack gate; consistency between both files is now a stated requirement
+- **Reviewer** check #7 test-framework extension mapping is now explicit (`xunit`/`nunit` → `.cs`, `junit` → `.java`, `pytest` → `.py`, `jest`/`vitest` → `.ts`/`.tsx`/`.js`/`.jsx`, `rspec` → `.rb`, `gotest` → `.go`); Gherkin and config files explicitly excluded
+- **Traceability agent + concurrent-touch template**: fix stale filename `container-mapping/<UC>-mapping.md` → correct pattern `container-mapping/<PREFIX>-UC-XXX-containers.md` (pre-existing bug; would have caused concurrent-touch DB detection to silently find no files)
+- **CI script** (`validate-traceability.sh`): new check 4 — changed `container-mapping/*.md` files must have a non-empty "Effective stack" column on every data row; emits `MISSING_STACK_COL` or `BLANK_STACK` violations
+
+Changes:
+- **`agents/iconix-architect.md`**: Stack resolution covers both container-mapping and package-map; PDR checklist item added for package-map Effective stack consistency
+- **`agents/iconix-reviewer.md`**: check #7 test-framework → extension mapping table; `.feature`/`.json`/`.xml` excluded
+- **`agents/iconix-traceability.md`**: filename pattern corrected
+- **`templates/concurrent-touch-template.md`**: filename pattern corrected
+- **`templates/git-integration/generic/validate-traceability.sh`**: check 4 added; header comment updated
+
 ## [0.9.37] — 2026-05-11
 
 **Enhancement: complete per-container stack support across Reviewer, Traceability, Migration, and package-map template.**
