@@ -9,9 +9,10 @@
 
 ## Detection scope
 
-- **Domain entities** — read/write of attributes or operations
+- **Domain entities** — read/write of attributes or operations; operation-name collisions (same name added by two UCs) escalate to HIGH
 - **Boundary controllers** — same-named controllers across UCs
 - **Database containers** — multiple UCs writing to the same DB container
+- **Previously accepted conflicts** — tagged `[ACCEPTED]`; excluded from active HIGH count and M2 gate readiness
 
 ## In-flight UCs
 
@@ -24,38 +25,52 @@
 
 ## Class-touch map
 
-> Cell legend: `W` = adds/modifies operations or attributes;
+> Cell legend: `W(op1, op2)` = adds/modifies named operations or attributes;
 > `R` = read-only reference; `-` = not touched.
+> Operation names are shown to enable collision detection.
 
 | Class / Resource | UC-XXX | UC-YYY | UC-ZZZ |
 |---|---|---|---|
-| <EntityA>           | W (add foo()) | -     | R     |
-| <EntityB>           | -    | W (add bar()) | W (add baz()) |
-| <SharedController>  | W    | W     | -     |
+| <EntityA>           | W(foo()) | -        | R     |
+| <EntityB>           | -        | W(bar()) | W(baz()) |
+| <SharedController>  | W(save()) | W(save()) | -   |
 | db:<container>      | W    | W     | -     |
 
 ## Conflicts detected
 
-> One section per conflict, ordered by severity (HIGH → MEDIUM → LOW).
-> If no conflicts: write "No concurrent-touch conflicts detected." and
-> stop here.
+> One section per conflict, ordered by: active HIGH → active MEDIUM → active LOW → accepted.
+> If no conflicts: write "No concurrent-touch conflicts detected." and stop here.
 
 ### CONFLICT-001 — <ClassName> [HIGH]
 
-**Type:** entity write/write | controller name collision | DB container write/write
+**Type:** operation-name collision | entity write/write | controller name collision | DB container write/write
 
 **UCs involved:** UC-XXX, UC-YYY
 
 **Detail:**
-- UC-XXX (RB-XXX) adds: `<ClassName>.<operation>(...)` and attribute `<attr>`
-- UC-YYY (RB-YYY) adds: `<ClassName>.<other-operation>(...)`
+- UC-XXX (RB-XXX) adds: `<ClassName>.save(...)` ← name collision
+- UC-YYY (RB-YYY) adds: `<ClassName>.save(...)`
 
 **Why this matters:** <one sentence — typically merge conflict + semantic conflict>
 
 **Recommended resolution:**
-- <option 1 — e.g., extract `<ClassName>Service` aggregating both operations; both UCs depend on the service>
-- <option 2 — e.g., land UC-XXX first via `arch/<scope>` branch; UC-YYY rebases>
-- <option 3 — e.g., split `<ClassName>` into two classes if responsibilities are distinct>
+- <option 1 — e.g., rename to disambiguate: `UC-XXX` uses `saveAsDraft()`, `UC-YYY` uses `saveAsPublished()`>
+- <option 2 — e.g., extract `<ClassName>Service` aggregating both operations; both UCs depend on the service>
+- <option 3 — e.g., land UC-XXX first via `arch/<scope>` branch; UC-YYY rebases>
+
+---
+
+### CONFLICT-002 — <ClassName> [HIGH] [ACCEPTED — CT-2026-04-15]
+
+> This conflict was accepted on 2026-04-15 (see `change-impact/CT-2026-04-15.md`, CONFLICT-003).
+> It is shown here for transparency but **excluded from the active HIGH count**.
+> Re-raise if the acceptance rationale no longer applies.
+
+**Type:** entity write/write
+
+**UCs involved:** UC-AAA, UC-BBB
+
+**Acceptance rationale:** <paste from original CT report or PR description>
 
 ### NOTE-001 — <Resource> [MEDIUM]
 
@@ -78,12 +93,19 @@ UC-XXX and UC-YYY both reference `<Resource>` but neither modifies it. Informati
 
 - [ ] CONFLICT-001 resolved before M2 promotion
 - [ ] NOTE-001 acknowledged by both UC owners
-- [ ] If CONFLICT-001 was deliberately accepted, document the rationale in the M2 PR description
+- [ ] To accept a conflict instead of resolving it: add `[CT-ACCEPT-001]` with rationale to the M2 PR description; future `/iconix-concurrent` runs will suppress it
+
+## Summary
+
+- Active HIGH conflicts: <N>
+- Accepted HIGH conflicts: <N>
+- MEDIUM: <N>
+- LOW: <N>
 
 ## Configuration
 
 - `concurrent_check.enabled`: <true|false>
-- `concurrent_check.block_on_high_conflict`: <true|false>
+- `concurrent_check.block_on_high_conflict`: <true|false> (counts active HIGH only)
 - `concurrent_check.detect_boundaries`: <true|false>
 - `concurrent_check.detect_db_containers`: <true|false>
 

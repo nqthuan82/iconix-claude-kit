@@ -5,6 +5,21 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.42] — 2026-05-11
+
+**Enhancement: operation-name collision detection and CT-ACCEPT suppression in concurrent-touch check.**
+
+Two improvements to the `/iconix-concurrent` detection logic:
+
+**Operation-name collision detection.** The previous W/W rule classified any two UCs both writing to the same class as HIGH. This was too coarse: UC-A adding `save()` and UC-B adding `delete()` to the same class is a coordination concern (MEDIUM), not a true collision. The new rule resolves to operation/attribute names: if the same name is being added by both UCs, it escalates to HIGH (operation-name collision); if the names are distinct, it stays MEDIUM (parallel writes, coupling risk). The class-touch map now records specific operation/attribute names per UC, and the conflict classification uses them.
+
+**CT-ACCEPT suppression.** When a HIGH conflict was previously reviewed and deliberately accepted (documented as `[CT-ACCEPT-XXX]` in a prior CT report or merged PR commit message), subsequent `/iconix-concurrent` runs re-flagged it as active HIGH — noise for the team. A new Step 3 now loads the accepted set from `change-impact/CT-*.md` files (last 90 days) and `git log --grep="CT-ACCEPT"`. Accepted conflicts appear in the report tagged `[ACCEPTED — CT-<date>]` for transparency but are excluded from the active HIGH count, `block_on_high_conflict` exit semantics, and M2 gate readiness.
+
+Changes:
+- **`agents/iconix-traceability.md`**: Step 2 records operation/attribute names; new Step 3 loads accepted conflicts; Step 4 uses operation-name collision rules and accepted-set check; Step 5 adds operation-name resolution options; Step 7 exit semantics exclude accepted; M2 gate section updated
+- **`commands/iconix-concurrent.md`**: steps updated to reflect new classification and accepted-set logic
+- **`templates/concurrent-touch-template.md`**: class-touch map shows named operations; detection scope documents collision and ACCEPTED rules; ACCEPTED conflict example added; Summary section with active/accepted counts added; Recommendations updated with CT-ACCEPT instructions; Configuration note on `block_on_high_conflict` scope
+
 ## [0.9.41] — 2026-05-11
 
 **Fix: sync Azure DevOps PR templates to parity with GitHub templates.**

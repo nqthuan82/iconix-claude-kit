@@ -14,16 +14,18 @@ The agent should follow its `# Concurrent touch detection` workflow:
    - UCs past M2 with no Implementation PR merged
 3. For each in-flight UC, build the class-touch map:
    - Parse robustness diagrams to extract referenced classes (entities, controllers)
-   - Cross-reference `class-model.puml` to identify added operations / attributes (writes) vs unchanged references (reads)
+   - Cross-reference `class-model.puml` to identify added operations / attributes (writes, recording specific names) vs unchanged references (reads)
    - For database touches, parse `container-mapping/` to identify DB-container writes
-4. For each pair of in-flight UCs, classify shared touches:
-   - **HIGH** — both writes; or same-named controller across UCs; or both writing the same DB container
-   - **MEDIUM** — one write, one read of the same class
+4. Load previously accepted conflicts from `change-impact/CT-*.md` (last 90 days) and `git log --grep="CT-ACCEPT"` — build an accepted set keyed by `(UC-A, UC-B, class-or-resource)` tuple.
+5. For each pair of in-flight UCs, classify shared touches:
+   - **HIGH** — operation/attribute name collision (same name added by both UCs); or same-named controller; or both writing the same DB container
+   - **MEDIUM** — both write same class but add distinct operations (no name collision); or one write, one read
    - **LOW** — both reads (informational)
-5. If `$ARGUMENTS` is a UC-ID, filter the report to conflicts involving that UC.
-6. Produce `change-impact/CT-<today>.md` from `templates/concurrent-touch-template.md` (or its installed copy at `docs/iconix/templates/`).
-7. Print a summary: counts of HIGH / MEDIUM / LOW conflicts, with one-line teaser per HIGH.
-8. If `block_on_high_conflict: true` and HIGH conflicts exist, exit non-zero (so CI fails). Otherwise exit 0 regardless of findings.
+   - **[ACCEPTED]** — previously accepted HIGH conflict; shown for transparency, excluded from active HIGH count
+6. If `$ARGUMENTS` is a UC-ID, filter the report to conflicts involving that UC.
+7. Produce `change-impact/CT-<today>.md` from `templates/concurrent-touch-template.md` (or its installed copy at `docs/iconix/templates/`).
+8. Print a summary: active HIGH / accepted HIGH / MEDIUM / LOW counts, with one-line teaser per active HIGH.
+9. If `block_on_high_conflict: true` and **active** HIGH conflicts exist, exit non-zero (so CI fails). Accepted conflicts do not trigger a non-zero exit.
 
 Do not modify code, artifacts, or branches. The Architect agent is the canonical resolver — recommend `/iconix-next` if HIGH conflicts need architectural resolution before M2 promotion.
 

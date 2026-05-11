@@ -85,48 +85,63 @@ For each in-flight UC:
    - (no stereotype) → controller
 2. Parse `class-model/class-model.puml` (or per-UC entries):
    - For each class touched by the UC, list operations and attributes added by this UC vs already-present on `main`
-   - "added" → **W** (write); "referenced but not modified" → **R** (read)
+   - "added" → **W** (write); record the specific operation/attribute names being added (used for operation-name collision detection in Step 4)
+   - "referenced but not modified" → **R** (read)
 3. If `detect_db_containers: true`, parse `container-mapping/<PREFIX>-UC-XXX-containers.md`:
    - Extract DB containers the UC writes to (lookup via container `type: database` or `kind: db` markers)
    - Mark each DB container as **W** if any UC step writes to it
 
-## Step 3 — Detect conflicts
+## Step 3 — Load previously accepted conflicts
+Before classifying, check whether any conflicts were already explicitly accepted by the team:
+1. Read all `change-impact/CT-*.md` files created in the last 90 days (most recent first)
+2. In each file, find `[CT-ACCEPT-XXX]` tokens in the Recommendations section; for each token, read the corresponding `CONFLICT-XXX` block in the same file to extract the `(UC-A, UC-B, class-or-resource)` tuple
+3. Also run `git log --oneline --grep="CT-ACCEPT" --since="90 days ago"` to catch acceptances documented in merged PR commit messages
+4. Build an **accepted set**: a collection of `(UC-A, UC-B, class-or-resource)` tuples (order-insensitive on UC pair) with associated acceptance date and source CT file
+5. If no CT files exist and git integration is not configured: skip (accepted set is empty)
+
+## Step 4 — Detect conflicts
 For each pair of in-flight UCs `(A, B)`:
 1. Set intersection of their class-touch maps
-2. For each shared class `C`, classify severity:
-   - Both **W** → **HIGH** (CONFLICT) — write/write conflict
+2. For each shared class `C`, classify severity using operation-level resolution:
+   - Both **W**, AND one or more added operation/attribute names collide (same name added by both UCs) → **HIGH** (CONFLICT — operation-name collision)
+   - Both **W**, AND no name collisions (both UCs add distinct operations/attributes to `C`) → **MEDIUM** (NOTE — parallel writes; no direct collision, but coupling risk)
    - **W**/**R** mix → **MEDIUM** (NOTE) — read/write coordination needed
    - Both **R** → **LOW** (INFO) — informational only
 3. If `detect_boundaries: true`: same-named boundary controller across UCs → **HIGH** (CONFLICT) — likely same physical class with collision
 4. For DB containers (when `detect_db_containers: true`): both UCs write the same DB container → **HIGH** (CONFLICT) — schema/migration conflict; recommend coordinating migrations
+5. For each detected conflict, check the accepted set from Step 3:
+   - If the `(UC-A, UC-B, class-or-resource)` tuple matches an accepted entry, tag the conflict `[ACCEPTED — CT-<date>]`
+   - Accepted conflicts appear in the report for transparency but are excluded from the **active** HIGH count used by `block_on_high_conflict` and M2 gate readiness
 
-## Step 4 — Recommend resolutions
-For each HIGH conflict, produce 2–3 concrete options. Examples:
-- **Entity write/write**: extract a service class aggregating both operations; UCs depend on the service. OR: split the entity into two classes if responsibilities are distinct. OR: land one UC first via `arch/<scope>` branch; the other rebases.
+## Step 5 — Recommend resolutions
+For each **active** (non-accepted) HIGH conflict, produce 2–3 concrete options. Examples:
+- **Operation-name collision**: rename one UC's operation to disambiguate (preferred when semantics genuinely differ). OR extract a shared base class/interface that both UCs call. OR split the class if responsibilities are distinct.
+- **Entity write/write (distinct operations, escalated)**: extract a service class aggregating both operations; UCs depend on the service. OR land one UC first via `arch/<scope>` branch; the other rebases.
 - **Controller name collision**: rename to disambiguate (`PlaceBetController` + `CancelBetController`) OR consolidate into one controller with multiple endpoints.
 - **DB container write/write**: share a single migration; coordinate via `arch/<scope>`; document in an ADR.
 
 You produce options, not the final decision — the Architect agent is the canonical resolver.
 
-## Step 5 — Render the report
+## Step 6 — Render the report
 Use `templates/concurrent-touch-template.md` (or `docs/iconix/templates/concurrent-touch-template.md` after install). Save as `change-impact/CT-<today>.md`.
 
 If `$ARGUMENTS` is a UC-ID (`/iconix-concurrent UC-017`), filter to conflicts involving that UC.
 
-## Step 6 — Exit semantics (when invoked from CI)
+## Step 7 — Exit semantics (when invoked from CI)
 - `block_on_high_conflict: false` → always exit 0; report findings only
-- `block_on_high_conflict: true` → exit non-zero if any HIGH conflict exists, so the M2 PR build fails
+- `block_on_high_conflict: true` → exit non-zero if any **active** (non-accepted) HIGH conflict exists; accepted conflicts do not count
 
 ## Integration into the M2 gate report
 When you produce the M2 milestone report (`milestone-reports/M2-<date>.md`), append a section:
 ```
 ## Concurrent touches
 See change-impact/CT-<today>.md
-- HIGH: <count>
+- HIGH (active): <count>
+- HIGH (accepted): <count>
 - MEDIUM: <count>
 - LOW: <count>
 ```
-If any HIGH exist, M2 readiness is `NOT READY` regardless of other checks (unless the team has explicitly accepted the risk in the PR description, documented as `[CT-ACCEPT-XXX]`).
+If any **active** (non-accepted) HIGH conflicts exist, M2 readiness is `NOT READY`. Conflicts tagged `[CT-ACCEPT-XXX]` in a prior CT report or in the M2 PR description are excluded from the active HIGH count — they appear in the CT report tagged `[ACCEPTED]` for transparency.
 
 # Milestone gate report format
 
