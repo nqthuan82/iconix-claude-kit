@@ -123,6 +123,26 @@ Edit `iconix.config.yaml` at your project root:
 - `architecture.containers` — list of containers the Architect maps UCs to
 - `milestones.max_revisions_per_artifact` — anti-analysis-paralysis guardrail
 
+### Multi-repo / microservices (v1.0.0+)
+
+When each container lives in its own git repository (cloned locally), add `path:` per container:
+
+```yaml
+architecture:
+  containers:
+    - name: "OrderService"
+      path: "../order-service"          # local clone path
+      git_url: "https://github.com/org/order-service"  # for /iconix-pr
+      src_dir: "src"                    # default; omit if your layout matches
+      test_dir: "tests"                 # default; omit if your layout matches
+      reviewers: ["@team-a"]            # optional PR reviewers
+```
+
+- Agents resolve source at `<path>/<src_dir>/` and tests at `<path>/<test_dir>/`
+- Containers without `path:` fall back to `./src/<ContainerName>/` (single-repo behaviour unchanged)
+- Cross-container system tests and BDD step definitions live in the meta-project under `meta.system_tests_dir` / `meta.acceptance_tests_dir`
+- The migration agent in multi-repo mode walks each container's source root independently and produces a unified survey
+
 ## Project layout
 
 After `iconix-init` the project gains two layers: **kit machinery** (agents, commands, templates installed once) and **artifact scaffolding** (empty directories the pipeline fills over time).

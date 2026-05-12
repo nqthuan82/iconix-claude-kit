@@ -5,6 +5,67 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0-alpha.2] — 2026-05-12
+
+**Mixed-topology clarification: multiple containers sharing one git repo.**
+
+Discovered via design Q&A: when multiple containers live in the same git repo
+(e.g., Backend + WebAPI both in `../shared-platform/`), the Phase A config and
+Phase B migration agent needed explicit support for nested `src_dir:` paths and
+a "deduplicate by `path:`" rule for Phase C git operations.
+
+- **`templates/iconix.config.yaml`**: Expanded multi-repo comment block — `src_dir:`
+  now documented as accepting nested paths (e.g., `"src/Backend"`). Added inline
+  mixed-topology example showing two containers sharing the same `path:` with
+  different `src_dir:` subdirectories. Added note that same `path:` = same git repo.
+- **`agents/iconix-migration.md`**: Updated container source root resolution table to
+  document nested `src_dir:` support with a concrete example. Disk-existence check
+  now deduplicates by unique `path:` value before verifying.
+- **Memory (backlog #8)**: Phase A updated with mixed-topology rule. Phase C updated
+  with "deduplicate by `path:`" rule — one branch and one PR per unique `path:` value,
+  not per container.
+
+## [1.0.0-alpha.1] — 2026-05-12
+
+**Multi-repo / microservices support — Phase A (config) + Phase B (migration).**
+
+Enables one iconix meta-project to orchestrate multiple microservice repos cloned
+locally. Phases C (git multi-repo sync + Phase 9 write-to-correct-repo) and D
+(traceability cross-repo CI) are deferred to v1.0.0 final.
+
+### Phase A — Config foundation
+
+- **`templates/iconix.config.yaml`**: Added optional multi-repo fields per container:
+  `path:` (local clone path), `git_url:` (for PR creation), `src_dir:` (default `"src"`),
+  `test_dir:` (default `"tests"`), `reviewers:`. All fields are commented-out by default —
+  single-repo projects are unaffected. Added commented-out `meta:` section for
+  `system_tests_dir` / `acceptance_tests_dir` (cross-container tests in the meta-project).
+- **`agents/iconix-upgrade.md`**: v1.0.0 heuristic detection (presence of `meta:` section
+  or any container `path:` field). Layer B auto-adds commented-out `meta:` section.
+  Layer D detects containers with `path:` but no `git_url:` (oversight that breaks
+  `/iconix-pr`), missing/broken local path, and absent `src_dir:` for non-standard layouts.
+
+### Phase B — Migration agent multi-repo
+
+- **`agents/iconix-migration.md`**: New `# Multi-repo source resolution` section defines:
+  container source root resolution table (`path:` + `src_dir:` → resolved path, with
+  single-repo fallback), multi-repo detection and announcement format, disk-existence
+  check per container path, unified survey **Containers surveyed** table, and
+  `Source-container:` annotation required on every DRAFT artifact in multi-repo mode
+  (enables Phase C to write code back to the correct repo).
+  Phase 1 (both graph-assisted and code-walking) modified with a **Multi-repo pre-step**
+  that scopes the walk to each container's resolved source root.
+  Phase 6 (test coverage) modified to search each container's resolved test root.
+
+### What's NOT in this alpha (deferred to v1.0.0 final)
+
+- Phase C: `iconix-git` multi-repo branch sync; Developer/Tester writing to `<path>/src/`
+- Phase D: `ICONIX_CONFIG_PATH` env var for service-repo CI; `traceability.mode: cross-repo`
+
+**Versioning note:** v1.0.0 marks the first breaking change to `iconix.config.yaml` schema
+(new container fields + `meta:` section). Single-repo projects are fully backward compatible —
+no config changes required.
+
 ## [0.9.48] — 2026-05-12
 
 **Add `feature-template.feature` — Gherkin BDD feature file scaffold.**

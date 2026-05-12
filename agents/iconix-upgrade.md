@@ -64,6 +64,7 @@ If the field is missing (project predates v0.9.9), use **two-pass heuristic dete
 | `migration/` outputs from migration agent | v0.9.2 |
 | `use-case-packages/` folder | v0.9.0 |
 | `knowledge_graph:` section in config | v0.3.0 |
+| `meta:` section in config OR any container has `path:` field | v1.0.0 |
 
 **Pass 2 — content-based fallback** (run only when Pass 1 returns no evidence above v0.3.0; for projects with customized or non-canonical layouts):
 
@@ -113,6 +114,7 @@ For each config section in `templates/iconix.config.yaml` from the target versio
 - `metrics:` (v0.9.7+) — add with `enabled: false`
 - `phase9:` (v0.9.8+) — add with `enabled: false`
 - `kit_version:` (v0.9.9+) — set to target version
+- `meta:` (v1.0.0+) — add as fully commented-out block (no active keys); only activates when user uncomments `system_tests_dir` / `acceptance_tests_dir`
 
 **Conservative defaults rule:** during an upgrade, every newly-added boolean toggle defaults to `false` even if the kit's seeded template has `true`. The principle is: the upgrade itself must not change runtime behaviour. The user opts in by editing the config after reading the report.
 
@@ -154,7 +156,12 @@ Scan existing artifacts for differences from the current template format. Do NOT
    - Do M2 reports include the concurrent-touch summary section (v0.9.6+)?
    - Do reports use the current "Recommendation" line format that `iconix-metrics` parses?
 
-6. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
+6. **Multi-repo container config** (v1.0.0+) — for each container in `architecture.containers`:
+   - Has `path:` defined but no `git_url:`? Flag as likely oversight — `/iconix-pr` needs `git_url:` to open PRs in the external repo.
+   - Has `path:` defined? Verify the path exists locally (`Test-Path` / `-d`). If not, flag as broken path — migration and Phase 9 will fail silently.
+   - Has `path:` defined and `src_dir:` absent? Note that default `"src"` applies; flag for confirmation if the container's actual source layout differs.
+
+7. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
    - Do they follow the v0.9.5 naming convention (`bugfix/T1-<slug>` / `bugfix/T2-UC-XXX-<slug>`)?
 
 **Pass 2 — content-based fallback** (run when Pass 1 finds 0 artifacts in any category — e.g., the project uses a flat or renamed layout):

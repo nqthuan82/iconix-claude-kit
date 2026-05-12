@@ -32,12 +32,44 @@ architecture:
     # Optional: add a stack: sub-key to override the top-level stack for that container.
     # Developer and Tester agents resolve language/test_framework as:
     #   container stack.language → top-level stack.language (fallback)
+    #
+    # ── Multi-repo fields (optional — omit for single-repo projects) ─────────
+    # When path: is set, this container lives in a separate git repository
+    # cloned locally. All agents resolve source at <path>/<src_dir> and tests
+    # at <path>/<test_dir>. Without path:, the single-repo fallback applies:
+    #   source → ./src/<ContainerName>/
+    #   tests  → ./tests/<ContainerName>.Tests/
+    #
+    # src_dir: accepts nested paths — use this when multiple containers share
+    # one git repo (mixed topology). Containers with the same path: value are
+    # treated as one git repo: one branch and one PR for both.
+    #
+    # Mixed topology example (Backend + WebAPI in the same repo):
+    #   - name: "Backend"
+    #     path: "../shared-platform"
+    #     src_dir: "src/Backend"        # ← nested: <path>/src/Backend/
+    #     git_url: "https://github.com/org/shared-platform"
+    #   - name: "WebAPI"
+    #     path: "../shared-platform"    # ← same path: = same git repo
+    #     src_dir: "src/WebAPI"         # ← nested: <path>/src/WebAPI/
+    # ─────────────────────────────────────────────────────────────────────────
     - name: "Backend"
+      # path: "../my-backend-service"      # local clone path (multi-repo only)
+      # git_url: "https://github.com/org/backend"  # for /iconix-pr PR creation
+      # src_dir: "src"                     # source subdir within path (default: "src")
+      #                                    # use nested path e.g. "src/Backend" for
+      #                                    # mixed topology (multiple containers, one repo)
+      # test_dir: "tests"                  # test subdir within path (default: "tests")
+      # reviewers: []                      # PR reviewers e.g. ["@alice", "@team-backend"]
     - name: "WebAPI"
+      # path: "../my-webapi-service"
+      # git_url: "https://github.com/org/webapi"
     - name: "Frontend"
       stack:                    # optional — overrides top-level stack for this container only
         language: "typescript"
         test_framework: "jest"
+      # path: "../my-frontend-app"
+      # git_url: "https://github.com/org/frontend"
     - name: "Database"
 
 nfr_catalog: "docs/nfr-catalog.md"
@@ -91,6 +123,14 @@ git:
   work_item_prefix: ""          # e.g. "AB#" (Azure Boards), "#" (GitHub Issues), or "" to disable
   pr_cli: "none"                # gh | az | none — must be on PATH if set
   impl_squash: false            # squash Implementation-phase PRs to one commit (true) or preserve history (false)
+
+# Multi-repo: cross-container test directories in the meta-project repo (v1.0.0+)
+# Only used when ≥1 container above has path: defined (multi-repo mode).
+# System and acceptance tests that span multiple containers live here, not in
+# any individual container repo.
+# meta:
+#   system_tests_dir: "tests/SystemTests"         # cross-container system tests
+#   acceptance_tests_dir: "tests/AcceptanceTests"  # BDD step definitions for features/
 
 # Knowledge graph integration (optional, used by iconix-migration in v0.3.0+)
 # Enable when you have Graphify installed and have run `graphify .` on your repo.
