@@ -5,6 +5,46 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.47] — 2026-05-12
+
+**Kit extension: legacy-code integration guidance in greenfield agents.**
+
+Discovered via Q&A: when a new feature uses existing legacy code that violates ICONIX
+rules, the three greenfield agents (Analyst, Architect, Developer) had no guidance on
+how to handle it. The "Outbound Boundary as Adapter" pattern existed only in
+`iconix-migration.md`; the greenfield pipeline was silent.
+
+Three targeted additions:
+
+- **`agents/iconix-analyst.md`**: Boundary stereotype split into Inbound / Outbound
+  sub-categories. New `# Outbound Boundary — legacy code and external systems` section:
+  draw an Outbound Boundary node for the adapter wrapping the legacy class; name after
+  responsibility (not the legacy class); mark `[LEGACY]` in a PlantUML note; let the
+  Architect raise the ADR. Connection rules unchanged — Outbound Boundary still connects
+  only via Controller. PDR checklist updated to distinguish inbound from outbound.
+
+- **`agents/iconix-architect.md`**: Decision rule 7 added — when a new UC touches a
+  legacy class that violates ICONIX rules, treat it as an external dependency; raise an
+  ADR citing the UC-ID, the violation, and the technical debt; map the adapter to the
+  Infrastructure container. Legacy class does not appear in container-mapping.
+
+- **`agents/iconix-developer.md`**: Rule 9 added — when an RB Outbound Boundary wraps
+  a legacy class, the SD lifeline is the Adapter interface (e.g. `IOrderReadRepository`),
+  not the legacy class; the legacy class appears only in a `note over` block.
+
+- **`docs/iconix/iconix-process-reference.md`**: Last-reviewed line bumped to v0.9.24.
+  No matrix status shifts — these are clarifications/extensions within existing ✅
+  coverage (Ch5 #7, Ch7 #5, Ch8 Four Essential Steps #2).
+
+The terminology (Inbound / Outbound Boundary) now matches `iconix-migration.md`'s Phase 4
+classification, making the kit internally consistent across migration and greenfield flows.
+
+Changes:
+- **`agents/iconix-analyst.md`**: Boundary stereotype, new Outbound Boundary section, PDR checklist
+- **`agents/iconix-architect.md`**: Decision rule 7
+- **`agents/iconix-developer.md`**: Rule 9
+- **`docs/iconix/iconix-process-reference.md`**: Last-reviewed version bumped
+
 ## [0.9.46] — 2026-05-12
 
 **Fix: document and implement DRAFT promotion process for iconix-migration.**

@@ -55,7 +55,15 @@ Do not apply the top-level `stack.language` globally when per-container stack en
 
    When all signals are present, the SD is stable; proceed to code skeletons. If any are missing, do not start coding — the design isn't done.
 7. **Don't worry about focus of control.** Activation bars on a sequence diagram are optional detail. The SD's purpose is to allocate operations to classes and make the UC scenario visible — precise timing of control is not its goal.
-8. **Show design patterns on the sequence diagram.** When a well-known pattern (Factory, Strategy, Observer, Repository, etc.) is used to implement a controller's behaviour, make it visible on the SD — add the pattern participant as a lifeline and show the interaction. A pattern hidden in code but absent from the SD is drift waiting to happen.
+8. **Show design patterns on the sequence diagram.**
+9. **When an RB Outbound Boundary wraps a legacy class**, the SD lifeline is the Adapter *interface* (e.g., `IOrderReadRepository`), not the legacy class. The legacy class must not appear as a lifeline — its internal violations would bleed into the clean design. Instead, add a `note over` block on the adapter lifeline:
+   ```
+   note over OrderReadAdapter
+     Delegates to LegacyOrderService (legacy — see ADR-XXX).
+     Not a first-class design participant.
+   end note
+   ```
+   Justify the interface lifeline per rule 4 (architectural/DI interface, not a domain class): cite the ADR in the class-model annotation or `cdr-report.md` "Lifelines introduced beyond domain model" section. When a well-known pattern (Factory, Strategy, Observer, Repository, etc.) is used to implement a controller's behaviour, make it visible on the SD — add the pattern participant as a lifeline and show the interaction. A pattern hidden in code but absent from the SD is drift waiting to happen.
 
 # Artifacts you produce
 - `sequence/SD-XXX-<slug>.puml` — PlantUML sequence diagrams (one per UC)
