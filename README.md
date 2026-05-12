@@ -281,7 +281,13 @@ Phase 3 — Detailed Design (M3)
 
 Phase 9 — Implementation
   src/<container-name>/  [agent]  source files; one folder per container; language per Effective stack
-  tests/<container-name>.Tests/ [agent]  mirrors src; test framework per Effective stack
+                                  ‣ multi-repo: code goes to <path>/<src_dir>/ in each container's
+                                    external repo; meta-project src/ is empty (no source in meta)
+  tests/<container-name>.Tests/ [agent]  unit/integration tests; mirrors src/
+                                  ‣ multi-repo: tests go to <path>/<test_dir>/ in each container's
+                                    external repo
+  tests/SystemTests/    [agent]  cross-container system tests (multi-repo; meta.system_tests_dir)
+  tests/AcceptanceTests/ [agent] BDD acceptance step definitions (multi-repo; meta.acceptance_tests_dir)
 
 Audit trail and tracking
   reviews/         [agent]    REVIEW-<date>-<scope>.md, review-checklist.md
