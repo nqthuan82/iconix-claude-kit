@@ -145,6 +145,8 @@ architecture:
 - The git agent syncs all repos at Phase entry: shows a per-repo plan, waits for confirmation, then creates the same feature branch in every repo simultaneously. Set `base_branch:` on a container to override `git.default_branch` for that repo (e.g., `develop` in gitflow services).
 - `/iconix-pr` opens one PR per unique `path:` at Implementation phase (plus one meta-project PR for traceability artifacts); M1/M2/M3 always use a single meta-project PR
 - Mixed topology (multiple containers in one repo): use the same `path:` and different `src_dir:` subdirectories — the git agent treats them as one repo and creates one branch + one PR
+- Developer and Tester agents resolve the correct source/test root per container (`<path>/<src_dir>/` and `<path>/<test_dir>/`); unit and integration tests go to the container repo, system and acceptance tests go to the meta-project
+- The traceability CI script supports `ICONIX_CONFIG_PATH` for service repo pipelines — set it to the meta-project checkout so the script resolves artifact folders (use-cases/, robustness/, etc.) from the right location
 
 ## Project layout
 

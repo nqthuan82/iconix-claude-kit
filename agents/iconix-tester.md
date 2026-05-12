@@ -66,7 +66,30 @@ When selecting a test framework for a container, resolve as follows:
 1. Read `container-mapping/<PREFIX>-UC-XXX-containers.md` — the "Effective stack" column lists the resolved `test_framework` per container (set by the Architect).
 2. If absent or blank, fall back to top-level `stack.test_framework` in `iconix.config.yaml`.
 3. `stack.bdd` and `stack.bdd_framework` remain global — they control the project's overall test style and do not vary per container.
-4. A UC that touches containers with different test frameworks produces test files in multiple frameworks — one test suite per container, each under `tests/<container-name>.Tests/...`.
+4. A UC that touches containers with different test frameworks produces test files in multiple frameworks — one test suite per container, each under the **resolved test root** (see `# Container path resolution`).
+
+# Container path resolution (multi-repo mode)
+
+Runnable test code (Phase 9 implementation) is distributed across repos. Resolve before generating any test file:
+
+| Test type | Location |
+|---|---|
+| Unit / integration | Resolved test root per container (table below) |
+| System (cross-container) | `<meta.system_tests_dir>/` in meta-project (default: `tests/SystemTests/`) |
+| Acceptance BDD — step definitions | `<meta.acceptance_tests_dir>/` in meta-project (default: `tests/AcceptanceTests/`) |
+| Acceptance BDD — `.feature` files | `features/` in meta-project (always) |
+
+Container test root resolution:
+
+| Container config | Resolved test root |
+|---|---|
+| Has `path:` and `test_dir:` | `<path>/<test_dir>/` |
+| Has `path:`, no `test_dir:` | `<path>/tests/` |
+| No `path:` (single-repo) | `./tests/<container-name>.Tests/` |
+
+Mixed topology: containers sharing a `path:` each have their own `test_dir:` subdirectory (e.g., `tests/Backend.Tests` vs `tests/WebAPI.Tests`). `meta.system_tests_dir` and `meta.acceptance_tests_dir` are set in `iconix.config.yaml`; use the defaults above when absent.
+
+TC specification files (`test-cases/TC-XXX.md`), feature files, test matrix, edge-case reports, and test plans always live in the meta-project regardless of multi-repo mode.
 
 # Artifacts you produce
 - `test-cases/TC-XXX-<slug>.md` — structured test cases, one per course (use `templates/test-case-template.md`)
@@ -160,7 +183,7 @@ Triggered when M3 has passed for a UC and Phase 9 begins (sub-state 9.1 in the O
 
 ## Initial test implementation (9.1)
 1. For each TC catalogued at M3 (`test-cases/TC-XXX-<slug>.md`):
-   - Translate the Steps and Expected Results into runnable test code under `tests/<lang>/...`
+   - Translate the Steps and Expected Results into runnable test code under the resolved test root (see `# Container path resolution`). Unit and integration tests go to the container's `<path>/<test_dir>/`; system and acceptance tests go to `meta.system_tests_dir` / `meta.acceptance_tests_dir` in the meta-project.
    - One test method per TC (basic + each alternate course + each controller; per `# ICONIX rules`)
    - Add `Traceability: UC-XXX | TC-XXX` comment to every new test file
 2. Run the suite locally; tests should fail initially (the Developer's implementation is in flight). As Developer commits land, more tests turn green.

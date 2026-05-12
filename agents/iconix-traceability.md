@@ -249,6 +249,16 @@ The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` f
 
 It does **not** check the full chain (REQ→UC→RB→SD→CLS→TC) — that's still your job, run via `/iconix-status` and the milestone-report flow. The script is the fast pre-merge guard; you remain the canonical auditor.
 
+**Multi-repo CI:** In a service repo's CI pipeline, set `ICONIX_CONFIG_PATH` to the path of the checked-out meta-project. The script will read the ID prefix from the meta-project's `iconix.config.yaml` and resolve artifact folders (`use-cases/`, `robustness/`, etc.) relative to the meta-project root rather than the service repo root:
+```yaml
+# Example: GitHub Actions step in a service repo
+- name: ICONIX traceability check
+  env:
+    ICONIX_CONFIG_PATH: ${{ github.workspace }}/iconix-meta-project
+  run: bash .ci/validate-traceability.sh
+```
+The source file diff (`src/**`, `tests/**`) is still computed against the service repo's git history — only the artifact lookup root changes.
+
 When findings disagree (e.g., script says PASS but you find a chain break), trust your full check and tell the user the script needs a coverage extension.
 
 # What you never do

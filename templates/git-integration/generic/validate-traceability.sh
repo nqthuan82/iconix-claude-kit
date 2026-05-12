@@ -17,6 +17,11 @@
 #
 #   Defaults: base = origin/main, head = HEAD.
 #   Override via env: ICONIX_BASE_REF, ICONIX_HEAD_REF.
+#   ICONIX_CONFIG_PATH: root of the ICONIX meta-project (default: current dir).
+#     Set in service repo CI when iconix.config.yaml and artifact folders live
+#     in a separate meta-project checkout:
+#       env:
+#         ICONIX_CONFIG_PATH: path/to/meta-project
 #
 # Exit codes:
 #   0 — all checks pass
@@ -28,10 +33,15 @@ set -euo pipefail
 BASE_REF="${1:-${ICONIX_BASE_REF:-origin/main}}"
 HEAD_REF="${2:-${ICONIX_HEAD_REF:-HEAD}}"
 
+# Root of the ICONIX meta-project (iconix.config.yaml + artifact folders).
+# Default: current directory (single-repo or running inside the meta-project).
+# In a service repo CI, set ICONIX_CONFIG_PATH to the meta-project checkout root.
+ARTIFACT_ROOT="${ICONIX_CONFIG_PATH:-.}"
+
 # Resolve the kit-prefix from iconix.config.yaml (if present)
 PREFIX=""
-if [[ -f "iconix.config.yaml" ]]; then
-  PREFIX="$(grep -E '^\s*prefix:' iconix.config.yaml | head -1 | sed -E 's/.*prefix:\s*"?([^"]*)"?.*/\1/' || echo "")"
+if [[ -f "${ARTIFACT_ROOT}/iconix.config.yaml" ]]; then
+  PREFIX="$(grep -E '^\s*prefix:' "${ARTIFACT_ROOT}/iconix.config.yaml" | head -1 | sed -E 's/.*prefix:\s*"?([^"]*)"?.*/\1/' || echo "")"
 fi
 ID_RE='[A-Z][A-Z0-9]*-(REQ|UC|RB|SD|CLS|TC|ADR)-[0-9]+'
 if [[ -n "${PREFIX}" ]]; then
@@ -85,11 +95,11 @@ while IFS= read -r f; do
       *)   continue ;;
     esac
 
-    if [[ -d "$folder" ]]; then
+    if [[ -d "${ARTIFACT_ROOT}/${folder}" ]]; then
       # shellcheck disable=SC2086
-      matches="$(find "$folder" -maxdepth 2 -name "${pattern}" 2>/dev/null | head -1)"
+      matches="$(find "${ARTIFACT_ROOT}/${folder}" -maxdepth 2 -name "${pattern}" 2>/dev/null | head -1)"
       if [[ -z "$matches" ]]; then
-        echo "BROKEN_TRACE: ${f} cites ${id} but no artifact found at ${folder}/${pattern}" >&2
+        echo "BROKEN_TRACE: ${f} cites ${id} but no artifact found at ${ARTIFACT_ROOT}/${folder}/${pattern}" >&2
         violations=$((violations + 1))
       fi
     fi

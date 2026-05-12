@@ -20,9 +20,27 @@ When generating code skeletons or test stubs, resolve the effective language per
 
 1. Read `container-mapping/<PREFIX>-UC-XXX-containers.md` — the "Effective stack" column lists the resolved language per container (set by the Architect).
 2. If the column is absent or blank for a container, fall back to top-level `stack.language` in `iconix.config.yaml`.
-3. A UC that touches containers with different languages produces skeletons in multiple languages — one source tree per container, each under `src/<container-name>/...`.
+3. A UC that touches containers with different languages produces skeletons in multiple languages — one source tree per container, each under the **resolved source root** (see `# Container path resolution`).
 
 Do not apply the top-level `stack.language` globally when per-container stack entries exist. Generating C# for a TypeScript frontend container is a silent mismatch the Reviewer will flag.
+
+# Container path resolution (multi-repo mode)
+
+Before generating any source or test file, resolve the write path for each container:
+
+1. Read `container-mapping/<PREFIX>-UC-XXX-containers.md` — identify the containers this UC touches.
+2. For each container, look up its entry in `iconix.config.yaml` `architecture.containers`:
+
+| Container config | Resolved source root | Resolved test root |
+|---|---|---|
+| Has `path:` and `src_dir:` | `<path>/<src_dir>/` | `<path>/<test_dir>/` |
+| Has `path:`, no `src_dir:` | `<path>/src/` | `<path>/tests/` |
+| No `path:` (single-repo) | `./src/<container-name>/` | `./tests/<container-name>.Tests/` |
+
+3. Within the resolved source root, apply the package-map layout (see `# Code skeleton paths align with the architecture package map`).
+4. **Mixed topology** (multiple containers sharing one `path:`): each container has its own `src_dir:` subdirectory (e.g., `src/Backend` vs `src/WebAPI`), so the resolved root differs per container even though the repo root is shared.
+
+Never hardcode `src/<container-name>/` when the container has `path:` defined.
 
 # ICONIX rules you MUST enforce
 1. **One sequence diagram per use case.** Covers basic + alternate courses.
@@ -68,8 +86,8 @@ Do not apply the top-level `stack.language` globally when per-container stack en
 # Artifacts you produce
 - `sequence/SD-XXX-<slug>.puml` — PlantUML sequence diagrams (one per UC)
 - `class-model/class-model.puml` — detailed class diagram with operations
-- `src/<lang>/...` — code skeletons (language per container stack resolution — see `# Stack resolution`)
-- `tests/<lang>/...` — unit test stubs (language per container stack resolution; one file per controller, one test per course)
+- `<resolved-source-root>/...` — code skeletons (path per `# Container path resolution`; language per `# Stack resolution`)
+- `<resolved-test-root>/...` — unit test stubs (path per `# Container path resolution`; language per `# Stack resolution`)
 - `cdr-report.md` — CDR readiness
 
 # Workflow for each use case
@@ -150,19 +168,19 @@ When framework infrastructure is invoked transparently (model binders, auto-vali
 
 # Code skeleton paths align with the architecture package map
 
-Code skeletons go under `src/`, but the layout MUST follow `docs/architecture/package-map.md` (v0.9.14+). Pattern:
+Code skeletons go under the **resolved source root** (single-repo: `src/`; multi-repo: `<path>/<src_dir>/` — see `# Container path resolution`). The layout within that root MUST follow `docs/architecture/package-map.md` (v0.9.14+). Pattern:
 
 ```
-src/<package-map-package-name>/<conventional-folder>/<ClassName>.<ext>
+<resolved-source-root>/<package-map-package-name>/<conventional-folder>/<ClassName>.<ext>
 ```
 
-Examples (.NET stack from the worked example):
+Examples (.NET stack from the worked example, single-repo layout):
 - `src/Bookstore.Web/Controllers/WriteCustomerReviewController.cs`
 - `src/Bookstore.Domain/CustomerReview.cs`
 - `src/Bookstore.Application/Services/ICurrentUserService.cs`
 - `src/Bookstore.Infrastructure/Repositories/EfBookRepository.cs`
 
-**Rule:** every source file's directory name must match a package row in `docs/architecture/package-map.md`. Files placed under a directory NOT in the package map are flagged as architectural drift (Reviewer check at Phase 9). Tests follow the same convention under `tests/<package>.Tests/`.
+**Rule:** every source file's directory name must match a package row in `docs/architecture/package-map.md`. Files placed under a directory NOT in the package map are flagged as architectural drift (Reviewer check at Phase 9). Tests follow the same convention under `<resolved-test-root>/<package>.Tests/`.
 
 For projects without a multi-project layout (small monoliths), use the package-map's package names as top-level folders even if the build is single-project — keeps the Reviewer's allocation check meaningful.
 

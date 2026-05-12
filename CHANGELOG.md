@@ -5,6 +5,45 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] — 2026-05-12
+
+**Multi-repo / microservices support — final release.**
+
+Completes the four-phase arc started in alpha.1. One iconix meta-project can now orchestrate
+multiple microservice repos cloned locally: config, migration, git sync, PRs, code generation,
+testing, and CI traceability all understand the multi-repo topology.
+
+### Phase D — Developer/Tester write to the correct repo; cross-repo CI
+
+- **`agents/iconix-developer.md`**: New `# Container path resolution` section defines the
+  source/test root lookup table per container (has `path:` + `src_dir:` → `<path>/<src_dir>/`;
+  single-repo fallback → `./src/<container-name>/`). `# Stack resolution` step 3 updated.
+  `# Artifacts you produce` now references resolved paths instead of `src/<lang>/`.
+  `# Code skeleton paths` section updated: "resolved source root" instead of `src/`; examples
+  labelled "single-repo layout"; tests rule updated to `<resolved-test-root>/<package>.Tests/`.
+- **`agents/iconix-tester.md`**: New `# Container path resolution` section adds a two-level
+  distribution table — unit/integration tests go to `<path>/<test_dir>/` in the container repo;
+  system tests go to `meta.system_tests_dir`; acceptance BDD step definitions go to
+  `meta.acceptance_tests_dir`; `.feature` files always stay in the meta-project.
+  `# Stack resolution` step 4 updated. Phase 9 test implementation step 1 updated to use
+  resolved test root and note system/acceptance test destinations.
+- **`templates/git-integration/generic/validate-traceability.sh`**: New `ARTIFACT_ROOT`
+  variable from `ICONIX_CONFIG_PATH` env var (default `.`). Config reading and artifact folder
+  lookups (`use-cases/`, `robustness/`, `sequence/`, etc.) now use `${ARTIFACT_ROOT}/...`.
+  Usage comment updated with service-repo CI example.
+- **`agents/iconix-traceability.md`**: `# CI counterpart` section updated with multi-repo CI
+  guidance — `ICONIX_CONFIG_PATH` usage, worked GitHub Actions example, and clarification
+  that the source diff is still computed in the service repo's git history.
+
+### Summary — all four phases
+
+| Phase | Ships | What it adds |
+|---|---|---|
+| A | alpha.1 | Per-container `path:` / `src_dir:` / `test_dir:` / `git_url:` / `reviewers:` in config; `meta:` system/acceptance test dirs; upgrade detection |
+| B | alpha.1 | Migration agent walks each container's source root independently; `Source-container:` annotation on DRAFTs |
+| C | alpha.3 | Git agent multi-repo sync (plan → confirm → branch all repos); multi-repo Implementation PRs; Orchestrator Phase entry routing |
+| D | 1.0.0 | Developer/Tester resolve `<path>/<src_dir|test_dir>/` per container; test distribution (unit → container repo, system/acceptance → meta-project); `ICONIX_CONFIG_PATH` for service-repo CI |
+
 ## [1.0.0-alpha.3] — 2026-05-12
 
 **Multi-repo support — Phase C: git sync, multi-repo PRs, Orchestrator branch protocol.**
