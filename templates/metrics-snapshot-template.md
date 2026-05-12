@@ -90,6 +90,24 @@ If the M3-to-merge gap is the largest, your bottleneck is implementation through
 
 ---
 
+## 3.5. Phase 9 loop health (when `phase9.enabled: true`)
+
+> Skip this section if `phase9.enabled: false` in `iconix.config.yaml`.
+
+| Metric | Value | Notes |
+|---|---|---|
+| UCs currently in loop (active) | NN | — |
+| UCs exited loop (done)         | NN | — |
+| Median iterations / UC         | N.N | Target ≤ 2 |
+| p90 iterations / UC            | N.N | — |
+| Cap hit count                  | NN | Escalated to Architect/PO |
+| Cap hit %                      | NN% | Target < 10% |
+| First-pass approve %           | NN% | Target > 70% |
+
+**Interpretation:** High first-pass approve % means M3 CDR design quality is strong — few UCs need rework after the first Reviewer pass. Cap hits signal Type 2 design issues escalated mid-implementation; if cap hit % exceeds 10%, check M3 checklist rigor. Median ≤ 2 iterations is healthy; median > 3 consistently is a signal to tighten the CDR exit criteria.
+
+---
+
 ## 4. Process compliance (audit evidence)
 
 These are the metrics ISO auditors care about most. Aim for ≥95% on all four.
@@ -153,5 +171,6 @@ metrics. See `docs/iconix/iconix-process-reference.md` and
   - `reviews/REVIEW-*.md`, `reviews/review-checklist.md`
   - `change-impact/CT-*.md` (concurrent-touch reports), `change-impact/CI-*.md` (change-impact reports)
   - `bug-reports/BUG-*.md`
+  - `phase9-cycles/UC-*-cycle.md` (when `phase9.enabled: true`)
   - `git log` from project inception (or `metrics.git_history_window` if set)
 - Companion JSON: `metrics/snapshot-<date>.json` (schema: `docs/iconix/templates/metrics-schema.json`)

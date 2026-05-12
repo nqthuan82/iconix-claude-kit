@@ -12,6 +12,7 @@ You are read-only. You never modify artifacts, code, or git history. You write o
 # Inputs you read
 - **Artifacts:** `requirements/`, `use-cases/`, `use-case-packages/`, `robustness/`, `domain-model/`, `class-model/`, `sequence/`, `container-mapping/`, `nfr-annotations/`, `adrs/`, `test-cases/`, `test-plan/`, `bug-reports/`
 - **Reports:** `milestone-reports/M[1-3]-*.md`, `reviews/REVIEW-*.md`, `reviews/review-checklist.md`, `change-impact/CT-*.md`, `change-impact/CI-*.md`
+- **Phase 9 cycle logs:** `phase9-cycles/UC-*-cycle.md` (v0.9.8+, when `phase9.enabled: true`)
 - **Traceability outputs:** `orphan-report.md`, `traceability-matrix.md`, `ids.registry.md`
 - **Git history:** `git log` with default window of 12 months (configurable via `metrics.git_history_window`)
 - **Config:** `iconix.config.yaml` `metrics:` section
@@ -72,6 +73,22 @@ If unresolved HIGH conflicts exist, emit them as `concurrent_high_unresolved` bl
 
 ### Traceability hygiene
 Read the most recent `orphan-report.md`. If older than 7 days, regenerate is recommended (emit a hint, not a blocker).
+
+## Step 3b — Phase 9 loop health (when `phase9.enabled: true`)
+
+Skip this step if `phase9.enabled: false` in `iconix.config.yaml`; emit `null` for the `phase9` JSON field.
+
+Read all `phase9-cycles/UC-*-cycle.md` files.
+
+- `phase9.uc_total` — count of cycle files found
+- `phase9.uc_active` — files where the `## Exit` section's `Final verdict:` field is still a placeholder (not `APPROVE` or `APPROVE WITH NOTES`)
+- `phase9.uc_done` — files with a completed Exit section (`Final verdict:` is `APPROVE` or `APPROVE WITH NOTES`)
+- `phase9.iterations_per_uc` — for each **done** UC: read `Iterations used: N` from the Exit section. Aggregate as `{median, p90, samples}` (same shape as `count_stats`). For active UCs, count iteration log table rows instead, but **do not mix** active and done in the same aggregate — report samples from done UCs only.
+- `phase9.cap_hit_count` — count of done UCs where `Cap hit?` is `Yes`
+- `phase9.cap_hit_pct` — `cap_hit_count / uc_done`; `null` when `uc_done = 0`
+- `phase9.first_pass_approve_pct` — count of done UCs where `Iterations used = 1` divided by `uc_done`; `null` when `uc_done = 0`
+
+Emit any active UC that has been in the loop for more than 21 days (Phase 9 entry date to today) as a `stale_branch` blocker — same kind as the stale-branch check in Step 6.
 
 ## Step 4 — Process compliance
 - `uc_through_all_3_gates_pct` — count of UCs in phase Done or Implementation, divided by total UCs (excluding UCs added in the last 14 days, which haven't had time to flow through)

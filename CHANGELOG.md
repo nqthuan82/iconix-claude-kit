@@ -5,6 +5,33 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.6] — 2026-05-13
+
+**Gap fix: Phase 9 loop metrics — phase9-cycles/ was not read by the metrics agent.**
+
+`phase9-cycles/` existed since v0.9.8 and the orchestrator writes `UC-XXX-cycle.md` files
+there, but the metrics agent, JSON schema, glossary, and snapshot template had zero phase9
+content. Per-iteration statistics (`iterations_per_uc`, `cap_hit_pct`,
+`first_pass_approve_pct`) could never be computed.
+
+- **`agents/iconix-metrics.md`**: Added `phase9-cycles/` to Inputs list. Added new
+  `## Step 3b — Phase 9 loop health` computation step with rules for `uc_total`,
+  `uc_active`, `uc_done`, `iterations_per_uc` (from `Iterations used: N` in Exit section),
+  `cap_hit_count`, `cap_hit_pct`, `first_pass_approve_pct`. Active UCs in loop > 21 days
+  emit as `stale_branch` blockers.
+- **`templates/metrics-schema.json`**: Added optional top-level `phase9` object with 7
+  fields matching the new step. `null` when `phase9.enabled: false`.
+- **`docs/iconix/metrics-glossary.md`**: Added new section 3.5 defining all 7 phase9
+  fields with healthy ranges (median ≤ 2 iterations; cap hit < 10%;
+  first-pass approve > 70%).
+- **`templates/metrics-snapshot-template.md`**: Added `## 3.5. Phase 9 loop health`
+  section with interpretation guidance; added `phase9-cycles/` to the Traceability
+  source-artifacts list.
+
+CLAUDE.md audit: tooling-only (metrics extension — no ICONIX methodology rules changed);
+theory audit not required; state machine unchanged; README and project layout unchanged
+(phase9-cycles/ folder already listed, introduced in v0.9.8).
+
 ## [1.0.5] — 2026-05-13
 
 **Gap fix: validate-traceability.sh --full-scan mode for metrics snapshots.**

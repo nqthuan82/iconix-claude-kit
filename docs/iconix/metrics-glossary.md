@@ -68,6 +68,35 @@ Counts from the most recent `orphan-report.md` produced by the Traceability agen
 
 ---
 
+## 3.5. Phase 9 loop health (v0.9.8+)
+
+Only populated when `phase9.enabled: true` in `iconix.config.yaml`. All fields are `null` when phase9 is disabled or no `phase9-cycles/` files exist.
+
+### phase9.uc_total
+Total count of `phase9-cycles/UC-*-cycle.md` files. One file per UC that entered Phase 9.
+
+### phase9.uc_active
+Cycle files where the `## Exit` section's `Final verdict:` is still a placeholder (not `APPROVE` or `APPROVE WITH NOTES`). Represents UCs currently in the implementation loop.
+
+### phase9.uc_done
+Cycle files with a completed `## Exit` section. UCs counted here have merged to `main`.
+
+### phase9.iterations_per_uc
+Distribution of iteration counts across `uc_done` UCs. Parsed from `Iterations used: N` in each Exit section. `{median, p90, samples}`.
+
+**Healthy range:** median ≤ 2. Median > 3 consistently suggests M3 CDR is approving designs with too many open questions.
+
+### phase9.cap_hit_count
+Count of done UCs where `Cap hit? Yes`. These UCs escalated to Architect or PO — effectively Type 2 issues surfaced during implementation.
+
+### phase9.cap_hit_pct
+`cap_hit_count / uc_done`. `null` when `uc_done = 0`. **Target < 0.10** — if more than 10% of implementations hit the cap, M3 is not catching enough design issues.
+
+### phase9.first_pass_approve_pct
+`UCs where Iterations used = 1 AND Final verdict = APPROVE or APPROVE WITH NOTES / uc_done`. `null` when `uc_done = 0`. **Target > 0.70** — high values indicate M3 design quality is strong and the Reviewer rarely needs a second pass.
+
+---
+
 ## 4. Process compliance
 
 These four metrics are the ISO-audit-relevant ones. Target ≥ 0.95 (≥ 0.90 for NFR).

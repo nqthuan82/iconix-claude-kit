@@ -140,6 +140,19 @@
         "nfr_with_covering_adr_pct":    { "type": "number", "minimum": 0, "maximum": 1 }
       }
     },
+    "phase9": {
+      "type": ["object", "null"],
+      "description": "Phase 9 loop statistics (v0.9.8+). Present only when phase9.enabled: true and phase9-cycles/ exists. Null when phase9 is disabled or no cycle files exist.",
+      "properties": {
+        "uc_total":   { "type": "integer", "minimum": 0, "description": "Total UC-*-cycle.md files in phase9-cycles/" },
+        "uc_active":  { "type": "integer", "minimum": 0, "description": "UCs still in the loop — Exit section not filled" },
+        "uc_done":    { "type": "integer", "minimum": 0, "description": "UCs with a completed Exit section" },
+        "iterations_per_uc": { "$ref": "#/$defs/count_stats", "description": "Iteration count distribution across done UCs" },
+        "cap_hit_count":         { "type": "integer", "minimum": 0 },
+        "cap_hit_pct":           { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "cap_hit_count / uc_done; null when uc_done = 0" },
+        "first_pass_approve_pct":{ "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "UCs approved on iteration 1 / uc_done; null when uc_done = 0" }
+      }
+    },
     "trends": {
       "type": ["object", "null"],
       "description": "Present only when compared_to is non-null.",
