@@ -144,7 +144,10 @@ Scan existing artifacts for differences from the current template format. Do NOT
    - Has `## Traceability` block?
    - **Uses `Intakes:` field** (v0.9.11+) or older `Source:` field?
 
-3. **Source files under `src/`** — sample (don't read all if the project is large; spot-check 20 files at random plus all files in `Implementation` PRs from the last 30 days):
+3. **Source files** — sample (don't read all if the project is large; spot-check 20 files at random plus all files in `Implementation` PRs from the last 30 days):
+   - **Single-repo**: look under `src/`.
+   - **Multi-repo** (any container has `path:` in `iconix.config.yaml`): look under `<path>/<src_dir>/` for each external container. Verify the path exists locally before attempting to read (`git -C <path> status` must succeed); if the path is missing, note it as a broken-path finding (same as Layer D step 6) and skip source scanning for that container.
+   Checks for every sampled file:
    - Has `Traceability:` comment?
    - Format matches current convention (e.g., `Traceability: UC-XXX | RB-XXX | SD-XXX`)?
 

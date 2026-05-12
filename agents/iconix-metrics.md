@@ -41,7 +41,7 @@ If `enabled: false`, refuse and tell the user to enable it.
 - `use_cases.by_phase` — for each UC, classify by current phase (see `metrics-glossary.md` for exact rules; uses `[<UC>] <phase>: ...` commits on `main` per the v0.9.5 commit convention)
 - `use_cases.added_last_30d` / `added_last_7d` — count UCs whose first commit is within the window
 - `requirements.*` — same shape using `requirements/REQ-*.md`
-- `bugs.*` — count branches matching `bugfix/T1-*` and `bugfix/T2-UC-*-*` (via `git branch -r --list`); compute Type 2 ratio
+- `bugs.*` — count branches matching `bugfix/T1-*` and `bugfix/T2-UC-*-*` (via `git branch -r --list`); compute Type 2 ratio. In multi-repo mode (any container has `path:` in `iconix.config.yaml`), also run `git -C <path> branch -r --list 'bugfix/*'` for each external repo and union the results.
 
 ## Step 2 — Cycle time
 For each UC, parse git log for phase-tagged commits (`[<UC>] M1: ...`, `[<UC>] M2: ...`, `[<UC>] M3: ...`, `[<UC>] Impl: ...`). Compute durations between consecutive phase commits and the merge commit. Aggregate as median, p90, samples.
@@ -75,7 +75,7 @@ Read the most recent `orphan-report.md`. If older than 7 days, regenerate is rec
 
 ## Step 4 — Process compliance
 - `uc_through_all_3_gates_pct` — count of UCs in phase Done or Implementation, divided by total UCs (excluding UCs added in the last 14 days, which haven't had time to flow through)
-- `trace_comment_coverage_pct` — invoke `.ci/validate-traceability.sh main HEAD~0` (no diff; full scan), parse the output for "OK (N files checked)" and "MISSING_TRACE" lines. Coverage = (N - missing) / N.
+- `trace_comment_coverage_pct` — invoke `.ci/validate-traceability.sh main HEAD~0` (no diff; full scan), parse the output for "OK (N files checked)" and "MISSING_TRACE" lines. Coverage = (N - missing) / N. When running from the meta-project, `ARTIFACT_ROOT` defaults to `.` (no env var needed). Note: the script validates artifact-level traceability links (REQ → UC → RB chains); `Traceability:` comments in service-repo source files are not covered by this scan — those are checked by each service repo's own CI using `ICONIX_CONFIG_PATH` (see `templates/git-integration/generic/validate-traceability.sh`).
 - `req_with_downstream_uc_pct` — read `traceability-matrix.md` if present; otherwise grep each REQ ID across `use-cases/`. Should be 1.00.
 - `nfr_with_covering_adr_pct` — read `iconix.config.yaml` `nfr_catalog` (a path to NFR list); check each NFR against `adrs/` and `container-mapping/` for citations.
 
@@ -90,7 +90,7 @@ For inverted metrics (where lower is better — failure rates, cycle times, drif
 ## Step 6 — Blockers
 Aggregate from all the checks above:
 - Orphan UCs / ghost UCs / title-drifted UCs from `orphan-report.md`
-- Stale branches: `feature/UC-*` branches with no commit in last 21 days
+- Stale branches: `feature/UC-*` branches with no commit in last 21 days. In multi-repo mode (any container has `path:`), also check `git -C <path> branch -r --list 'feature/UC-*'` for each external repo; union all repos before applying the 21-day threshold.
 - Missing trace comments on `main` (from validate-traceability.sh full-scan)
 - REQs with no downstream UC and ≥14 days old
 - Untyped attributes from class-model.puml (parse `<<entity>>` blocks; check for `: <type>` pattern)

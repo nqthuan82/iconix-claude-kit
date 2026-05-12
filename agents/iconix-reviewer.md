@@ -30,8 +30,12 @@ For each source file that carries a `Traceability: UC-XXX | RB-XXX | SD-XXX` com
 - If code implements behavior not in the robustness diagram, flag it as "missing from analysis"
 
 ## 4. Traceability hygiene
-- Every source file under `src/` has a traceability comment citing UC/RB/SD
-- Every test file under `tests/` cites the UC and TC IDs
+- Every source file under the **resolved source root** has a traceability comment citing UC/RB/SD
+  - Single-repo: files under `src/<container-name>/`
+  - Multi-repo: files under `<path>/<src_dir>/` for each container that has `path:` defined in `iconix.config.yaml`
+- Every test file under the **resolved test root** cites the UC and TC IDs
+  - Single-repo: files under `tests/<container-name>.Tests/`
+  - Multi-repo: files under `<path>/<test_dir>/` for each external-repo container
 - Broken ID references (file mentions UC-042 but UC-042 doesn't exist)
 
 ## 5. NFR compliance hints
@@ -48,9 +52,19 @@ Read `nfr-annotations/UC-XXX-nfr.md` for the UC and flag obvious violations:
 ## 7. Container placement and stack alignment
 
 For each source file that carries a `Traceability: UC-XXX | RB-XXX | SD-XXX` comment:
+
+**Single-repo mode** (no container has `path:` in `iconix.config.yaml`):
 - The first path segment after `src/` (e.g., `src/Frontend/...` → `Frontend`) must match a container name in `container-mapping/<PREFIX>-UC-XXX-containers.md`; a mismatch is a `[DRIFT]` finding — the file is placed in a container the design never allocated to this UC
-- If the file is a **primary implementation language file** (extension is one of `.cs`, `.java`, `.py`, `.ts`, `.tsx`, `.go`, `.rb`), its extension must be consistent with the "Effective stack" `language` for that container row (e.g., a `.java` file under a container mapped `typescript / jest` is a mismatch); flag as `[DRIFT]`. Do **not** flag view templates, static assets, or config files — `.cshtml`, `.html`, `.jsx`, `.css`, `.json`, `.xml`, `.yml` are legitimate secondary artifacts in any container regardless of its primary language (e.g., Razor views in a C# MVC container, Thymeleaf templates in a Java container, Jinja templates in a Python container)
-- Same rule applies under `tests/`: directory segment must match a container name; the file extension must be consistent with the container's "Effective stack" `test_framework` using this mapping — `xunit`/`nunit` → `.cs`; `junit` → `.java`; `pytest` → `.py`; `jest`/`vitest` → `.ts`/`.tsx`/`.js`/`.jsx`; `rspec` → `.rb`; `gotest` → `.go`. Gherkin feature files (`.feature`) and config files (`.json`, `.xml`) are excluded from this check regardless of framework
+- Same rule applies under `tests/`: first segment after `tests/` must match a container name
+
+**Multi-repo mode** (one or more containers have `path:` defined):
+- Identify the container by matching the file's path prefix against the resolved source roots: a file at `<path>/<src_dir>/...` belongs to the container whose `path:` and `src_dir:` resolve to that prefix. A file whose path does not fall under any resolved source root is a `[TRACEABILITY]` finding — container ownership cannot be determined.
+- Cross-check: the resolved container must appear in `container-mapping/<PREFIX>-UC-XXX-containers.md`; if it doesn't, flag as `[DRIFT]` — the file is placed in a container the design never allocated to this UC.
+- Same rule applies to resolved test roots: a file at `<path>/<test_dir>/...` belongs to the container whose `path:` and `test_dir:` resolve to that prefix.
+
+**Stack alignment (applies to both modes):**
+- If the file is a **primary implementation language file** (extension is one of `.cs`, `.java`, `.py`, `.ts`, `.tsx`, `.go`, `.rb`), its extension must be consistent with the "Effective stack" `language` for that container row; flag as `[DRIFT]` on mismatch. Do **not** flag view templates, static assets, or config files — `.cshtml`, `.html`, `.jsx`, `.css`, `.json`, `.xml`, `.yml` are legitimate secondary artifacts in any container regardless of its primary language.
+- For test files: extension must be consistent with the container's "Effective stack" `test_framework` using this mapping — `xunit`/`nunit` → `.cs`; `junit` → `.java`; `pytest` → `.py`; `jest`/`vitest` → `.ts`/`.tsx`/`.js`/`.jsx`; `rspec` → `.rb`; `gotest` → `.go`. Gherkin feature files (`.feature`) and config files (`.json`, `.xml`) are excluded from this check regardless of framework.
 
 # Output format
 

@@ -5,6 +5,36 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] — 2026-05-12
+
+**Gap fix: remaining multi-repo gaps in reviewer, metrics, trace-check, and upgrade agents.**
+
+Comprehensive scan of all agents and commands for backlog item #8 residual gaps. Five gaps
+found and fixed; four agents (Architect, Docs, Analyst, PO) confirmed clean.
+
+- **`agents/iconix-reviewer.md`**: Check #4 updated — "source files under `src/`" replaced with
+  "resolved source root" covering both single-repo (`src/<container-name>/`) and multi-repo
+  (`<path>/<src_dir>/` per container with `path:`). Check #7 restructured into single-repo mode
+  (first-path-segment-after-`src/` logic) and multi-repo mode (identify container by matching
+  resolved source/test root prefix). Stack-alignment checks consolidated as a shared section
+  applying to both modes.
+- **`commands/iconix-trace-check.md`**: Step 4 now detects execution context before running the
+  shell script: meta-project context (has `iconix.config.yaml` → no env var needed); service-repo
+  context (no `iconix.config.yaml` → reads `ICONIX_CONFIG_PATH` from environment, prompts if
+  unset). Mirrors the `ARTIFACT_ROOT` logic implemented in Phase D.
+- **`agents/iconix-metrics.md`**: Multi-repo awareness added in three places: (1) `bugs.*` branch
+  count now unions `git -C <path> branch -r` results from all external repos; (2) `trace_comment_coverage_pct`
+  clarified — script covers meta-project artifact links only, not service-repo source-file
+  `Traceability:` comments (those checked in each service repo's own CI); (3) Step 6 stale-branch
+  detection now checks `feature/UC-*` across all external repos with `git -C <path> branch -r`.
+- **`agents/iconix-upgrade.md`**: Layer D step 3 (source-file spot-check) now includes
+  multi-repo containers: scans `<path>/<src_dir>/` when `path:` is defined, verifying the path
+  exists locally before reading; skips with broken-path finding if unavailable.
+
+CLAUDE.md audit: tooling-only (path resolution and context detection); no ICONIX methodology
+rules changed; theory audit not required; README agent count, command list, and project layout
+unchanged; state machine unchanged.
+
 ## [1.0.1] — 2026-05-12
 
 **Gap fix: multi-repo + graph-assisted mode — per-container Graphify graph support.**
