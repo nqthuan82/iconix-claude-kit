@@ -45,7 +45,9 @@ When routing a UC through Phase 1 (Product Owner) for the first time:
 
 1. Dispatch **Git** agent — ask it to suggest `feature/UC-XXX-<slug>` from the UC ID and a 2–5 word kebab-case slug.
 2. **STOP.** Print the suggested branch name (e.g., `## Branch creation — waiting for confirmation: feature/UC-017-place-bet`). Wait for the user to confirm or edit the name.
-3. After confirmation: Git agent runs `git checkout -b <confirmed-branch-name>` (or `git checkout <name>` if the branch already exists from a previous session).
+3. After confirmation:
+   - **Single-repo mode** (no container has `path:` defined): Git agent runs `git checkout -b <confirmed-branch-name>` (or `git checkout <name>` if the branch already exists from a previous session).
+   - **Multi-repo mode** (any container has `path:`): Git agent runs the `# Multi-repo sync` algorithm — it displays a per-repo sync plan and **waits for user confirmation** before creating the branch in the meta-project and all external repos simultaneously. If any repo is dirty or the sync fails, the whole operation halts.
 4. All subsequent phases (M1 → M2 → M3 → Implementation) run on this branch. Never switch branches mid-UC.
 
 If the UC ID is not yet known (raw input, no UC file exists), the Git agent defers branch creation until the Product Owner assigns the UC ID, then creates the branch before M1 gate.

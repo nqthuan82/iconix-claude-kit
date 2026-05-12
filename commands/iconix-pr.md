@@ -19,6 +19,7 @@ The agent should:
    - `gh` (GitHub) → `gh pr create --draft --title <title> --body-file <template>`
    - `az` (Azure DevOps) → `az repos pr create --draft --title <title> --description-from-file <template>`
    - `none` / generic → print the suggested branch push and PR URL; do not create.
+   - **Multi-repo mode (Implementation phase only):** if any container in `iconix.config.yaml` has a `path:` field, delegate to the Git agent's `### Multi-repo Implementation PRs` algorithm — it opens one PR per unique `path:` (for affected containers) plus one meta-project PR, and reports all URLs. M1/M2/M3 phases are always single-repo (ICONIX artifacts live in the meta-project only).
 5. Append the work-item ref (if `git.work_item_prefix` is non-empty) to the PR description.
 6. If `$ARGUMENTS` includes `ready`, mark the PR ready-for-review after creation.
 7. If `$ARGUMENTS` includes `--reviewers <list>`, set requested reviewers via the CLI.

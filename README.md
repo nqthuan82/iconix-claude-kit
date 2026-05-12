@@ -142,6 +142,9 @@ architecture:
 - Containers without `path:` fall back to `./src/<ContainerName>/` (single-repo behaviour unchanged)
 - Cross-container system tests and BDD step definitions live in the meta-project under `meta.system_tests_dir` / `meta.acceptance_tests_dir`
 - The migration agent in multi-repo mode walks each container's source root independently and produces a unified survey
+- The git agent syncs all repos at Phase entry: shows a per-repo plan, waits for confirmation, then creates the same feature branch in every repo simultaneously. Set `base_branch:` on a container to override `git.default_branch` for that repo (e.g., `develop` in gitflow services).
+- `/iconix-pr` opens one PR per unique `path:` at Implementation phase (plus one meta-project PR for traceability artifacts); M1/M2/M3 always use a single meta-project PR
+- Mixed topology (multiple containers in one repo): use the same `path:` and different `src_dir:` subdirectories — the git agent treats them as one repo and creates one branch + one PR
 
 ## Project layout
 

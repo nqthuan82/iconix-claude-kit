@@ -5,6 +5,44 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0-alpha.3] — 2026-05-12
+
+**Multi-repo support — Phase C: git sync, multi-repo PRs, Orchestrator branch protocol.**
+
+Completes the git-surface side of multi-repo support. Agents now create feature branches
+across all repos simultaneously, open one PR per external repo at Implementation phase,
+and detect in-flight UCs from external repo branches as well as the meta-project.
+
+### Phase C — Git multi-repo sync + PR support
+
+- **`agents/iconix-git.md`**:
+  - `# Before you do anything` now also reads `architecture.containers` to detect multi-repo mode.
+  - New `# Multi-repo sync` section: deduplicates containers by unique `path:` value, resolves
+    `base_branch:` per repo (container override > global `git.default_branch`), shows a
+    per-repo sync plan and **waits for user confirmation** before touching any repo,
+    then runs `fetch → checkout base → pull → checkout -b` (or `checkout` for existing
+    branches) in each repo. Halts the entire sync if any repo is dirty or fails.
+    Single-repo fallback applies when no container has `path:` defined.
+  - `## 3. Pull request opening` — new `### Multi-repo Implementation PRs` sub-section:
+    for Implementation-phase diffs in multi-repo mode, opens one PR per unique `path:`
+    (for containers touched by the UC) plus one meta-project PR; PR body lists all
+    containers at that path; reviewers are the union of all container `reviewers:` lists.
+    M1/M2/M3 phases always use the single meta-project PR path.
+  - `## 6. In-flight UC detection` — new step 1b: in multi-repo mode, also checks
+    `git -C <path> branch -r --list 'origin/feature/UC-*'` for each external repo;
+    deduplicates by UC-ID before returning the list to Traceability.
+- **`commands/iconix-pr.md`**: Step 4 updated — when phase is Implementation and any
+  container has `path:`, delegates to the Git agent's multi-repo PR algorithm.
+  M1/M2/M3 are unchanged (single meta-project PR).
+- **`agents/iconix-orchestrator.md`**: `# Phase entry — branch creation protocol` step 3
+  updated — single-repo mode uses `git checkout -b` as before; multi-repo mode calls
+  the Git agent's `# Multi-repo sync` algorithm (shows plan, waits for confirmation,
+  syncs all repos atomically).
+- **`templates/git-integration/branch-conventions.md`**: New `## Multi-repo mode` section
+  documents that the same branch name is created in all repos simultaneously, that
+  containers sharing a `path:` are one git repo, and that `base_branch:` can differ
+  per repo.
+
 ## [1.0.0-alpha.2] — 2026-05-12
 
 **Mixed-topology clarification: multiple containers sharing one git repo.**

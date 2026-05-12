@@ -42,3 +42,15 @@ release/2.4.0
 - `gitflow` — adds a permanent `develop` branch; `feature/*` and `arch/*` merge to `develop`; `release/*` merges to both `main` and `develop`; `hotfix/*` merges to both. Use only if your org has strict release-train requirements.
 
 The kit's automation defaults to **trunk**.
+
+## Multi-repo mode
+
+When `architecture.containers` has any entry with `path:` defined (multi-repo mode), the same branch name is created in **all repos simultaneously** by the Git agent's multi-repo sync:
+
+- The meta-project (current directory) always gets the branch.
+- Each unique `path:` value (external repo) also gets the same branch.
+- Containers sharing a `path:` are one git repo — they get one branch, not two.
+
+All naming rules above apply equally in every repo. The Git agent enforces that all repos in a feature session share the same branch name before any work begins.
+
+Per-repo base branches can differ (e.g., `main` in the meta-project, `develop` in an external service) — set `base_branch:` on the container entry in `iconix.config.yaml` to override `git.default_branch` for that repo.

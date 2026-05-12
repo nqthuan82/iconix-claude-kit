@@ -60,6 +60,8 @@ architecture:
       #                                    # use nested path e.g. "src/Backend" for
       #                                    # mixed topology (multiple containers, one repo)
       # test_dir: "tests"                  # test subdir within path (default: "tests")
+      # base_branch: "develop"             # base branch in this repo for PRs and sync
+      #                                    # (default: git.default_branch)
       # reviewers: []                      # PR reviewers e.g. ["@alice", "@team-backend"]
     - name: "WebAPI"
       # path: "../my-webapi-service"
