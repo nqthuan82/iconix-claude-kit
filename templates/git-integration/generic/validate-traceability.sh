@@ -5,15 +5,21 @@
 # Bitbucket Pipelines, plain Jenkins, etc.) as a merge-gate check.
 #
 # What it checks:
-#   1. Every changed file under src/ and tests/ has a `Traceability:` comment.
+#   1. Every source/test file has a `Traceability:` comment in its first 30 lines.
 #   2. Every cited UC-XXX / RB-XXX / SD-XXX / REQ-XXX / TC-XXX ID exists in the
 #      corresponding artifact folder.
 #   3. No file references an ID that's been deleted or renamed.
 #   4. Every changed container-mapping/*.md file has a non-empty "Effective stack"
 #      column on every data row (M2 blocker per Traceability check #16).
+#      (Check 4 is skipped in --full-scan mode; it is PR-specific.)
 #
 # Usage:
-#   validate-traceability.sh [<base-ref>] [<head-ref>]
+#   validate-traceability.sh [--full-scan] [<base-ref>] [<head-ref>]
+#
+#   --full-scan       Scan all tracked files under src/ and tests/ (git ls-files),
+#                     not just files changed since <base-ref>. Use this for metrics
+#                     snapshots (iconix-metrics trace_comment_coverage_pct). Check 4
+#                     (container-mapping Effective stack) is skipped in this mode.
 #
 #   Defaults: base = origin/main, head = HEAD.
 #   Override via env: ICONIX_BASE_REF, ICONIX_HEAD_REF.
@@ -29,6 +35,18 @@
 #   2 — usage / setup error
 
 set -euo pipefail
+
+# Parse --full-scan flag; leave positional args for BASE_REF / HEAD_REF.
+FULL_SCAN=false
+_ARGS=()
+for _arg in "$@"; do
+  case "$_arg" in
+    --full-scan) FULL_SCAN=true ;;
+    *)           _ARGS+=("$_arg") ;;
+  esac
+done
+set -- "${_ARGS[@]+"${_ARGS[@]}"}"
+unset _ARGS _arg
 
 BASE_REF="${1:-${ICONIX_BASE_REF:-origin/main}}"
 HEAD_REF="${2:-${ICONIX_HEAD_REF:-HEAD}}"
@@ -50,21 +68,33 @@ fi
 
 violations=0
 
-# Make sure the base ref exists locally
-if ! git rev-parse --verify "${BASE_REF}" >/dev/null 2>&1; then
-  echo "ERROR: base ref '${BASE_REF}' not found. Fetch the remote first or pass a different base." >&2
-  exit 2
+if [[ "$FULL_SCAN" == "true" ]]; then
+  # Full-scan mode: all tracked files under src/ and tests/.
+  CHANGED_FILES="$(git ls-files -- 'src/**' 'tests/**' 2>/dev/null || true)"
+  if [[ -z "${CHANGED_FILES}" ]]; then
+    echo "validate-traceability: no tracked source or test files found; skipping."
+    exit 0
+  fi
+  echo "validate-traceability: full scan (all tracked source/test files)"
+else
+  # Make sure the base ref exists locally.
+  if ! git rev-parse --verify "${BASE_REF}" >/dev/null 2>&1; then
+    echo "ERROR: base ref '${BASE_REF}' not found. Fetch the remote first or pass a different base." >&2
+    exit 2
+  fi
+  CHANGED_FILES="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'src/**' 'tests/**' 2>/dev/null || true)"
+  if [[ -z "${CHANGED_FILES}" ]]; then
+    echo "validate-traceability: no source or test files changed against ${BASE_REF}; skipping."
+    exit 0
+  fi
 fi
 
-CHANGED_FILES="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'src/**' 'tests/**' 2>/dev/null || true)"
-
-if [[ -z "${CHANGED_FILES}" ]]; then
-  echo "validate-traceability: no source or test files changed against ${BASE_REF}; skipping."
-  exit 0
+# ── Check 1: every file has a Traceability comment ─────────────────────
+if [[ "$FULL_SCAN" == "true" ]]; then
+  echo "validate-traceability: checking all tracked files"
+else
+  echo "validate-traceability: checking ${BASE_REF}...${HEAD_REF}"
 fi
-
-# ── Check 1: every changed file has a Traceability comment ─────────────
-echo "validate-traceability: checking ${BASE_REF}...${HEAD_REF}"
 
 while IFS= read -r f; do
   [[ -z "$f" || ! -f "$f" ]] && continue
@@ -108,7 +138,12 @@ while IFS= read -r f; do
 done <<< "${CHANGED_FILES}"
 
 # ── Check 3: changed container-mapping files have Effective stack filled ─
-CHANGED_MAPS="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'container-mapping/*.md' 2>/dev/null || true)"
+# Skipped in --full-scan mode (PR-specific check; not meaningful for full scans).
+if [[ "$FULL_SCAN" == "true" ]]; then
+  CHANGED_MAPS=""
+else
+  CHANGED_MAPS="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'container-mapping/*.md' 2>/dev/null || true)"
+fi
 
 while IFS= read -r f; do
   [[ -z "$f" || ! -f "$f" ]] && continue

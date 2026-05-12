@@ -5,6 +5,29 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.5] — 2026-05-13
+
+**Gap fix: validate-traceability.sh --full-scan mode for metrics snapshots.**
+
+`trace_comment_coverage_pct` in the metrics agent called `validate-traceability.sh main HEAD~0`
+intending a full scan, but the script only operates on `git diff` output. When `HEAD~0 == main`
+the diff is empty and the script exits with "skipping" — producing no parseable output. The
+`trace_comment_coverage_pct` field could never be computed.
+
+- **`templates/git-integration/generic/validate-traceability.sh`**: Added `--full-scan` flag.
+  When set, uses `git ls-files -- 'src/**' 'tests/**'` instead of `git diff` to enumerate files.
+  Check 3 (container-mapping Effective stack) is skipped in full-scan mode — it is PR-specific.
+  Output format (`"OK (N files checked)"` / `"MISSING_TRACE: ..."`) is unchanged so the metrics
+  agent can parse it without modification. Updated header comment to document the flag.
+- **`agents/iconix-metrics.md`**: `trace_comment_coverage_pct` updated to call
+  `validate-traceability.sh --full-scan` instead of `main HEAD~0`. Note clarified: the script
+  validates source-file → artifact ID links (not REQ → UC → RB artifact chains, which is the
+  orphan report's job).
+
+CLAUDE.md audit: tooling-only (CI script + metrics agent invocation); no ICONIX methodology
+rules changed; theory audit not required; state machine unchanged; README and project layout
+unchanged.
+
 ## [1.0.4] — 2026-05-12
 
 **Gap fix: upgrade agent heuristic detection gap for v1.0.1 and v1.0.2.**
