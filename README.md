@@ -229,7 +229,10 @@ docs/iconix/
         └── commit-conventions.md
 
 .ci/
-└── validate-traceability.sh         ← CI merge-gate (always installed)
+├── validate-traceability.sh         ← CI merge-gate validator (always installed)
+└── scripts/                         ← only if git.provider = github | azure-devops
+    ├── setup-branch-protection.sh   ← github only: enforce CI gates as required checks
+    └── setup-branch-policies.sh     ← azure-devops only: enforce CI gates as branch policies
 
 .github/                             ← only if git.provider = github
 ├── pull_request_template.md         ← default PR template
@@ -744,11 +747,24 @@ Full reference at `templates/git-integration/branch-conventions.md` and `commit-
 |---|---|---|
 | Always | `validate-traceability.sh` | `.ci/` |
 | Always | `branch-conventions.md`, `commit-conventions.md`, `README.md` | `docs/iconix/templates/git-integration/` |
-| `github` | `iconix-validate.yml`, PR templates (default + M1/M2/M3/Impl) | `.github/workflows/`, `.github/`, `.github/PULL_REQUEST_TEMPLATE/` |
-| `azure-devops` | `azure-pipelines-iconix-validate.yml`, PR templates | repo root, `.azuredevops/pull_request_templates/` |
+| `github` | `iconix-validate.yml`, PR templates (default + M1/M2/M3/Impl), `setup-branch-protection.sh` | `.github/workflows/`, `.github/`, `.github/PULL_REQUEST_TEMPLATE/`, `.ci/scripts/` |
+| `azure-devops` | `azure-pipelines-iconix-validate.yml`, PR templates, `setup-branch-policies.sh` | repo root, `.azuredevops/pull_request_templates/`, `.ci/scripts/` |
 | `generic` | (script only — user wires the script into their CI manually) | `.ci/` |
 
 **The merge-gate** — `.ci/validate-traceability.sh` runs in CI on every PR. It fails if any changed file under `src/` or `tests/` lacks a `Traceability:` comment, or if cited UC/RB/SD/REQ/TC/ADR IDs don't match an existing artifact. Run locally before pushing with `/iconix-trace-check`.
+
+**Enforcing the gate (branch protection)** — The CI workflow alone is advisory; it runs but cannot block merges. To make the gate enforced, run the one-time setup script installed to `.ci/scripts/`:
+
+```bash
+# GitHub (requires gh CLI, run after first CI workflow run):
+bash .ci/scripts/setup-branch-protection.sh
+
+# Azure DevOps (requires az CLI + azure-devops extension):
+bash .ci/scripts/setup-branch-policies.sh \
+  --org https://dev.azure.com/myorg --project MyProject --repo MyRepo
+```
+
+After running, PRs that fail the ICONIX traceability check will be blocked from merging. See `agents/iconix-git.md` `## 7. Branch protection setup` for full options.
 
 **Opening PRs** — `/iconix-pr` detects the current phase from the diff, opens a draft PR using the matching template (M1/M2/M3/Impl), and (with `pr_cli` set) calls the right CLI (`gh` for GitHub, `az` for Azure DevOps). With `pr_cli: none` it prints the suggested URL and lets you create the PR manually.
 

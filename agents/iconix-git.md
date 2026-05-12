@@ -151,6 +151,62 @@ If the review's recommendation is `BLOCK MERGE` or `REQUEST CHANGES`, also set t
 ## 5. Local trace check
 On `/iconix-trace-check`, run `.ci/validate-traceability.sh origin/<default_branch> HEAD` and surface the result. Same checks as the CI gate, run pre-push.
 
+## 7. Branch protection setup
+
+Triggered once after install (or by the user asking to enable enforced CI gates). Turns advisory CI checks into enforced merge gates.
+
+### When this runs
+- User runs `iconix-init` and the installer drops `.ci/scripts/setup-branch-protection.sh` (GitHub) or `.ci/scripts/setup-branch-policies.sh` (Azure DevOps)
+- User explicitly asks: "set up branch protection", "enforce the CI gate", or "why can I still merge when CI fails?"
+
+### Pre-flight check
+Before offering to run the setup, check whether protection is already in place:
+- **GitHub**: `gh api "repos/{owner}/{repo}/branches/main/protection" --jq ".required_status_checks.contexts[]"` — if it returns "Traceability gate", protection is already set.
+- **Azure DevOps**: `az repos policy list --org <org> --project <project> --branch main --repository-id <id> --query "[?type.displayName=='Build']" --output table` — if the ICONIX pipeline appears, the policy exists.
+
+If already configured, report the current settings and offer to update only.
+
+### Running the setup script (GitHub)
+```bash
+# Preview what will be set (no changes):
+bash .ci/scripts/setup-branch-protection.sh --dry-run
+
+# Apply — requires gh CLI authenticated (gh auth login):
+bash .ci/scripts/setup-branch-protection.sh
+
+# For gitflow projects (also protects develop):
+bash .ci/scripts/setup-branch-protection.sh --also-branch develop
+
+# Stricter: enforce for admins too, require 2 reviewers:
+bash .ci/scripts/setup-branch-protection.sh --enforce-admins --min-reviewers 2
+```
+
+**Important:** The `Traceability gate` check must have run at least once before GitHub will accept it as a required check. If the workflow hasn't run on any branch yet, push a temporary branch, trigger the workflow, then run the setup script.
+
+### Running the setup script (Azure DevOps)
+```bash
+# Preview:
+bash .ci/scripts/setup-branch-policies.sh --dry-run \
+  --org https://dev.azure.com/myorg --project MyProject --repo MyRepo
+
+# Apply:
+bash .ci/scripts/setup-branch-policies.sh \
+  --org https://dev.azure.com/myorg --project MyProject --repo MyRepo
+```
+
+**Important:** The `azure-pipelines-iconix-validate.yml` pipeline must exist in Azure DevOps before running (Pipelines → New pipeline → YAML → select the file). The script looks it up by name "ICONIX Validate" and fails if not found.
+
+### What gets enforced after setup
+
+| Provider | What is blocked |
+|---|---|
+| GitHub | PRs to `main` (or `develop`) where "Traceability gate" check has not passed; PRs with 0 reviewer approvals; force pushes; direct pushes |
+| Azure DevOps | PRs that don't have a passing "ICONIX Validate" build; PRs with fewer than `min-reviewers` approvals; source-push resets review count |
+
+### Post-setup: verify
+- **GitHub**: repo → Settings → Branches → main → you should see "Traceability gate" in Required status checks
+- **Azure DevOps**: Project Settings → Repositories → repo → Policies → Branches → main → Build Validation shows "ICONIX Validate — required"
+
 ## 6. In-flight UC detection (helper for Traceability's concurrent-touch check)
 When the Traceability agent runs `# Concurrent touch detection` (manually or at M2 gate), it asks you which UCs are currently in-flight. Compute the answer from git:
 

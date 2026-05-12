@@ -16,19 +16,23 @@ git-integration/
 │   ├── workflows/
 │   │   └── iconix-validate.yml      → .github/workflows/iconix-validate.yml
 │   ├── pull_request_template.md     → .github/pull_request_template.md
-│   └── PULL_REQUEST_TEMPLATE/
-│       ├── m1.md                    → .github/PULL_REQUEST_TEMPLATE/m1.md
-│       ├── m2.md
-│       ├── m3.md
-│       └── implementation.md
+│   ├── PULL_REQUEST_TEMPLATE/
+│   │   ├── m1.md                    → .github/PULL_REQUEST_TEMPLATE/m1.md
+│   │   ├── m2.md
+│   │   ├── m3.md
+│   │   └── implementation.md
+│   └── scripts/
+│       └── setup-branch-protection.sh  → .ci/scripts/setup-branch-protection.sh
 └── azure-devops/
     ├── azure-pipelines-iconix-validate.yml → repo root
-    └── pull_request_templates/
-        ├── default.md            → .azuredevops/pull_request_templates/default.md
-        ├── m1.md
-        ├── m2.md
-        ├── m3.md
-        └── implementation.md
+    ├── pull_request_templates/
+    │   ├── default.md            → .azuredevops/pull_request_templates/default.md
+    │   ├── m1.md
+    │   ├── m2.md
+    │   ├── m3.md
+    │   └── implementation.md
+    └── scripts/
+        └── setup-branch-policies.sh    → .ci/scripts/setup-branch-policies.sh
 ```
 
 ## What the installer does
@@ -38,16 +42,35 @@ When `iconix.config.yaml` has `git.provider: github`:
 - Copies `github/pull_request_template.md` to `.github/`
 - Copies `github/PULL_REQUEST_TEMPLATE/*.md` to `.github/PULL_REQUEST_TEMPLATE/`
 - Copies `generic/validate-traceability.sh` to `.ci/`
+- Copies `github/scripts/setup-branch-protection.sh` to `.ci/scripts/`
 
 When `git.provider: azure-devops`:
 - Copies `azure-devops/azure-pipelines-iconix-validate.yml` to project root
 - Copies `azure-devops/pull_request_templates/*.md` to `.azuredevops/pull_request_templates/`
 - Copies `generic/validate-traceability.sh` to `.ci/`
+- Copies `azure-devops/scripts/setup-branch-policies.sh` to `.ci/scripts/`
 
 When `git.provider: generic` (or unrecognised):
 - Copies `generic/validate-traceability.sh` to `.ci/`
 - Copies `generic/README.md` to `.ci/`
 - User wires the script into their CI manually (see `generic/README.md`)
+
+## Enforcing CI gates (branch protection)
+
+The CI workflow alone is advisory — it runs but cannot block merges on its own.
+To make ICONIX gates enforced (PRs can't merge when CI fails), run the one-time setup script
+dropped by the installer into `.ci/scripts/`:
+
+```bash
+# GitHub — run once after install and first CI run:
+bash .ci/scripts/setup-branch-protection.sh
+
+# Azure DevOps — run once; the pipeline must exist first:
+bash .ci/scripts/setup-branch-policies.sh \
+  --org https://dev.azure.com/myorg --project MyProject --repo MyRepo
+```
+
+See `agents/iconix-git.md` `## 7. Branch protection setup` for full usage and options.
 
 ## Adding support for another provider
 

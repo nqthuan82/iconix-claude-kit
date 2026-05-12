@@ -163,24 +163,28 @@ try {
         }
         switch ($gitProvider) {
             "github" {
-                New-Item -ItemType Directory -Force -Path ".github\workflows", ".github\PULL_REQUEST_TEMPLATE" | Out-Null
+                New-Item -ItemType Directory -Force -Path ".github\workflows", ".github\PULL_REQUEST_TEMPLATE", ".ci\scripts" | Out-Null
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\workflows\iconix-validate.yml") ".github\workflows\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\pull_request_template.md")      ".github\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m1.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m2.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\m3.md")             ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\github\PULL_REQUEST_TEMPLATE\implementation.md") ".github\PULL_REQUEST_TEMPLATE\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\github\scripts\setup-branch-protection.sh")      ".ci\scripts\" -Force -ErrorAction SilentlyContinue
                 Write-Host "  installed git integration: github"
+                Write-Host "  -> run 'bash .ci/scripts/setup-branch-protection.sh' once to enforce CI gates on merge"
             }
             "azure-devops" {
-                New-Item -ItemType Directory -Force -Path ".azuredevops\pull_request_templates" | Out-Null
+                New-Item -ItemType Directory -Force -Path ".azuredevops\pull_request_templates", ".ci\scripts" | Out-Null
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\azure-pipelines-iconix-validate.yml") ".\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\default.md")        ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m1.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m2.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\m3.md")             ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\pull_request_templates\implementation.md") ".azuredevops\pull_request_templates\" -Force -ErrorAction SilentlyContinue
+                Copy-Item (Join-Path $WorkDir "templates\git-integration\azure-devops\scripts\setup-branch-policies.sh")         ".ci\scripts\" -Force -ErrorAction SilentlyContinue
                 Write-Host "  installed git integration: azure-devops"
+                Write-Host "  -> run 'bash .ci/scripts/setup-branch-policies.sh --help' to enforce CI gates on merge"
             }
             default {
                 Copy-Item (Join-Path $WorkDir "templates\git-integration\generic\README.md") ".ci\" -Force -ErrorAction SilentlyContinue

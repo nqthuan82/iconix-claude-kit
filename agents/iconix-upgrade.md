@@ -65,6 +65,7 @@ If the field is missing (project predates v0.9.9), use **two-pass heuristic dete
 | `use-case-packages/` folder | v0.9.0 |
 | `knowledge_graph:` section in config | v0.3.0 |
 | `meta:` section in config OR any container has `path:` field | v1.0.0 |
+| `.ci/scripts/setup-branch-protection.sh` OR `.ci/scripts/setup-branch-policies.sh` | v1.0.3 |
 
 **Pass 2 — content-based fallback** (run only when Pass 1 returns no evidence above v0.3.0; for projects with customized or non-canonical layouts):
 
@@ -106,6 +107,7 @@ For each folder in the target version that doesn't exist in the project:
 - `metrics/` (v0.9.7+)
 - `phase9-cycles/` (v0.9.8+)
 - `upgrades/` (v0.9.9+)
+- `.ci/scripts/` (v1.0.3+) — only when `git.provider` is `github` or `azure-devops`
 
 ### Layer B: config sections
 For each config section in `templates/iconix.config.yaml` from the target version that's missing in the project's config:
@@ -183,8 +185,8 @@ For each finding (in either pass), record: artifact path, what's missing/differe
 ### Layer E: CI / git integration files
 Read `iconix.config.yaml` `git.provider`:
 - `generic` (or unset): copy `templates/git-integration/generic/validate-traceability.sh` to `.ci/` if not present. Note in the report that the user should set `git.provider` and re-run `iconix-init` for the matching workflow.
-- `github`: copy `.github/workflows/iconix-validate.yml`, `.github/pull_request_template.md`, and `.github/PULL_REQUEST_TEMPLATE/{m1,m2,m3,implementation}.md` from `<kit-source>/templates/git-integration/github/`. Don't overwrite if already present (user may have customized) — log as "kept existing; review for drift" in the report.
-- `azure-devops`: same idea with the Azure DevOps subtree.
+- `github`: copy `.github/workflows/iconix-validate.yml`, `.github/pull_request_template.md`, and `.github/PULL_REQUEST_TEMPLATE/{m1,m2,m3,implementation}.md` from `<kit-source>/templates/git-integration/github/`. Don't overwrite if already present (user may have customized) — log as "kept existing; review for drift" in the report. Also copy `templates/git-integration/github/scripts/setup-branch-protection.sh` to `.ci/scripts/` if not present (v1.0.3+ — turns advisory CI into enforced gates; log as added if new, skip if already present).
+- `azure-devops`: same idea with the Azure DevOps subtree. Also copy `templates/git-integration/azure-devops/scripts/setup-branch-policies.sh` to `.ci/scripts/` if not present (v1.0.3+).
 
 ## Step 3 — Apply (or dry-run)
 

@@ -5,6 +5,42 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] — 2026-05-12
+
+**Backlog #1 — Branch protection config generation: enforce ICONIX CI gates on merge.**
+
+Prior to this version, the ICONIX CI gate (`iconix-validate.yml` / `azure-pipelines-iconix-validate.yml`)
+was advisory — it ran on every PR but nothing prevented a user from merging a failing PR. This
+change closes that gap by shipping one-time branch protection setup scripts that make the CI
+check required.
+
+- **`templates/git-integration/github/scripts/setup-branch-protection.sh`** (new): uses
+  `gh api` to enable GitHub branch protection on `main` (and `develop` for gitflow). Sets
+  "Traceability gate" as a required status check; requires ≥1 PR review; blocks force pushes
+  and direct pushes. Auto-detects gitflow from `iconix.config.yaml`. Supports `--dry-run`,
+  `--min-reviewers`, `--enforce-admins`, `--also-branch`, `--check-name` flags. Idempotent.
+- **`templates/git-integration/azure-devops/scripts/setup-branch-policies.sh`** (new): uses
+  `az repos policy` to create a build validation policy (ICONIX pipeline required) and an
+  approver-count policy on `main`. Auto-discovers pipeline ID by name. Supports `--dry-run`,
+  `--min-reviewers`, `--branch`, `--pipeline-name` flags.
+- **`agents/iconix-git.md`**: New `## 7. Branch protection setup` section — pre-flight check
+  to detect if protection is already configured; step-by-step run instructions for both
+  providers; post-setup verification pointers.
+- **`iconix-init`** (bash) + **`iconix-init.ps1`** (PowerShell): both installers now copy the
+  matching setup script to `.ci/scripts/` when `git.provider` is `github` or `azure-devops`;
+  print a reminder to run it once to activate enforcement.
+- **`agents/iconix-upgrade.md`**: Layer A gains `.ci/scripts/` folder (v1.0.3+, provider-
+  conditional); Layer E gains setup-script copy for both providers; version-detection heuristic
+  table gains v1.0.3 entry.
+- **`templates/git-integration/README.md`**: Layout diagram updated with `scripts/` subtrees;
+  new `## Enforcing CI gates` section with quickstart commands.
+- **`README.md`**: Project layout updated (`.ci/scripts/` with both script names); provider
+  table updated; new "Enforcing the gate" block in the git integration section.
+
+CLAUDE.md audit: tooling-only (new shell scripts + installer copy logic); no ICONIX methodology
+rules changed; theory audit not required; state machine unchanged; README and project layout
+updated in this same change.
+
 ## [1.0.2] — 2026-05-12
 
 **Gap fix: remaining multi-repo gaps in reviewer, metrics, trace-check, and upgrade agents.**

@@ -180,24 +180,30 @@ if [[ "${SCOPE}" == "project" ]]; then
   GIT_PROVIDER="$(grep -E '^\s*provider:' "${CONFIG_FILE}" 2>/dev/null | head -1 | sed -E 's/.*provider:\s*"?([^"]*)"?.*/\1/' || echo "generic")"
   case "${GIT_PROVIDER}" in
     github)
-      mkdir -p ".github/workflows" ".github/PULL_REQUEST_TEMPLATE"
+      mkdir -p ".github/workflows" ".github/PULL_REQUEST_TEMPLATE" ".ci/scripts"
       cp "${WORKDIR}/templates/git-integration/github/workflows/iconix-validate.yml" ".github/workflows/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/github/pull_request_template.md"      ".github/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m1.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m2.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/m3.md"             ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/github/PULL_REQUEST_TEMPLATE/implementation.md" ".github/PULL_REQUEST_TEMPLATE/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/github/scripts/setup-branch-protection.sh"      ".ci/scripts/" 2>/dev/null || true
+      chmod +x ".ci/scripts/setup-branch-protection.sh" 2>/dev/null || true
       echo "  installed git integration: github"
+      echo "  → run 'bash .ci/scripts/setup-branch-protection.sh' once to enforce CI gates on merge"
       ;;
     azure-devops)
-      mkdir -p ".azuredevops/pull_request_templates"
+      mkdir -p ".azuredevops/pull_request_templates" ".ci/scripts"
       cp "${WORKDIR}/templates/git-integration/azure-devops/azure-pipelines-iconix-validate.yml" "./" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/default.md"        ".azuredevops/pull_request_templates/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m1.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m2.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/m3.md"             ".azuredevops/pull_request_templates/" 2>/dev/null || true
       cp "${WORKDIR}/templates/git-integration/azure-devops/pull_request_templates/implementation.md" ".azuredevops/pull_request_templates/" 2>/dev/null || true
+      cp "${WORKDIR}/templates/git-integration/azure-devops/scripts/setup-branch-policies.sh"         ".ci/scripts/" 2>/dev/null || true
+      chmod +x ".ci/scripts/setup-branch-policies.sh" 2>/dev/null || true
       echo "  installed git integration: azure-devops"
+      echo "  → run 'bash .ci/scripts/setup-branch-policies.sh --help' to enforce CI gates on merge"
       ;;
     generic|*)
       cp "${WORKDIR}/templates/git-integration/generic/README.md" ".ci/" 2>/dev/null || true
