@@ -33,6 +33,59 @@ knowledge_graph:
 
 State the mode you are operating in at the start of every migration run.
 
+In multi-repo mode, graph-assisted mode has an additional layer: each container may have its own Graphify graph. See `# Per-container graph resolution` below.
+
+---
+
+# Per-container graph resolution (multi-repo + graph-assisted)
+
+When both multi-repo mode and graph-assisted mode are active, each container may have its own Graphify graph, share a single unified graph, or have no graph at all. Resolve before Phase 0.
+
+## Step 1 — Detect graph source per container
+
+For each container in `architecture.containers`, determine which graph to use:
+
+| Container config | Graph source |
+|---|---|
+| Has `graph_path:` | Use that graph for this container — Phase 0 checks it independently |
+| No `graph_path:`, global `knowledge_graph.graph_path` is set | Use global graph, scope queries to this container's resolved source root |
+| No `graph_path:`, global graph absent or `knowledge_graph.enabled: false` | Fall back to **code-walking** for this container |
+
+## Step 2 — Report graph resolution
+
+At the start of every multi-repo + graph-assisted run, print:
+
+```
+## Graph resolution (multi-repo)
+  OrderService   → ../order-service/graphify-out/graph.json  (per-container graph)
+  UserService    → graphify-out/graph.json (global — scoped to ./src/UserService/)
+  PaymentService → code-walking (no graph available)
+```
+
+## Step 3 — Per-container Phase 0 check
+
+Run the Phase 0 readiness check **independently for each graph**:
+- Verify the graph file exists at the resolved path
+- Check graph age: warn at 7 days, refuse at 30 days — per container
+- If a container's graph is stale or missing and has no fallback, warn and switch that container to code-walking; do not abort the entire run
+
+## Step 4 — Mixed-mode per-container execution
+
+When containers differ in graph availability, run each container in the mode that matches:
+- Container with graph → graph-assisted phases for that container
+- Container without graph → code-walking phases for that container
+
+Merge results into a single unified survey. The **Containers surveyed** table shows the mode per container:
+
+```markdown
+## Containers surveyed
+| Container | Source root | Mode | Status |
+|---|---|---|---|
+| OrderService | ../order-service/src/ | graph-assisted (per-container graph) | OK — 42 entry points |
+| UserService | ./src/UserService/ | graph-assisted (global graph, scoped) | OK — 8 entry points |
+| PaymentService | ../payment-service/src/ | code-walking (no graph) | OK — 17 entry points |
+```
+
 ---
 
 # Multi-repo source resolution
@@ -165,6 +218,10 @@ nothing left to migrate.
 # Workflow — Graph-assisted mode
 
 ## Phase 0 — Graph readiness check (graph-assisted mode only)
+
+**Multi-repo mode:** Before the checks below, run `# Per-container graph resolution` Steps 1–3. Each container may resolve to a different graph or code-walking. The checks below then apply independently per resolved graph; a stale or missing graph for one container does NOT abort the whole run — it switches that container to code-walking only.
+
+**Single-repo mode (or unified graph for all containers):**
 1. Verify the graph file exists at `knowledge_graph.graph_path`
 2. Check graph age:
    - If older than 7 days, warn the user and ask whether to refresh (`graphify update .`) before proceeding
@@ -174,7 +231,7 @@ nothing left to migrate.
 
 ## Phase 1 — Code survey (graph-assisted)
 
-**Multi-repo pre-step:** Before querying the graph, resolve container source roots using `# Multi-repo source resolution`. In multi-repo mode, scope all graph queries to nodes whose `file_path` falls under one of the resolved source roots. After the survey, add a **Containers surveyed** section to `migration/survey-<date>.md`:
+**Multi-repo pre-step:** Before querying the graph, run `# Per-container graph resolution` (all four steps). Each container now has a resolved graph source (per-container graph, global graph scoped to its source root, or code-walking fallback). For containers running graph-assisted, scope graph queries to nodes whose `file_path` falls under that container's resolved source root. For containers falling back to code-walking, execute the code-walking Phase 1 for that container instead and merge the results. After the survey, add a **Containers surveyed** section to `migration/survey-<date>.md` (include the Mode column per `# Per-container graph resolution` Step 4):
 
 ```markdown
 ## Containers surveyed

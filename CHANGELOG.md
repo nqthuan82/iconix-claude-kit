@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-05-12
+
+**Gap fix: multi-repo + graph-assisted mode — per-container Graphify graph support.**
+
+Discovered during post-v1.0.0 review of backlog item #8. The migration agent previously
+assumed a single unified Graphify graph for all containers (global `knowledge_graph.graph_path`).
+In practice, each container repo may have its own graph. Three scenarios now handled:
+
+- Container has `graph_path:` → uses its own graph (Phase 0 checks it independently)
+- Container has no `graph_path:`, global graph is set → uses global graph, queries scoped to that container's source root (existing behaviour, now explicit)
+- Container has no graph at all → falls back to code-walking for that container only (new)
+
+Mixed-mode (some containers graph-assisted, others code-walking) is supported within a single
+migration run; results are merged into one unified survey.
+
+- **`templates/iconix.config.yaml`**: Added optional `graph_path:` per container (commented out) with explanation of the three-way fallback.
+- **`agents/iconix-migration.md`**: New `# Per-container graph resolution` section (4 steps: detect, report, Phase 0 per-container check, mixed-mode execution); Phase 0 updated to delegate multi-repo resolution to the new section; Phase 1 multi-repo pre-step updated to reference per-container graph resolution and merge mixed-mode results.
+
+CLAUDE.md audit: tooling-only (graph detection infrastructure); no ICONIX rules changed; theory audit not required; state machine and README project layout unaffected.
+
 ## [1.0.0] — 2026-05-12
 
 **Multi-repo / microservices support — final release.**

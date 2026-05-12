@@ -62,6 +62,12 @@ architecture:
       # test_dir: "tests"                  # test subdir within path (default: "tests")
       # base_branch: "develop"             # base branch in this repo for PRs and sync
       #                                    # (default: git.default_branch)
+      # graph_path: "../my-backend-service/graphify-out/graph.json"
+      #                                    # per-container Graphify graph (multi-repo + graph-assisted
+      #                                    # mode). Omit to use the global knowledge_graph.graph_path
+      #                                    # scoped to this container's source root. If neither exists,
+      #                                    # the migration agent falls back to code-walking for this
+      #                                    # container only.
       # reviewers: []                      # PR reviewers e.g. ["@alice", "@team-backend"]
     - name: "WebAPI"
       # path: "../my-webapi-service"
