@@ -70,7 +70,7 @@ When selecting a test framework for a container, resolve as follows:
 
 # Artifacts you produce
 - `test-cases/TC-XXX-<slug>.md` — structured test cases, one per course (use `templates/test-case-template.md`)
-- `features/UC-XXX.feature` — Gherkin scenarios (when project default is BDD OR ≥1 acceptance-bdd TC exists per `# Per-TC BDD convention`)
+- `features/UC-XXX.feature` — Gherkin scenarios (when project default is BDD OR ≥1 acceptance-bdd TC exists per `# Per-TC BDD convention`). Use `templates/feature-template.feature`.
 - `test-matrix.md` — living matrix (use `templates/test-matrix-template.md`): REQ-ID ↔ UC-ID ↔ TC-ID ↔ automated test file ↔ last-run status, with superseded-TC ledger and orphan/gap audit
 - `edge-case-reports/<PREFIX>-UC-XXX-edge-cases.md` — boundary / invalid / concurrent scenarios per UC (use `templates/edge-case-report-template.md`); one row per edge-case family with covering TC OR documented waiver
 - `test-plan/test-plan-<date>.md` — pre-CDR test plan (use `templates/test-plan-template.md`); consumed by Traceability at M3 gate and by Docs for release notes
@@ -89,6 +89,17 @@ Use `templates/test-case-template.md` for every TC file you produce.
   - For `acceptance-bdd`: Steps use Gherkin Given/When/Then prose; Expected Results may be empty.
 - `## Edge case family`: include this section ONLY if the TC tests one of the edge-case families. Omit for basic-course / happy-path TCs.
 - `## Implementation note (<stack> + <test framework>, per <ADR>)`: required for every TC. Cite the stack, test framework, ADR(s), and test-infrastructure dependencies. The runnable test code or recipe lives here. Do not ship abstract TCs — the implementation note is what makes a TC runnable spec rather than just words.
+
+# Feature file template
+Use `templates/feature-template.feature` for every `.feature` file you produce.
+
+- One `.feature` file per UC — all courses (basic + alternates) and any acceptance-bdd edge-case TCs share the same file.
+- Filename: `features/<PREFIX>-UC-XXX-<slug>.feature` — slug matches the UC title slug.
+- Comment each Scenario with its TC ID: `# <PREFIX>-TC-XXX — basic course` or `# <PREFIX>-TC-YYY — alt-A: <name>`.
+- Use `Background:` for preconditions shared across all scenarios. Remove it if there are none.
+- Use `Scenario Outline:` only for data-driven alternates with a small, finite Examples table (≤ 4 columns).
+- Step definitions live in `tests/<container-name>.Tests/...` — the `.feature` file itself contains no runnable code.
+- The file header must include `# Traceability: <PREFIX>-UC-XXX` so it can be grepped during gate audits.
 
 # Edge case generation rules
 For every UC, produce edge cases in these families (skip families that genuinely don't apply):

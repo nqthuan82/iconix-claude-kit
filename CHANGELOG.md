@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.48] — 2026-05-12
+
+**Add `feature-template.feature` — Gherkin BDD feature file scaffold.**
+
+The Tester agent already produced `features/UC-XXX.feature` files for acceptance-bdd TCs,
+but there was no template to scaffold from. This adds it.
+
+- **`templates/feature-template.feature`**: Gherkin scaffold covering the mandatory header
+  comment block (Traceability, Generated-by, TCs covered), Feature user-story block, optional
+  Background, one Scenario per UC course with TC-ID comment, and a commented-out Scenario
+  Outline pattern for data-driven alternates.
+- **`agents/iconix-tester.md`**: updated artifact line and added `# Feature file template`
+  section with authoring rules (one file per UC, filename convention, TC-ID comments,
+  Background usage, Scenario Outline guidance, step definition location, grep-able
+  Traceability header).
+- **`README.md`**: `feature-template.feature` added to both the `## What's inside` and
+  `## Project layout` template lists.
+
+ICONIX theory: kit extension. The canonical text does not cover BDD/Gherkin; this scaffolds
+the existing acceptance-testing obligation (Ch12 #4, already ✅). No matrix update required.
+
 ## [0.9.47] — 2026-05-12
 
 **Kit extension: legacy-code integration guidance in greenfield agents.**

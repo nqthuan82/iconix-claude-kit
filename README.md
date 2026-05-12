@@ -60,6 +60,7 @@ iconix-kit/
     ├── cdr-report-template.md              # per-UC M3 readiness report (v0.9.19+)
     ├── edge-case-report-template.md        # per-UC edge-case enumeration (v0.9.20+)
     ├── test-matrix-template.md             # living REQ↔UC↔TC matrix (v0.9.20+)
+    ├── feature-template.feature            # Gherkin BDD feature file scaffold (v0.9.48+)
     ├── change-impact-template.md
     ├── graphify-setup.md        # Graphify integration setup guide
     ├── intake-transcript-template.md   # stakeholder interview / meeting notes
@@ -182,6 +183,7 @@ docs/iconix/
     ├── test-matrix-template.md
     ├── test-plan-template.md
     ├── edge-case-report-template.md
+    ├── feature-template.feature
     ├── change-impact-template.md
     ├── concurrent-touch-template.md
     ├── bug-report-template.md
