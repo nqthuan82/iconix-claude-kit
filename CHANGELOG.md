@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] — 2026-05-12
+
+**Gap fix: upgrade agent heuristic detection gap for v1.0.1 and v1.0.2.**
+
+The version-detection heuristic table in `iconix-upgrade.md` jumped from v1.0.0 directly to
+v1.0.3 with no entries for v1.0.1 or v1.0.2. A project at v1.0.1 would be mis-detected as
+v1.0.0, producing an inaccurate "upgrading from v1.0.0" report and potentially missing
+version-specific Layer D checks.
+
+- **`agents/iconix-upgrade.md`** Step 1b — Pass 1 heuristic table: added v1.0.1 detection
+  signal (`graph_path:` field present on any container in `iconix.config.yaml`).
+- **`agents/iconix-upgrade.md`** Step 1b — added v1.0.2 note after the Pass 1 table: v1.0.2
+  is pure agent-prompt fixes with no structural signals; cannot be auto-detected; users on
+  v1.0.2 should use `--from 1.0.2` to override.
+- **`agents/iconix-upgrade.md`** Layer D step 6: added `graph_path:` broken-path check —
+  if a container defines `graph_path:` but the file doesn't exist locally, flag it; the
+  Migration agent will silently fall back to code-walking without this check.
+
+CLAUDE.md audit: tooling-only (upgrade agent heuristic and detection check); no ICONIX
+methodology rules changed; theory audit not required; state machine unchanged; README
+and project layout unchanged.
+
 ## [1.0.3] — 2026-05-12
 
 **Backlog #1 — Branch protection config generation: enforce ICONIX CI gates on merge.**

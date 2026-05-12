@@ -65,7 +65,10 @@ If the field is missing (project predates v0.9.9), use **two-pass heuristic dete
 | `use-case-packages/` folder | v0.9.0 |
 | `knowledge_graph:` section in config | v0.3.0 |
 | `meta:` section in config OR any container has `path:` field | v1.0.0 |
+| any container has `graph_path:` field in config | v1.0.1 |
 | `.ci/scripts/setup-branch-protection.sh` OR `.ci/scripts/setup-branch-policies.sh` | v1.0.3 |
+
+**v1.0.2 note:** v1.0.2 contains only agent-prompt fixes (reviewer, metrics, trace-check, upgrade) with no new folders, config keys, or templates. There is no structural signal to distinguish v1.0.1 from v1.0.2. If Pass 1 concludes v1.0.1 and the user knows they are on v1.0.2, use `--from 1.0.2` to override.
 
 **Pass 2 — content-based fallback** (run only when Pass 1 returns no evidence above v0.3.0; for projects with customized or non-canonical layouts):
 
@@ -165,6 +168,7 @@ Scan existing artifacts for differences from the current template format. Do NOT
    - Has `path:` defined but no `git_url:`? Flag as likely oversight — `/iconix-pr` needs `git_url:` to open PRs in the external repo.
    - Has `path:` defined? Verify the path exists locally (`Test-Path` / `-d`). If not, flag as broken path — migration and Phase 9 will fail silently.
    - Has `path:` defined and `src_dir:` absent? Note that default `"src"` applies; flag for confirmation if the container's actual source layout differs.
+   - Has `graph_path:` defined (v1.0.1+)? Verify the file exists at that path. If not, flag as broken graph path — the Migration agent will fall back to code-walking silently without warning.
 
 7. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
    - Do they follow the v0.9.5 naming convention (`bugfix/T1-<slug>` / `bugfix/T2-UC-XXX-<slug>`)?
