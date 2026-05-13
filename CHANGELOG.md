@@ -5,6 +5,22 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.9] — 2026-05-13
+
+**Feature: Developer agent dependency source lookup.**
+
+The Developer agent implements code based on sequence diagrams and class models. When a
+class extends or implements a type from an in-house package or plugin contract, the agent
+had no way to locate the type's source — leading to invented APIs or `[VERIFY]` gaps in
+generated code.
+
+- **`agents/iconix-developer.md`**: New `# Dependency source lookup` section. When a type
+  is not found in the container's own source root, the Developer now looks it up in
+  `dependency_sources:` from `iconix.config.yaml`, applying the same `containers:` scope
+  filter as the Migration agent. `role: contracts` entries guide plugin implementation;
+  `role: domain/infrastructure/utility` entries expose base class APIs. Types still not
+  found are annotated `// [VERIFY — type source unknown]` rather than silently invented.
+
 ## [1.0.8] — 2026-05-13
 
 **Feature: per-container scoping for `dependency_sources`.**

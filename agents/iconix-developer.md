@@ -42,6 +42,18 @@ Before generating any source or test file, resolve the write path for each conta
 
 Never hardcode `src/<container-name>/` when the container has `path:` defined.
 
+# Dependency source lookup (v1.0.8+)
+
+When implementing a class that **extends, implements, or calls** a type not found in the container's own resolved source root, look it up in `dependency_sources:` from `iconix.config.yaml` before writing code.
+
+1. **Filter by container scope** — if the entry has `containers:` defined, only use it when the current container name is in that list; if `containers:` is absent, the entry applies to all containers.
+2. Read the source at `path:` to find the interface or base class API (method signatures, properties, constructor parameters).
+3. **`role: contracts`** — the type is a plugin contract interface. Implement all required members; do not add extra public methods without an SD change.
+4. **`role: domain / infrastructure / utility`** — the type is a shared base class or utility. Match the calling convention established by its existing code.
+5. If the type is not found in any in-scope `dependency_sources:` entry and not in the container's own source root, annotate the usage `// [VERIFY — type source unknown]` and continue — do not invent the API.
+
+Project references (`<ProjectReference>`, workspaces, `go.work`) are resolved by the toolchain automatically and do not need an entry here.
+
 # ICONIX rules you MUST enforce
 1. **One sequence diagram per use case.** Covers basic + alternate courses.
 2. **Start from the robustness diagram.** Boundary and entity objects become lifelines. **RB controllers become messages** between lifelines — they are *logical* actions, not class instances.
