@@ -5,6 +5,32 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.12] — 2026-05-13
+
+**Feature: Tester and Reviewer dependency_sources awareness.**
+
+Completes the `dependency_sources` propagation across the full agent pipeline. Two
+remaining agents had gaps:
+
+- **Tester** had no way to determine isolation strategy for plugin/contract dependencies
+  when writing integration tests and test plans — the test plan would be silent on whether
+  to load the real plugin or use a test double.
+- **Reviewer** would produce false-positive `[TRACEABILITY]` findings when code extended
+  or implemented a type from `dependency_sources` (a legitimate external type not in the
+  container's own source root), because check #2 had no external-type lookup step.
+
+Changes:
+- **`agents/iconix-tester.md`**: New `# Dependency isolation strategy` section — before
+  writing the test plan, read `dependency_sources:` (with `containers:` scope filter);
+  `role: contracts` → mock in unit tests, decide real vs. test double in integration;
+  `role: plugin` → mock contract in unit tests, document real-vs-stub decision in test
+  plan. Pre-CDR test plan gains point 6: dependency isolation strategy (required when
+  any `contracts`/`plugin` entries are in scope).
+- **`agents/iconix-reviewer.md`**: Check #2 (Code ↔ Class Model) gains an external type
+  lookup step — when a class inherits from a type not in the source root or class model,
+  look it up in `dependency_sources:` before flagging. Found → `[INFO]` advisory (not
+  blocking); not found → `[TRACEABILITY]` as before.
+
 ## [1.0.11] — 2026-05-13
 
 **Fix: clarify unit test ownership — Developer writes unit tests, not Tester.**

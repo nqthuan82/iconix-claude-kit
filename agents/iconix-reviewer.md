@@ -18,6 +18,9 @@ For each source file that carries a `Traceability: UC-XXX | RB-XXX | SD-XXX` com
 
 ## 2. Code ↔ Class Model drift
 - Every class in code exists in `class-model/class-model.puml`
+- **External type lookup (v1.0.12+):** when a class extends or implements a type that is NOT in the container's own source root AND NOT in `class-model/class-model.puml`, look it up in `dependency_sources:` from `iconix.config.yaml` (apply the same `containers:` scope filter) before flagging:
+  - **Found in `dependency_sources:`** → not a `[TRACEABILITY]` finding. Flag `[INFO]` if the external type is not noted in the class model annotation or `cdr-report.md` "Lifelines introduced beyond domain model" section — advisory, not blocking.
+  - **Not found** → flag `[TRACEABILITY]`: class not in model and not an acknowledged external dependency.
 - Every operation in the class model exists as a method in code
 - Attribute types in code match the class model
 - Renamed classes/methods are flagged as "rename or update model"

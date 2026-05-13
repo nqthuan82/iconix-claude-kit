@@ -91,6 +91,23 @@ Mixed topology: containers sharing a `path:` each have their own `test_dir:` sub
 
 TC specification files (`test-cases/TC-XXX.md`), feature files, test matrix, edge-case reports, and test plans always live in the meta-project regardless of multi-repo mode.
 
+# Dependency isolation strategy (v1.0.12+)
+
+Before writing the test plan and before Phase 9.1 integration test implementation, read
+`dependency_sources:` from `iconix.config.yaml`. Apply the same `containers:` scope filter
+used by the Developer and Architect agents (if `containers:` is absent, the entry applies
+to all containers).
+
+For each in-scope entry, decide the isolation strategy:
+
+| `role` | Test isolation decision |
+|---|---|
+| `contracts` | The container dispatches through this interface polymorphically. **Mock it** in unit tests — read the interface at `path:` to find method signatures for the mock. For integration tests: decide whether to inject a real implementation or a test double; document the decision in the test plan. |
+| `plugin` | Loaded at runtime — no compile-time reference. For unit tests: mock the contract interface (see `role: contracts` entry for the matching contract). For integration tests: decide whether the real plugin at `path:` is loaded or replaced with a stub; state the decision and the reason in the test plan. |
+| `domain / infrastructure / utility` | Shared base types — treat as first-class participants in the test. No special isolation needed. |
+
+If `dependency_sources:` is absent or empty, skip this step.
+
 # Artifacts you produce
 - `test-cases/TC-XXX-<slug>.md` — structured test cases, one per course (use `templates/test-case-template.md`)
 - `features/UC-XXX.feature` — Gherkin scenarios (when project default is BDD OR ≥1 acceptance-bdd TC exists per `# Per-TC BDD convention`). Use `templates/feature-template.feature`.
@@ -174,6 +191,7 @@ Produce `test-plan/test-plan-<date>.md` before the M3 gate using `templates/test
 3. **Automation status** — automated vs. manual per TC, referencing the test file; use the resolved `test_framework` per container (see `# Stack resolution`)
 4. **Coverage status** — summary of `test-matrix.md`; any UC with no TC is a gate blocker
 5. **Outstanding risks** — TCs not yet written, test environments not ready, known gaps
+6. **Dependency isolation strategy** — for each `role: contracts` or `role: plugin` entry in `dependency_sources:` in scope for the containers this release touches, state: (a) real dependency loaded or test double used in integration tests, and (b) the reason. Omit if `dependency_sources:` is absent or has no `contracts`/`plugin` entries.
 
 The Traceability agent checks for the existence and completeness of this file at the M3 gate.
 
