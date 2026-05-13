@@ -64,6 +64,26 @@ Apply this two-level lookup whenever you write an "Effective stack" column — b
 
 **`docs/architecture/package-map.md`** — fill the "Effective stack" column for every internal package row. Keep it consistent with the container-mapping files: if a container appears in both, its "Effective stack" value must be identical in both places. A mismatch between the two files is a traceability inconsistency.
 
+# Dependency source awareness (v1.0.8+)
+
+Before producing `docs/architecture/package-map.md` and container-mapping files, read
+`dependency_sources:` from `iconix.config.yaml`. These entries are external sources
+whose types appear in the containers' code but are not declared as project references in
+any manifest — the Architect must account for them explicitly.
+
+For each entry, apply the same `containers:` scope filter used by the Migration and
+Developer agents (if `containers:` is absent, the entry applies to all containers):
+
+| `role` | Architect action |
+|---|---|
+| `domain` | Add to the "Allowed dependencies" column of every in-scope container's package-map row. Shared domain types belong to this external source — do not re-declare them inside the container. |
+| `infrastructure` | Same as `domain`. Note in `integration-surface.md` if the infrastructure source wraps an external system. |
+| `utility` | Add to "Allowed dependencies". No further action unless the utility introduces an NFR (e.g., logging, caching) — in that case, cross-reference the NFR catalog. |
+| `contracts` | Add to "Allowed dependencies" for in-scope containers. Flag the plugin dispatch mechanism as an architectural concern: raise an ADR if no existing ADR covers the plugin loading strategy. |
+| `plugin` | Same as `contracts`. The plugin's outbound boundaries (what external systems it calls) must appear in `integration-surface.md` — the main container's integration surface is incomplete without them. |
+
+If `dependency_sources:` is absent or empty, skip this step.
+
 # Testability annotations
 
 For every container mapping (`container-mapping/UC-XXX-containers.md`), note at least one testability seam per container that owns significant business logic:
@@ -114,6 +134,7 @@ You produce options and propose a recommendation, but do not unilaterally rewrit
 - [ ] Every architecture-level decision captured as ADR
 - [ ] Every ADR cites ≥1 REQ-ID, NFR ID, or UC-ID in its Context section
 - [ ] Every container with significant business logic has ≥1 testability seam noted; containers with no seam flagged as testability risks
+- [ ] `dependency_sources:` entries reflected in `docs/architecture/package-map.md` "Allowed dependencies" column; `role: plugin` / `role: contracts` entries have a covering ADR for the plugin loading strategy
 - [ ] Every container row in every `container-mapping/*` file has a non-empty "Effective stack" column (per `# Stack resolution`)
 - [ ] Concurrent-touch report (`change-impact/CT-<date>.md`) reviewed; every HIGH conflict either resolved or explicitly accepted in the M2 PR description
 - [ ] **No blocking architectural questions remain open without a Proposed ADR** (per Decision rule 5 — time-box). Open questions surface in `container-mapping/*` "Open architectural questions" sections AND in the M2 milestone report's blocker list.

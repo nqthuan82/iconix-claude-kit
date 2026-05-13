@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.10] — 2026-05-13
+
+**Feature: Architect agent dependency source awareness.**
+
+The Architect produces `package-map.md` and container-mapping files that define
+architectural boundaries. Without knowledge of `dependency_sources:`, the "Allowed
+dependencies" column in the package map would silently omit in-house packages and plugin
+contracts — making the map incomplete and causing false drift findings downstream.
+
+- **`agents/iconix-architect.md`**: New `# Dependency source awareness` section. Before
+  producing `package-map.md` and container-mapping files, the Architect reads
+  `dependency_sources:` from `iconix.config.yaml` (applying the same `containers:` scope
+  filter as Migration and Developer agents) and takes role-specific actions: `domain /
+  infrastructure / utility` entries are added to "Allowed dependencies"; `contracts /
+  plugin` entries additionally trigger an ADR for the plugin loading strategy and require
+  the plugin's outbound boundaries in `integration-surface.md`. New PDR readiness
+  checklist item enforces this.
+
 ## [1.0.9] — 2026-05-13
 
 **Feature: Developer agent dependency source lookup.**
