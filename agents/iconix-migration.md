@@ -245,12 +245,15 @@ Read `dependency_sources:` from `iconix.config.yaml`. This covers cases auto-det
 - **In-house packages** (NuGet, npm, pip, Maven, etc.) — the manifest only sees a package name + version; the source repo is cloned alongside the container but the agent has no path to follow from the manifest.
 - **Plugins** — loaded at runtime via reflection / MEF / plugin-framework. The main container has **no compile-time reference** to the plugin implementation; only to a contract interface. Without an explicit entry here the agent cannot trace the plugin's outbound boundaries.
 
+Determine the **current container name** before iterating: in multi-repo mode this is the container currently being processed (one pass per container); in single-repo mode use the first container name in `architecture.containers` as the current context (or treat all entries as in-scope if the project has only one logical container).
+
 For each entry in `dependency_sources:`:
-1. Verify `path:` exists on disk — if not, record `[VERIFY — dependency_sources path not found: <name> @ <path>]` and skip
-2. Read source files at `path:`; classify public types by responsibility shape
-3. **`role: contracts`** — focus on interfaces and DTOs: these are plugin contracts the main container dispatches through polymorphically. Register them so Phase 3/4 can resolve `AMBIGUOUS` polymorphic calls to concrete candidate implementations.
-4. **`role: plugin`** — trace the full outbound boundary chain as in Phase 3/4. These are runtime-loaded implementations the agent would otherwise miss entirely. Register all public types AND trace their infrastructure imports so Phase 4 can produce complete RB nodes.
-5. Register each type as `EXTRACTED (dependency-source: <name> @ <path>)` in the known-types registry
+1. **Container scope check** — if the entry has a `containers:` list, check whether the current container name is in that list. If not, skip this entry and record it in the registry as `skipped (not in containers scope for <current-container>)`. If `containers:` is absent, the entry applies to all containers — include it.
+2. Verify `path:` exists on disk — if not, record `[VERIFY — dependency_sources path not found: <name> @ <path>]` and skip
+3. Read source files at `path:`; classify public types by responsibility shape
+4. **`role: contracts`** — focus on interfaces and DTOs: these are plugin contracts the main container dispatches through polymorphically. Register them so Phase 3/4 can resolve `AMBIGUOUS` polymorphic calls to concrete candidate implementations.
+5. **`role: plugin`** — trace the full outbound boundary chain as in Phase 3/4. These are runtime-loaded implementations the agent would otherwise miss entirely. Register all public types AND trace their infrastructure imports so Phase 4 can produce complete RB nodes.
+6. Register each type as `EXTRACTED (dependency-source: <name> @ <path>)` in the known-types registry
 
 ## Sub-step C — Report the registry
 
@@ -258,8 +261,9 @@ Before proceeding to Phase 0/1, output a registry summary:
 
 ```
 ## Dependency source registry
-Project-references detected: N  |  Configured dependency_sources: M
-Known types registered: K
+Current container: <name>
+Project-references detected: N  |  Configured dependency_sources: M (K skipped — not in scope)
+Known types registered: T
 
 | Source | Role | Types registered | Status |
 |---|---|---|---|
@@ -268,6 +272,7 @@ Known types registered: K
 | ../acme-infra (dependency_sources)        | infrastructure |  8 | OK |
 | ../plugins/contracts (dependency_sources) | contracts      |  4 | OK |
 | ../plugins/reporting (dependency_sources) | plugin         |  3 | OK |
+| ../plugins/analytics (dependency_sources) | plugin         |  0 | skipped (containers: [Frontend] — current: Backend) |
 | ../../Missing.Lib (project-ref)           | —              |  0 | [VERIFY] path not found |
 ```
 

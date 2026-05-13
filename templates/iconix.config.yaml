@@ -105,19 +105,29 @@ architecture:
 #   contracts      — interfaces and DTOs that plugins implement (plugin contracts)
 #   plugin         — runtime-loaded plugin implementations
 #
+# containers: (optional per entry) — list of container names this source applies to.
+#   Omit to apply to ALL containers. Use this to scope plugins or packages that are
+#   only relevant to one container so the agent does not pollute others' registries.
+#   Package entries without containers: are still filtered at runtime by whether the
+#   package name appears in that container's manifest — but explicit scoping is cleaner.
+#
 # dependency_sources:
 #   - name: "Acme.Domain"
 #     path: "../acme-domain/src"
 #     role: domain
+#     # containers: ["Backend", "WebAPI"]   # omit = all containers
 #   - name: "Acme.Infrastructure"
 #     path: "../acme-infra/src"
 #     role: infrastructure
+#     # containers: ["Backend"]
 #   - name: "PluginContracts"
 #     path: "../plugins/contracts/src"
 #     role: contracts
+#     # contracts are typically shared — omit containers: to apply everywhere
 #   - name: "ReportingPlugin"
 #     path: "../plugins/reporting/src"
 #     role: plugin
+#     containers: ["Backend"]              # plugin only loaded by Backend
 
 nfr_catalog: "docs/nfr-catalog.md"
 

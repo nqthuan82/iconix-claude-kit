@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.8] — 2026-05-13
+
+**Feature: per-container scoping for `dependency_sources`.**
+
+`dependency_sources` entries are defined at the project level but some sources — plugins
+especially — are only loaded by one specific container. Without scoping, the migration
+agent would include every plugin in every container's known-types registry, polluting
+registries with types that can never appear in that container's code.
+
+New optional `containers:` list field on each `dependency_sources` entry. If present,
+the entry is only included in the known-types registry when the migration agent is
+processing a container whose name is in the list. If absent, the entry applies to all
+containers (existing behaviour unchanged).
+
+- **`agents/iconix-migration.md`**: Sub-step B now starts by determining the current
+  container name (multi-repo: the container being processed; single-repo: first
+  container in config). Each `dependency_sources` entry is checked for `containers:`
+  before loading — entries not in scope are skipped and shown in the Sub-step C registry
+  report as `skipped (containers: [...] — current: <name>)`.
+- **`templates/iconix.config.yaml`**: Added `containers:` field documentation to the
+  `dependency_sources` section with examples and the "omit = all containers" rule.
+
 ## [1.0.7] — 2026-05-13
 
 **Feature: dependency source reconnaissance for the migration agent.**
