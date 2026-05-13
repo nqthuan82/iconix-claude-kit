@@ -573,8 +573,10 @@ When the kit evolves (new templates, new agents, new config sections), existing 
 After M3 / CDR passes, the implementation phase isn't a black box ("Developer + Tester iterate") — it's a 4-sub-state loop owned by the Orchestrator, with explicit handoffs and an iteration cap.
 
 ```
-9.1 Kickoff    │  Developer codes from SD; Tester implements TCs; both on
-               │  feature/UC-XXX-<slug>. Commits: [UC-XXX] Impl: <summary>.
+9.1 Kickoff    │  Developer codes from SD + implements unit test bodies (from
+               │  unit TCs); Tester implements integration/system/acceptance
+               │  TCs + verifies unit coverage. Both on feature/UC-XXX-<slug>.
+               │  Commits: [UC-XXX] Impl: <summary>.
    ▼
 9.2 Pre-merge  │  Reviewer drift check. Verdict: APPROVE | APPROVE WITH NOTES |
    drift       │  REQUEST CHANGES | BLOCK MERGE.

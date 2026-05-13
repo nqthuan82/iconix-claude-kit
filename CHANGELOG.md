@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.11] — 2026-05-13
+
+**Fix: clarify unit test ownership — Developer writes unit tests, not Tester.**
+
+The kit had an internal inconsistency: the process reference matrix (Ch10 #3) stated
+"Developer is expected to write unit tests," but the Tester agent's Phase 9.1 translated
+ALL TC types (including unit) into runnable test code. The Developer agent only emitted
+empty stubs. This contradicted ICONIX Ch10 #3: "Focus on unit testing *while* implementing
+code" — an activity that belongs to the Developer.
+
+- **`agents/iconix-developer.md`**: Phase 9.1 now includes an explicit step to implement
+  unit test bodies from unit-level TC specifications (`## Type: unit`) alongside the
+  corresponding production method (arrange/act/assert from TC Steps/Expected results).
+  Traceability comment added to unit test files. Signal-ready condition updated to require
+  unit test bodies complete.
+- **`agents/iconix-tester.md`**: Phase 9.1 scoped to integration, system, and acceptance
+  TCs only. Unit TCs are Developer's responsibility. Tester verifies unit test coverage
+  by checking `test-matrix.md` for test file paths before signaling ready.
+- **`docs/iconix/iconix-process-reference.md`**: Ch10 #3 row updated to accurately
+  describe the split: Developer writes unit test bodies at Phase 9.1; Tester writes
+  integration/system/acceptance code in parallel.
+
 ## [1.0.10] — 2026-05-13
 
 **Feature: Architect agent dependency source awareness.**

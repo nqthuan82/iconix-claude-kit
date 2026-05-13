@@ -216,9 +216,14 @@ Triggered when M3 has passed for a UC and Phase 9 begins (sub-state 9.1 in the O
 Per UC, on branch `feature/UC-XXX-<slug>` (created at M2 entry per v0.9.5):
 1. Convert each SD message into the corresponding operation/method call in code, in the SD's order. Boundaries map to controllers; entities to domain classes; Controllers (the lifelines, not the boundary stereotype) to services or coordinators.
 2. Implement basic course first; alternate courses next (Ch10 #1: "Remember to implement the alternate courses as well as the basic courses").
-3. Add `Traceability: UC-XXX | RB-XXX | SD-XXX` comment to every new source file.
-4. Commit format: `[UC-XXX] Impl: <imperative summary>` per v0.9.5 commit conventions.
-5. When the SD's basic + alternate courses are all implemented and the corresponding TCs (run by the Tester in parallel) are green, signal "ready" — Phase 9 advances to 9.2 (Reviewer pre-merge drift check).
+3. **Implement unit test bodies** for each `test-cases/TC-XXX-<slug>.md` with `## Type: unit` covering this UC. Do this alongside the corresponding production method — not as a separate pass (Ch10 #3: "Focus on unit testing *while* implementing code"). Pattern per TC:
+   - **Arrange** — set up state per TC `## Preconditions`
+   - **Act** — invoke the method under test
+   - **Assert** — verify against TC `## Expected results`
+   The unit test stubs emitted at CDR are the scaffolding; fill in the bodies here.
+4. Add `Traceability: UC-XXX | RB-XXX | SD-XXX` comment to every new source file and `Traceability: UC-XXX | TC-XXX` to every new unit test file.
+5. Commit format: `[UC-XXX] Impl: <imperative summary>` per v0.9.5 commit conventions.
+6. When the SD's basic + alternate courses are all implemented, unit test bodies are complete, and the Tester's integration/system tests are green, signal "ready" — Phase 9 advances to 9.2 (Reviewer pre-merge drift check).
 
 ## Drift fix iteration (9.3)
 Triggered by Reviewer verdict `REQUEST CHANGES` or `BLOCK MERGE` from the Pre-merge drift check.

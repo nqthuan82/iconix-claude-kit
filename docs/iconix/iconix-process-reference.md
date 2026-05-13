@@ -242,7 +242,7 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 | 6 | Don't let framework issues take over business issues | ✅ | `iconix-reviewer.md` check #6 — flags methods with framework boilerplate but no visible domain behaviour |
 | 5 | If code gets out of control, revisit the design | ✅ | Bug Type 2 flow re-runs Traceability → full change pipeline; Phase 9 iteration cap (`phase9.max_iterations_per_uc`) escalates a stuck Type 1 to Architect / PO before it becomes Type 2 (added v0.9.8) |
 | 4 | Keep design and code in sync | ✅ | Reviewer + M3 gate; Phase 9.2 pre-merge drift check is the per-PR enforcement (added v0.9.8) |
-| 3 | Focus on unit testing while implementing code | ✅ | Developer is expected to write unit tests; `iconix-tester.md` `# Test implementation mode` runs Tester in parallel with Developer at Phase 9.1 (added v0.9.8) |
+| 3 | Focus on unit testing while implementing code | ✅ | Developer writes unit test bodies in Phase 9.1 alongside production code — per Ch10 #3 "while implementing." Unit test *stubs* (empty shells) are emitted at CDR; bodies filled at Phase 9.1 from unit-level TC `## Steps` / `## Expected results`. Tester writes integration/system/acceptance test code in parallel; verifies Developer's unit test coverage via `test-matrix.md` before signaling ready. (clarified v1.0.11) |
 | 2 | Don't overcomment code | ❌ | Not in kit (out of scope for agent prompts) |
 | 1 | Implement the alternate courses, not just the basic course | ✅ | Developer + Tester — both handle alternate courses; Phase 9 Implementation mode explicitly cites Ch10 #1 (added v0.9.8) |
 
