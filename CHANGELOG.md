@@ -5,6 +5,39 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.7] — 2026-05-13
+
+**Feature: dependency source reconnaissance for the migration agent.**
+
+When the migration agent walks a container's code it encounters types defined in
+dependencies — not in the container's own source root. Without access to those type
+definitions the agent falls back to name-based heuristics and emits `[VERIFY]` on
+every unrecognised base class or interface. Two categories of dependency were unhandled:
+
+1. **In-house packages** (NuGet, npm, pip, Maven, etc.) whose source is cloned on the
+   same machine but whose manifest entry is a package name + version — not a resolvable
+   path the agent can follow automatically.
+2. **Plugins** loaded at runtime via reflection / MEF / plugin-framework — the main
+   container has no compile-time reference to the plugin implementation at all.
+
+- **`agents/iconix-migration.md`**: New `# Step 0b — Dependency source reconnaissance`
+  section, running in both graph-assisted and code-walking modes before Phase 0/1.
+  Three sub-steps: (A) auto-detect project references from manifest (`<ProjectReference>`,
+  `workspaces`, `go.work`, etc.) and classify their public types; (B) read explicit
+  `dependency_sources:` entries from config for packages and plugins the manifest cannot
+  describe; (C) report the known-types registry before proceeding. Types not in the
+  registry fall back to name-based heuristics + `[VERIFY]`, unchanged from before.
+- **`templates/iconix.config.yaml`**: New `dependency_sources:` section (commented out,
+  with `role:` enum documented: `domain | infrastructure | utility | contracts | plugin`).
+  Distinction between project-reference (auto-detected, no entry needed) and
+  package/plugin (must be declared) is explained in the comment block.
+- **`agents/iconix-upgrade.md`**: Layer D check #8 — verifies each `dependency_sources`
+  `path:` exists on disk; flags missing role as informational.
+
+CLAUDE.md audit: tooling-only (migration agent reconnaissance step + config extension);
+no ICONIX methodology rules changed; theory audit not required; state machine unchanged;
+README and project layout unchanged.
+
 ## [1.0.6] — 2026-05-13
 
 **Gap fix: Phase 9 loop metrics — phase9-cycles/ was not read by the metrics agent.**

@@ -215,6 +215,66 @@ nothing left to migrate.
 
 ---
 
+# Step 0b — Dependency source reconnaissance
+
+Run this step in **both modes** immediately after the pre-run idempotency check, before Phase 0 (graph-assisted) or Phase 1 (code-walking). It builds a **known-types registry** — a mapping of class/interface names → ICONIX stereotype — drawn from dependency source code available locally. The registry is consulted in Phase 2, 3, and 4 whenever a type is not defined in the container's own source root.
+
+## Sub-step A — Project references (auto-detect)
+
+Parse the project manifest(s) at each container's resolved source root for compile-time project references:
+
+| Language | Manifest | Reference syntax |
+|---|---|---|
+| C# / .NET | `*.csproj` | `<ProjectReference Include="../../Acme.Domain/Acme.Domain.csproj" />` |
+| Node.js / TS | `package.json` | `"workspaces": ["../shared"]` or `"@acme/domain": "file:../../shared"` |
+| Python | `pyproject.toml` | `acme-domain = {path = "../../acme-domain"}` |
+| Go | `go.work` | `use (../acme-domain)` |
+| Java | `pom.xml` | `<scope>system</scope>` + `<systemPath>` |
+| Ruby | `Gemfile` | `gem 'acme', path: '../../acme'` |
+
+For each project reference found:
+1. Resolve the absolute path from the manifest's location
+2. Verify the path exists on disk — if not, record `[VERIFY — ProjectReference not found: <path>]` in the registry report and skip
+3. Read source files at that path; classify public types by responsibility shape (same rules as Phase 4)
+4. Register each type as `EXTRACTED (project-ref: <relative-path>)` in the known-types registry
+
+## Sub-step B — Explicit dependency sources (from config)
+
+Read `dependency_sources:` from `iconix.config.yaml`. This covers cases auto-detect cannot reach:
+
+- **In-house packages** (NuGet, npm, pip, Maven, etc.) — the manifest only sees a package name + version; the source repo is cloned alongside the container but the agent has no path to follow from the manifest.
+- **Plugins** — loaded at runtime via reflection / MEF / plugin-framework. The main container has **no compile-time reference** to the plugin implementation; only to a contract interface. Without an explicit entry here the agent cannot trace the plugin's outbound boundaries.
+
+For each entry in `dependency_sources:`:
+1. Verify `path:` exists on disk — if not, record `[VERIFY — dependency_sources path not found: <name> @ <path>]` and skip
+2. Read source files at `path:`; classify public types by responsibility shape
+3. **`role: contracts`** — focus on interfaces and DTOs: these are plugin contracts the main container dispatches through polymorphically. Register them so Phase 3/4 can resolve `AMBIGUOUS` polymorphic calls to concrete candidate implementations.
+4. **`role: plugin`** — trace the full outbound boundary chain as in Phase 3/4. These are runtime-loaded implementations the agent would otherwise miss entirely. Register all public types AND trace their infrastructure imports so Phase 4 can produce complete RB nodes.
+5. Register each type as `EXTRACTED (dependency-source: <name> @ <path>)` in the known-types registry
+
+## Sub-step C — Report the registry
+
+Before proceeding to Phase 0/1, output a registry summary:
+
+```
+## Dependency source registry
+Project-references detected: N  |  Configured dependency_sources: M
+Known types registered: K
+
+| Source | Role | Types registered | Status |
+|---|---|---|---|
+| ../../Acme.Domain (project-ref)           | domain         | 12 | OK |
+| ../../Acme.SharedKernel (project-ref)     | auto-detected  |  5 | OK |
+| ../acme-infra (dependency_sources)        | infrastructure |  8 | OK |
+| ../plugins/contracts (dependency_sources) | contracts      |  4 | OK |
+| ../plugins/reporting (dependency_sources) | plugin         |  3 | OK |
+| ../../Missing.Lib (project-ref)           | —              |  0 | [VERIFY] path not found |
+```
+
+Types **not found** in the registry during Phase 2/3/4 fall back to name-based heuristics and are annotated `[VERIFY]`, same as before this step existed.
+
+---
+
 # Workflow — Graph-assisted mode
 
 ## Phase 0 — Graph readiness check (graph-assisted mode only)

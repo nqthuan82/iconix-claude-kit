@@ -80,6 +80,45 @@ architecture:
       # git_url: "https://github.com/org/frontend"
     - name: "Database"
 
+# Dependency sources available locally for the migration agent (optional, v1.0.7+)
+#
+# Use this when dependency source code lives on the same machine but is NOT
+# reachable via a ProjectReference / workspace link in the container's manifest:
+#
+#   1. In-house packages (NuGet, npm, pip, Maven, etc.) — your team owns the source
+#      and has it cloned locally. The container's manifest only sees a package name +
+#      version; the agent cannot auto-detect the source path.
+#
+#   2. Plugins — loaded at runtime via reflection / MEF / plugin-framework. The main
+#      container has NO compile-time reference to the plugin implementation; only to a
+#      contract interface. Without this entry the agent cannot trace the plugin's
+#      outbound boundaries.
+#
+# Project references declared in a manifest (e.g. <ProjectReference> in .csproj,
+# workspace entries in package.json, go.work use directives) are auto-detected in
+# Step 0b-A and do NOT need an entry here.
+#
+# role values:
+#   domain         — entities, value objects, domain services
+#   infrastructure — repositories, adapters, external service clients
+#   utility        — helpers, extensions, cross-cutting concerns
+#   contracts      — interfaces and DTOs that plugins implement (plugin contracts)
+#   plugin         — runtime-loaded plugin implementations
+#
+# dependency_sources:
+#   - name: "Acme.Domain"
+#     path: "../acme-domain/src"
+#     role: domain
+#   - name: "Acme.Infrastructure"
+#     path: "../acme-infra/src"
+#     role: infrastructure
+#   - name: "PluginContracts"
+#     path: "../plugins/contracts/src"
+#     role: contracts
+#   - name: "ReportingPlugin"
+#     path: "../plugins/reporting/src"
+#     role: plugin
+
 nfr_catalog: "docs/nfr-catalog.md"
 
 # Custom test families for your domain (e.g., gaming, finance, healthcare)

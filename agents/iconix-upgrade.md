@@ -173,6 +173,10 @@ Scan existing artifacts for differences from the current template format. Do NOT
 7. **Bug-fix branches** (if git history available) — `git branch -r --list 'origin/bugfix/*'`:
    - Do they follow the v0.9.5 naming convention (`bugfix/T1-<slug>` / `bugfix/T2-UC-XXX-<slug>`)?
 
+8. **`dependency_sources` config** (v1.0.7+, when present) — for each entry in `dependency_sources:`:
+   - Has `path:` defined? Verify the path exists locally (`Test-Path` / `-d`). If not, flag as broken dependency source path — migration agent Step 0b will silently skip it without this check.
+   - Has `role:` absent? Note that no role is specified; the agent will attempt auto-detection but may misclassify (flag as informational, not a blocker).
+
 **Pass 2 — content-based fallback** (run when Pass 1 finds 0 artifacts in any category — e.g., the project uses a flat or renamed layout):
 
 Use Glob + Grep to find files by content pattern at any path:
