@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.41] — 2026-05-14
+
+**Feature: `/iconix-status` — BR-NNN stats (migration mode, read-only).**
+
+`commands/iconix-status.md` extended with three additions. No files are written — status
+remains a read-only conversation report.
+
+1. **Section 1 — Artifact inventory**: new `BR` row showing EXTRACTED/INFERRED counts and
+   broken ADR citation count. Row is omitted when `migration/business-rules.md` is absent.
+2. **New section 2b — Business rules coverage** (between NFR coverage and test coverage):
+   - Total rules with EXTRACTED / INFERRED / AMBIGUOUS split.
+   - ⚠ Investigate categories (Invariant / Authorization / Transition guard / Workflow /
+     Calculation) with no covering ADR — lists BR-IDs as ADR candidates for Architect.
+   - Broken ADR citations (Traceability check #17): scans `adrs/*.md` Context sections for
+     `BR-\d+` patterns and verifies each against `business-rules.md` — lists broken pairs.
+   - Unlinked rules: BR-IDs that no UC file references in `## Business rules cross-reference`.
+   - Section skipped entirely when `migration/business-rules.md` is absent.
+3. **Section 5 — Milestone readiness**: BR-NNN check #17 added to M2 blocker list with
+   per-broken-citation detail.
+
 ## [1.0.40] — 2026-05-14
 
 **Feature: Traceability matrix — BR-NNN column + Phase 5d rule IDs.**
