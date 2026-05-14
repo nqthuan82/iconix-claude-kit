@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.28] — 2026-05-14
+
+**Fix: Migration Phase 5c (manual mode) — propagate two-part skip logic and Step 4 gate.**
+
+The manual Phase 5c section previously said "All other rules apply unchanged" without
+explicitly calling out the gate added in v1.0.27. Added an explicit bullet to make it
+unambiguous that the same two-part logic applies in code-walking mode:
+- Steps 1–3 (domain glossary) always run when schema sources are found.
+- The Step 4 gate checks `bdd.enabled` and UC-DRAFT existence before generating
+  BDD-DRAFT files; log messages and handoff report entries are identical to graph-assisted.
+
+No theory audit required — parity fix between the two execution modes.
+
 ## [1.0.27] — 2026-05-14
 
 **Fix: Migration Phase 5c — decouple domain glossary generation from `bdd.enabled` flag.**

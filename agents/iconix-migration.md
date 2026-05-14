@@ -1491,6 +1491,10 @@ Same as graph-assisted Phase 5c. Key differences in code-walking mode:
 - **Confidence:** add a caveat in every BDD-DRAFT file header:
   `Code-walking mode — confidence is lower than graph-assisted output;
    every scenario requires careful human review before promotion.`
+- **Two-part skip logic and Step 4 gate:** identical to graph-assisted — Steps 1–3
+  (domain glossary) always run when schema sources are found, regardless of `bdd.enabled`;
+  the gate before Step 4 checks `bdd.enabled` and UC-DRAFT existence before generating
+  BDD-DRAFT files. Log messages and handoff report entries are the same as graph-assisted.
 
 All other rules (Step 1 detection, Step 2 parsing, Step 3 glossary, Steps 4–6) apply unchanged.
 
