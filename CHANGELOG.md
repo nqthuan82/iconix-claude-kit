@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.21] — 2026-05-14
+
+**Fix: Traceability agent concurrent-touch Step 6 — remove duplicated Architect resolution options.**
+
+Step 6 "Recommend resolutions" encoded concrete architectural options (service extraction,
+class splitting, migration coordination, ADR guidance) that are duplicated from
+`iconix-architect.md # Resolving concurrent touches`. Two agents maintaining the same
+resolution list is a drift risk. The Traceability agent is an auditor; its job ends at
+detection and classification. Resolution belongs to the Architect.
+
+Step 6 replaced with "Escalate active HIGH conflicts to Architect" — flags conflicts for
+Architect resolution and defers all options to `iconix-architect.md`.
+
 ## [1.0.20] — 2026-05-14
 
 **Fix: remove stale `# Drift detection` section from Developer agent.**

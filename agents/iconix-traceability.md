@@ -126,14 +126,11 @@ For each pair of in-flight UCs `(A, B)`:
    - If the `(UC-A, UC-B, class-or-resource)` tuple matches an accepted entry, tag the conflict `[ACCEPTED — CT-<date>]`
    - Accepted conflicts appear in the report for transparency but are excluded from the **active** HIGH count used by `block_on_high_conflict` and M2 gate readiness
 
-## Step 6 — Recommend resolutions
-For each **active** (non-accepted) HIGH conflict, produce 2–3 concrete options. Examples:
-- **Operation-name collision**: rename one UC's operation to disambiguate (preferred when semantics genuinely differ). OR extract a shared base class/interface that both UCs call. OR split the class if responsibilities are distinct.
-- **Entity write/write (distinct operations, escalated)**: extract a service class aggregating both operations; UCs depend on the service. OR land one UC first via `arch/<scope>` branch; the other rebases.
-- **Controller name collision**: rename to disambiguate (`PlaceBetController` + `CancelBetController`) OR consolidate into one controller with multiple endpoints.
-- **DB container write/write**: share a single migration; coordinate via `arch/<scope>`; document in an ADR.
-
-You produce options, not the final decision — the Architect agent is the canonical resolver.
+## Step 6 — Escalate active HIGH conflicts to Architect
+For each **active** (non-accepted) HIGH conflict, flag it in the report as requiring
+Architect resolution. Do not propose resolution options here — that logic lives in
+`iconix-architect.md # Resolving concurrent touches` and the Architect is the canonical
+resolver. Your job ends at detection and classification.
 
 ## Step 7 — Render the report
 Use `templates/concurrent-touch-template.md` (or `docs/iconix/templates/concurrent-touch-template.md` after install). Save as `change-impact/CT-<today>.md`.
