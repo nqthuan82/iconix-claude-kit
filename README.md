@@ -307,7 +307,9 @@ Traceability (root level — accessible by all agents without path resolution)
   orphan-report.md [agent]
 
 Migration (legacy codebases only — produced by /iconix-migrate)
-  migration/       [agent]    survey-<date>.md, coverage-gaps.md, handoff-<date>.md
+  migration/       [agent]    survey-<date>.md, coverage-gaps.md, handoff-<date>.md,
+                              domain-glossary.md (Phase 5c — domain vocabulary from SQL schema)
+  features/                   BDD-DRAFT-*.feature (Phase 5c — also writes here when SQL schema found)
 ```
 
 ## Usage
@@ -821,7 +823,7 @@ the normal pipeline resumes once Traceability promotes them to permanent IDs.
 | **Analyst** | `UC-DRAFT-*.md`, `RB-DRAFT-*.puml` — validates and promotes through M1/M2 |
 | **Architect** | `class-model.puml` — maps to containers, produces ADRs |
 | **Developer** | `SD-DRAFT-*.puml`, `class-model.puml` — starting point for detailed design |
-| **Tester** | `coverage-gaps.md` — identifies which use cases lack test coverage |
+| **Tester** | `coverage-gaps.md` — identifies which use cases lack test coverage; `BDD-DRAFT-*.feature` — starting scenarios for acceptance test step definitions |
 
 DRAFT IDs are **unstable** — downstream agents must not treat them as permanent until
 Traceability has assigned real IDs.

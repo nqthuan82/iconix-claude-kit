@@ -5,6 +5,146 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.26] — 2026-05-14
+
+**Feature: Migration Phase 5c — Track B5 (application-layer enum lookup for integer status columns).**
+
+Addresses the gap where SQL `CHECK (col IN (1,2,3,...))` columns carry integer values with
+no semantic names. Track B5 searches the full application codebase (outside ORM entity classes)
+to find an enum or constant declaration that maps those integers to domain names.
+
+Track B5 runs only when Track A finds an integer CHECK constraint **and** Track B4 finds no
+ORM enum type for the same column. Per-language search patterns:
+- **C# / .NET** — `enum *<ColName>*` with `= N` members; `const int` blocks inside classes
+  named after the column.
+- **Java** — standalone `enum *<ColName>*` with constructor values or ordinal order;
+  excludes classes already covered by `@Enumerated` in B4.
+- **Python** — `IntEnum` / `int`-base subclasses; integer-keyed dict literals; `CHOICES` tuples.
+- **PHP** — constants classes (`const PENDING = 1`) named after the column.
+- **Ruby** — hash constants (`STATUSES = { pending: 1, ... }`) outside a model's `enum` call.
+- **TypeScript / JS** — `enum` with `= N` members; `as const` objects with integer values.
+- **Go** — typed int with `const` block using `= N` or `iota`.
+
+Column-to-enum matching uses a three-tier heuristic (exact → suffix → substring) with
+corresponding confidence tiers:
+- **High (exact match + full coverage)** → `EXTRACTED (B5-enum)`; no `[VERIFY]` on sequence.
+- **Medium (fuzzy match or partial coverage)** → `INFERRED (B5-enum)`; `[VERIFY]` on match.
+- **Ambiguous (multiple candidates)** → `AMBIGUOUS (B5-enum)`; list all, do not auto-select.
+- **Not found** → fall back to view/SP-name SQL heuristic or `State_N` placeholders with
+  `[VERIFY — integer status, semantic names unknown]`.
+
+Step 2A-c updated to route integer CHECK constraints through B5 before SQL secondary signals.
+Step 2B-g added to apply the B5 result during entity glossary construction.
+Four new rows added to the 2C merge table covering all B5 confidence tiers.
+Report block updated: `Track B5 (app enum)` line added.
+`Source` field in glossary extended with `B5-enum (<file>)` value.
+
+No theory audit required — capability extension within the Migration agent; no ICONIX
+methodology surface affected.
+
+## [1.0.25] — 2026-05-14
+
+**Feature: Migration Phase 5c — full cross-stack schema detection (7 language families, Track C).**
+
+Phase 5c Step 1 extended from C# Entity Framework only to all major ORM stacks and adds
+Track C (schema/migration DSL files). Detection now covers three tracks:
+
+- **Track A (SQL):** unchanged — `.sqlproj` and `**/*.sql` glob.
+- **Track B (ORM model classes):** language-aware detection across 7 families:
+  - **C# EF Core** — DbContext/DbSet<T>, entity annotations, IEntityTypeConfiguration<T>
+  - **Java JPA/Hibernate** — `@Entity`, `@Table`, `@Enumerated`, `@Embedded`, `@ManyToOne`/`@OneToMany`
+  - **Python Django/SQLAlchemy** — `models.py` subclasses, `Column()`, `relationship()`, `__tablename__`
+  - **PHP Doctrine/Eloquent** — `@ORM\Entity`, `#[ORM\Entity]`, `$fillable`/`$table`, `belongsTo()`
+  - **Ruby ActiveRecord** — `ApplicationRecord` subclasses, `belongs_to`, `has_many`, `enum` declarations
+  - **TypeScript TypeORM/Prisma** — `@Entity()`, `@Column()`, `@ManyToOne()`
+  - **Go GORM/Ent** — `gorm.Model` embeds, `ent/schema/*.go` struct definitions
+  - Four cross-stack signal tables (B1 entity registry, B2 field signals, B3 relationship signals,
+    B4 enum/status signals) cover all stacks in a uniform structure.
+- **Track C:**
+  - **C1 (single source of truth):** `schema.prisma`, `db/schema.rb`, `ent/schema/*.go` — when
+    present, supersede Tracks A and B entirely.
+  - **C2 (migration DSL fallback):** Alembic `.py`, Liquibase XML/YAML, Laravel `.php`,
+    Rails migrations `.rb`, Flyway `.sql`.
+  - Priority: `C1 > B > C2 > A`.
+
+Step 2B generalized from EF-specific to cross-stack ORM analysis with language-aware rules for:
+entity name normalization, required attribute detection, relationships → Given preconditions,
+enum state machines (all ORM stacks: declaration order authoritative — no `[VERIFY]` on
+sequence), value objects / embedded types, and skip markers.
+
+Step 2C merge table updated from EF-centric to ORM-centric; C1 conflict rule added (C1 wins
+over Track B when both are present).
+
+Three remaining wording fixes:
+- Step 2A-c `[VERIFY]` drop condition: "EF enum in Track B" → "ORM enum in Track B or C"
+- Phase 5c header: "SQL schema analysis" → "schema analysis (SQL, ORM, or migration DSL)"
+- Code-walking manual Phase 5c note: expanded to mention all three tracks (A, B, C).
+
+No theory audit required — capability extension within the Migration agent; no ICONIX
+methodology surface affected.
+
+## [1.0.24] — 2026-05-14
+
+**Feature: Migration Phase 5c — extend schema detection to Entity Framework (DbContext, annotations, enums).**
+
+Phase 5c Step 1 now runs two detection tracks in parallel instead of SQL-only:
+
+- **Track A (SQL):** unchanged — `.sqlproj` and `**/*.sql` glob.
+- **Track B (EF):** grep for `DbContext` subclasses → read `DbSet<T>` entity list →
+  read entity class annotations (`[Required]`, `[ForeignKey]`, `[Owned]`, `[Range]`,
+  `[NotMapped]`) and navigation properties → discover `IEntityTypeConfiguration<T>`
+  for fluent rules → read enum declarations for status properties → migration fallback
+  when no DbContext is found but `Migrations/` folder exists.
+
+Step 2 restructured into three subsections: **2A (SQL analysis)**, **2B (EF analysis)**,
+and **2C (merge rules)**. Key improvements from EF:
+- Entity class names are already PascalCase singular — no normalization needed.
+- Enum-typed status properties give state sequences in declaration order (authoritative
+  — no `[VERIFY]` on sequence, only on individual UC transitions).
+- `[Owned]` / `.OwnsOne` / `.OwnsMany` → value objects nested under owning entity,
+  not listed as standalone domain entities.
+- When both tracks present: EF enum wins over SQL `CHECK IN` for state ordering; EF
+  property name wins over SQL column name for domain vocabulary.
+
+Skip condition updated: "no SQL or EF schema source detected" (was SQL-only).
+Phase 5c report block added at detection start.
+Code-walking manual Phase 5c note updated — both tracks are schema-driven in both modes.
+
+No theory audit required — this is a schema-parsing capability extension within the
+Migration agent; no ICONIX rules or methodology surface affected.
+
+## [1.0.23] — 2026-05-14
+
+**Feature: Migration agent Phase 5c — BDD Gherkin scenario synthesis from SQL schema.**
+
+Migration agent now parses Microsoft SQL Server Database Project (`.sqlproj`) and
+plain `.sql` files to build a domain vocabulary glossary, then uses it alongside
+UC-DRAFTs to produce `BDD-DRAFT-XXX-<slug>.feature` files — one per UC-DRAFT.
+
+What Phase 5c does:
+- **SQL schema parsing:** reads `CREATE TABLE` statements to extract entity names,
+  attributes, FK relationships, `CHECK IN` status enums (state machines), and
+  stored procedure verbs from `sp_<Verb><Entity>` naming.
+- **Domain glossary:** produces `migration/domain-glossary.md` with normalized entity
+  names, states, invariants, and relationships derived from the schema.
+- **BDD-DRAFTs:** produces `features/BDD-DRAFT-XXX-<slug>.feature` using the existing
+  `feature-template.feature`. Each file has a happy-path Scenario from the UC main
+  course, one Scenario per alternate course, and a Scenario Outline for entity state
+  transitions when a status column with `CHECK IN` is found.
+- Both graph-assisted and code-walking modes support Phase 5c (SQL parsing is
+  schema-driven in both modes; only entity-to-UC cross-reference differs).
+- Phase is skipped gracefully when no SQL schema source is found; logged in survey
+  and handoff report.
+
+Entities not matched in any UC-DRAFT are surfaced as "possible missing use cases"
+for PO review — the unmatched-entity signal is a practical byproduct of schema coverage.
+
+Theory audit: Ch12 #4 (scenario-level acceptance testing ✅) — BDD-DRAFTs are
+reverse-engineered drafts that feed the Tester's formal TC-XXX generation at M3;
+Ch2 #4 (domain model as project glossary ✅) — `migration/domain-glossary.md` is
+the reverse-engineered equivalent, built from SQL table definitions rather than PO
+modeling. No rule status shifts. Summary Coverage Matrix unchanged.
+
 ## [1.0.22] — 2026-05-14
 
 **Fix: PO agent rule 9 — remove duplicated domain model heuristics and VERIFY convention.**

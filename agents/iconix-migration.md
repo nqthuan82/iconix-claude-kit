@@ -782,6 +782,497 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 5. Flag UC-DRAFTs that did not fit any cluster as **orphan UCs** in the handoff report.
 6. Fill in the **UC → package allocation** table in `docs/architecture/package-map.md` (drafted in Phase 4b): one row per UC-DRAFT, mapping it to the boundary, application, domain, and persistence packages it traverses. Use the entry-point cluster from Phase 1 as the primary signal; cross-check against the robustness diagram for that UC.
 
+## Phase 5c — BDD Gherkin scenario synthesis (graph-assisted)
+
+Produces `BDD-DRAFT-XXX-<slug>.feature` files by combining schema analysis (SQL, ORM, or migration DSL) with
+UC-DRAFT content. Skip this phase and log in the handoff report when no SQL schema
+source is detected, or when `bdd.enabled: false` in `iconix.config.yaml`.
+
+### Step 1 — Detect schema source
+
+Detection runs three tracks. Read `stack.language` from `iconix.config.yaml` first
+to select language-specific patterns for Tracks B and C.
+In multi-repo mode, run all tracks independently per container's resolved source root.
+
+**Track A — SQL files (cross-stack, always run)**
+
+1. Glob for `*.sqlproj` → parse `<Build Include="...">` XML to enumerate `.sql` files.
+2. Glob for `**/*.sql` at each container's resolved source root.
+
+For each `.sql` file found, classify by statement type:
+- `CREATE TABLE [schema.]<name>` — entity definition (primary target)
+- `CREATE PROCEDURE` / `CREATE FUNCTION` — named operation (extracts domain verbs)
+- `CREATE VIEW` — derived concept (secondary, informational only)
+
+**Track B — ORM model classes (language-aware)**
+
+Use the entity registry signal for the resolved `stack.language` to locate entity classes,
+then read class-level signals. For multi-language containers apply all matching rows.
+
+*B1 — Entity registry: where to look*
+
+| Language | Registry signal | Entity file pattern |
+|---|---|---|
+| C# / .NET | `class * : *DbContext` → `DbSet<T>` properties; also `IEntityTypeConfiguration<T>` | `**/*Context.cs`, `**/*Configuration.cs` |
+| Java | `@Entity` classes on Spring component-scan path (`persistence.xml` / `application.properties`) | `src/main/java/**/*.java` |
+| Python (Django) | `INSTALLED_APPS` in `settings.py` → `models.py` in each app | `**/models.py` |
+| Python (SQLAlchemy) | `declarative_base()` call → subclasses of the returned Base | `**/*.py` |
+| PHP (Doctrine) | `doctrine.yaml` `mappings:` paths → `@ORM\Entity` / `#[ORM\Entity]` classes | `src/**/*.php` |
+| PHP (Eloquent) | All classes extending `Illuminate\Database\Eloquent\Model` | `app/Models/**/*.php` |
+| Ruby (Rails) | All classes extending `ApplicationRecord` | `app/models/**/*.rb` |
+| TypeScript / JS (TypeORM) | `DataSource` / `createConnection` `entities:` config → `@Entity()` classes | `**/*.entity.ts`, `**/*.entity.js` |
+| Go (GORM) | Structs embedding `gorm.Model` or with `gorm:"..."` struct tags | `**/*.go` |
+| Go (Ent) | Each `ent/schema/*.go` file defines one entity schema | `ent/schema/*.go` |
+
+*B2 — Entity and field signals*
+
+| Signal | C# / .NET | Java | Python | PHP | Ruby | TypeScript / JS | Go |
+|---|---|---|---|---|---|---|---|
+| **Entity decl.** | `DbSet<T>` | `@Entity` | `class *(models.Model)` / `class *(Base)` | `@ORM\Entity` / `extends Model` | `< ApplicationRecord` | `@Entity()` | `gorm.Model` embed / `ent/schema` file |
+| **Table name override** | `[Table("n")]` / `.ToTable("n")` | `@Table(name="n")` | `Meta.db_table` / `__tablename__` | `@ORM\Table(name="n")` / `$table` | `self.table_name` | `@Entity({name:"n"})` | `gorm:"table:n"` / `.StorageKey("n")` |
+| **Required / NOT NULL** | `[Required]` / `.IsRequired()` | `@NotNull` / `@Column(nullable=false)` | `null=False` (Django default) / `nullable=False` (SA) | `@Column(nullable=false)` / migration | `null: false` | `@Column({nullable:false})` / no `?` (Prisma) | `gorm:"not null"` / no `.Optional()` (Ent) |
+| **Skip (not persisted)** | `[NotMapped]` / `.Ignore()` | `@Transient` | not declared on model | `@ORM\Transient` / not in `$fillable` | `attr_accessor` | `{select:false}` / `@ignore` (Prisma) | `gorm:"-"` / `.StorageKey("")` (Ent) |
+
+*B3 — Relationship signals*
+
+| Relationship | C# / .NET | Java | Python | PHP | Ruby | TypeScript / JS | Go |
+|---|---|---|---|---|---|---|---|
+| **belongs-to (FK)** | `[ForeignKey]` / `.HasOne().WithMany()` | `@ManyToOne` / `@JoinColumn` | `ForeignKey("T")` (Django) / `ForeignKey("t.id")` (SA) | `@ORM\ManyToOne` / `belongsTo(T::class)` | `belongs_to :t` | `@ManyToOne(()=>T)` | `gorm:"foreignKey:"` / `.From("t")` (Ent) |
+| **has-many** | `ICollection<T>` nav prop | `@OneToMany` | `related_name=` (Django) / `relationship()` (SA) | `@ORM\OneToMany` / `hasMany(T::class)` | `has_many :ts` | `@OneToMany(()=>T)` | slice + `gorm:"foreignKey:"` / `.To("ts")` (Ent) |
+| **many-to-many** | `ICollection<T>` + junction | `@ManyToMany` + `@JoinTable` | `ManyToManyField(T)` (Django) | `@ORM\ManyToMany` / `belongsToMany(T::class)` | `has_and_belongs_to_many` | `@ManyToMany(()=>T)` | `gorm:"many2many:"` |
+| **value object / embedded** | `[Owned]` / `.OwnsOne()` | `@Embeddable` / `@Embedded` | (no direct — nested serializer) | `@ORM\Embeddable` | (no direct) | `@Column({type:'json'})` | struct embedding |
+
+*B4 — Enum / status field signals*
+
+| Stack | Enum signal | State ordering | `[VERIFY]` on sequence? |
+|---|---|---|---|
+| C# / .NET | C# `enum` type as entity property | Declaration order | **No — authoritative** |
+| Java | Java `enum` + `@Enumerated(EnumType.STRING)` | Declaration order | **No — authoritative** |
+| Python Django | `TextChoices` / `IntegerChoices` class | Class definition order | **No — authoritative** |
+| Python SQLAlchemy | `Enum("v1","v2",...)` / Python `enum.Enum` | Argument / declaration order | **No — authoritative** |
+| PHP | PHP `enum` used in `$casts` / `@Column(enumType=)` | Declaration order | **No — authoritative** |
+| Ruby Rails | `enum :field, { name: int, ... }` | Hash definition order | **No — authoritative** |
+| TypeScript (TypeORM) | TS `enum` + `@Column({type:'enum', enum: E})` | Declaration order | **No — authoritative** |
+| TypeScript (Prisma) | `enum Name { VAL1 VAL2 ... }` in `schema.prisma` | Declaration order | **No — authoritative** |
+| Go (GORM) | `const (A Type = iota; B; C)` | `iota` value order | **No — authoritative** |
+| Go (Ent) | `field.Enum("f").Values("a","b","c")` | `Values()` argument order | **No — authoritative** |
+| SQL-only (no ORM enum found) | `CHECK (col IN ('A','B','C'))` | Heuristic only — see 2A-c | **Yes — `[VERIFY]`** |
+
+For all ORM enum signals: **do not add `[VERIFY]` on state sequence**; only flag individual
+transitions `[VERIFY]` where it is unclear which UC triggers them.
+
+*B5 — Application-layer enum lookup (integer status columns only)*
+
+Run this sub-track only when Track A finds `CHECK (<col> IN (1,2,...))` (integer values)
+**and** Track B4 finds no ORM enum type for that column. Goal: locate an enum or constant
+declaration anywhere in the application code that maps those integers to names.
+
+For each integer-only CHECK constraint column, search the resolved source root using the
+column name (and its entity-name-prefixed form, e.g., `Status` → also search `OrderStatus`)
+as the matching target:
+
+| Language | File scope | Patterns to match |
+|---|---|---|
+| C# / .NET | `**/*.cs` | `enum \w*<ColName>\w*` with explicit `= \d+` member values; `const int \w+ = \d+` inside a class whose name contains the column name |
+| Java | `**/*.java` | `enum \w*<ColName>\w*` with either `(\d+)` constructor values or ordinal order; exclude classes already in B4 |
+| Python | `**/*.py` | `class \w*<ColName>\w*\(.*IntEnum\)` or `\(int.*Enum\)`; dict literal `\{\s*\d+\s*:\s*'` with var name matching column; `CHOICES = \[\(\d+,` tuples |
+| PHP | `**/*.php` | `class \w*<ColName>\w*` containing `const \w+ = \d+` members |
+| Ruby | `**/*.rb` | `\w*<COL_NAME>\w* = \{` hash with integer values outside a model's `enum` call (B4 covers that) |
+| TypeScript / JS | `**/*.ts`, `**/*.js` | `enum \w*<ColName>\w*` with `= \d+` members; `const \w*<ColName>\w* = \{[^}]+:\s*\d` as-const objects |
+| Go | `**/*.go` | `type \w*<ColName>\w* int` with `const (` block using `= \d+` or `= iota` |
+
+**Column-to-enum name matching (heuristic, tried in order):**
+1. **Exact match** — `OrderStatus` column → `OrderStatus` enum/type — highest confidence.
+2. **Suffix match** — `Status` column → any `*Status`, `*State`, `*StatusCode` enum in the
+   same package/namespace as the entity — medium confidence.
+3. **Substring match** — `Status` column → `StatusCode`, `OrderState` elsewhere — low confidence.
+
+**Confidence tiers and `[VERIFY]` rules:**
+
+| Confidence | Criteria | `[VERIFY]` on sequence? | Label |
+|---|---|---|---|
+| **High** | Exact name match + enum covers all integer CHECK values | **No** | `EXTRACTED (B5-enum)` |
+| **Medium** | Fuzzy name match, or enum does not cover all CHECK values | **Yes — confirm match** | `INFERRED (B5-enum)` |
+| **Ambiguous** | Multiple candidates with no clear winner | **Yes — list all candidates** | `AMBIGUOUS (B5-enum)` |
+| **Not found** | No candidate in codebase | — fall back to Step 2A-c SQL secondary signals | `INFERRED (SQL heuristic)` |
+
+When multiple candidates exist, record all under a `Candidates:` field in the glossary
+and let the human reviewer select the correct mapping.
+
+**Track C — Schema / migration DSL (language-aware)**
+
+*C1 — Single source of truth files (supersede Tracks A and B for their stack):*
+
+| File pattern | Stack | Format | Primary signals |
+|---|---|---|---|
+| `**/schema.prisma` | TypeScript / JS (Prisma) | Prisma SDL | `model Name { ... }` + `enum Name { ... }` |
+| `db/schema.rb` | Ruby (Rails) | Ruby DSL | `create_table "name" do \|t\| ... end` — canonical schema dump |
+| `ent/schema/*.go` | Go (Ent) | Go code | `.Fields()` + `.Edges()` + `.Indexes()` per entity file |
+
+When a C1 file is found for a container, it supersedes Track B ORM signals for that
+container. Merge with Track A only for stored-procedure verb extraction (C1 files
+do not include SP names).
+
+*C2 — Migration DSL files (use when no C1 file and Track B yields < 2 entities):*
+
+| File pattern | Stack | Format | Entity signal |
+|---|---|---|---|
+| `alembic/versions/*.py` | Python | Python | `op.create_table("name", ...)` |
+| `**/changelog*.xml` / `**/changelog*.yaml` | Java / Any | Liquibase | `<createTable tableName="...">` / `createTable: tableName:` |
+| `database/migrations/*.php` | PHP (Laravel) | PHP | `Schema::create('name', function (Blueprint $table)` |
+| `db/migrate/*.rb` | Ruby (Rails) | Ruby | `create_table :name do \|t\| ... end` (only when `db/schema.rb` absent) |
+| `src/main/resources/db/migration/V*.sql` | Java (Flyway) | SQL | Track A already covers `.sql`; confirms Flyway context |
+
+Mark C2 entries as `INFERRED (migration DSL)`. Add `[VERIFY]` to business constraints
+found in C2 files — DSL may include DBA-only constraints with no domain meaning.
+
+**Active priority when multiple tracks have results for the same container:**
+
+```
+C1 (SoT file)  >  Track B (ORM classes)  >  C2 (migration DSL)  >  Track A (SQL)
+```
+
+**Skip condition:** if Track A, B, and C all yield zero entity definitions after all
+containers are scanned: log `Phase 5c skipped — no SQL, ORM, or migration DSL source
+detected` in `migration/survey-<date>.md` and the handoff report, then move to Phase 6.
+
+**Report at start of Phase 5c:**
+
+```
+## Phase 5c — Schema source detection
+stack.language: <value from iconix.config.yaml>
+Track A (SQL):   <N .sql files / .sqlproj | not found>
+Track B (ORM):   <framework detected> → <K entity types | not found>
+Track B5 (app enum): <N integer columns resolved (High/Medium/Ambiguous) | not run>
+Track C1 (SoT):  <schema.prisma | db/schema.rb | ent/schema/*.go | not found>
+Track C2 (DSL):  <Alembic | Liquibase | Laravel | Rails migrations | not found>
+Enum state machines: <list: EntityName.field — N values (framework | B5-enum | SQL heuristic)>
+Active merge mode: <C1 | B+A | C2+A | A only | ...>
+```
+
+### Step 2 — Build entity glossary
+
+**2A — SQL analysis** (when Track A has results)
+
+For each `CREATE TABLE` statement:
+
+**a) Table name normalization**
+
+- Strip schema prefix (`dbo.`, `app.`, `cfg.`, etc.)
+- Strip common technical prefixes: `tbl`, `Tbl`, `TBL`, leading `_`
+- Convert `snake_case` → `PascalCase` (`order_line_items` → `OrderLineItem`)
+- Singularize plural PascalCase names (`Orders` → `Order`, `Customers` → `Customer`)
+- Mark as technical table (skip from glossary) when the name matches:
+  `(?i)(audit|log|history|migration|__EF|sysdiagram|dbo\.__)`  — log in the glossary
+  under `## Technical tables filtered out`.
+
+**b) SQL column analysis**
+
+| Column attribute | What to extract |
+|---|---|
+| `PRIMARY KEY` / `IDENTITY` | Identity — skip (infrastructure, not domain attribute) |
+| `FOREIGN KEY REFERENCES <T>(<C>)` | Relationship: this entity → referenced entity (becomes Given precondition) |
+| `NOT NULL` (non-PK/FK) | Required attribute → business invariant |
+| `CHECK (<col> IN ('A','B',...))` | Status/type enum → state machine candidate |
+| `CHECK (<expression>)` | Business constraint (e.g., `Amount >= 0`) |
+| `DEFAULT <value>` | Initial state / business default |
+| `DECIMAL / MONEY / NUMERIC` | Monetary or numeric domain attribute |
+| `DATETIME / DATE` | Temporal domain attribute |
+| `BIT` | Boolean flag |
+
+Drop columns matching `(?i)(CreatedAt|CreatedBy|UpdatedAt|UpdatedBy|ModifiedAt|ModifiedBy|RowVersion|Timestamp|IsDeleted|DeletedAt|DeletedBy|ConcurrencyToken)` — these are infrastructure, not domain vocabulary.
+
+**c) SQL state machine extraction**
+
+When a column has `CHECK (<col> IN ('A','B','C',...))`:
+- Extract the enum values as candidate states.
+- Attempt logical ordering using two signals (both `[VERIFY]`):
+  1. `CREATE PROCEDURE` names: `sp_ApproveOrder` → verb `Approve` suggests a transition
+     *to* `Approved`; `sp_CancelOrder` → terminal transition.
+  2. Common state-name heuristics: `Draft` / `Pending` → early states;
+     `Active` / `Approved` / `Processing` → middle states;
+     `Completed` / `Done` / `Delivered` → end states;
+     `Cancelled` / `Rejected` / `Archived` → terminal states.
+- Mark ordering `[VERIFY]` — lifecycle sequence must be confirmed by a human. Drop
+  this `[VERIFY]` if an ORM enum for the same column is found in Track B or C (ORM
+  declaration order is authoritative; see Step 2B-d).
+
+When a column has `CHECK (<col> IN (1,2,3,...))` (integer values — no names in SQL):
+- Record the integer set as candidate states; names are not available from SQL alone.
+- Delegate to Track B5 lookup (see Step 1): if B5 found a mapping, apply it using the
+  B5 confidence tier and `[VERIFY]` rules — see Step 2B-g.
+- If B5 not found, attempt partial name recovery from secondary SQL signals:
+  - **Named views:** `CREATE VIEW vw_<StateName><Entity> AS ... WHERE <col> = N`
+    → `N` maps to `<StateName>`. Mark `[VERIFY — name inferred from view naming]`.
+  - **Named stored procedures:** `sp_Set<Entity>To<StateName>` or `sp_<Entity><StateName>`
+    → verb hints at a transition *into* `<StateName>`. Mark `[VERIFY — inferred from SP name]`.
+- If no names recoverable from any source: record states as `State_1`, `State_2`, ...
+  with `[VERIFY — integer status, semantic names unknown — locate enum in application code]`.
+
+**d) Stored procedure verb extraction**
+
+For each `CREATE PROCEDURE sp_<VerbEntity>` or `CREATE PROCEDURE <schema>.<VerbEntity>`:
+- Extract verb (`Approve`) and entity (`Order`) from the name.
+- Register as a candidate business operation for `When` clauses.
+
+**2B — ORM analysis** (when Track B or Track C has results)
+
+For each entity type discovered in Step 1 Tracks B / C:
+
+**a) Entity name normalization**
+
+Use the class / model name directly — ORM frameworks follow PascalCase singular naming by
+convention. Language-specific exceptions:
+- **Python:** some projects use lowercase model names; convert to PascalCase.
+- **Ruby (Rails):** class name is PascalCase (`Order`); table is `orders` (pluralized) —
+  use the class name, not the table name, as the glossary entry.
+- **Go (Ent):** use the schema file name (PascalCase) as the entity name.
+
+Filter technical entities across all stacks: base classes not in the entity registry,
+`*Configuration` / `*Migration` / `*Base` / `*Mixin` / `*Abstract` classes, test fixtures,
+abstract classes.
+
+**b) Required attributes and business invariants**
+
+Using the "Required / NOT NULL" signal from Step 1 Table B2 for the resolved language,
+record each required non-PK/FK field as a required attribute → business invariant.
+
+Language-specific notes:
+- **Python Django:** `null=False` is the default — mark as optional only when `null=True`
+  is explicit.
+- **PHP Eloquent:** required constraints live in migration files, not the model class —
+  cross-reference with Track C2 (Laravel Schema Builder) for `->notNullable()` calls.
+
+**c) Relationships → Given preconditions**
+
+Using the signals from Step 1 Table B3:
+- **belongs-to** → referenced entity becomes `Given a <entity> exists` precondition.
+- **has-many** → inverse relationship; reference in alternate courses
+  (e.g., "Order has no OrderLines").
+- **many-to-many** → both sides become `Given` preconditions.
+- **value object / embedded** → nest under owning entity; not a standalone entity (see 2B-e).
+
+**d) Enum state machines (ORM — higher fidelity than SQL CHECK IN)**
+
+Apply the `[VERIFY]` rule from Step 1 Table B4:
+- **ORM enum (any stack)** → **no `[VERIFY]` on sequence** — use declaration / argument /
+  definition order as authoritative.
+- **SQL `CHECK IN` only** → `[VERIFY]` on sequence (heuristic — see 2A-c).
+- **Both ORM enum and SQL CHECK IN present** → ORM wins; drop sequence `[VERIFY]`.
+
+Identify terminal states by name regardless of stack:
+`Cancelled`, `Rejected`, `Archived`, `Deleted`, `Failed`, `Expired`, `Closed`, `Void`.
+
+Glossary format for ORM enum state machines:
+
+  **States (from <EnumTypeName> via <framework>, declaration order):**
+  Pending → Processing → Shipped → Delivered | Terminal: Cancelled
+  Source: <file>:<line> — EXTRACTED
+
+**e) Value objects / embedded types**
+
+Using the "value object / embedded" signal from Step 1 Table B3:
+- The owned/embedded type is **not** listed as a standalone entity in the glossary.
+- Its attributes are nested under the owning entity with a `(value object)` marker.
+- Example: `Order.ShippingAddress` (value object) → Street, City, PostalCode, Country.
+- **Stacks with no direct value object support** (PHP Eloquent, Ruby ActiveRecord, plain
+  GORM): check for JSON column patterns that store a nested object; flag as
+  `[VERIFY — confirm if value object or separate entity]`.
+
+**f) Skip markers**
+
+Using the "Skip (not persisted)" signal from Step 1 Table B2 for the resolved language:
+drop any field carrying a skip marker from domain attributes.
+
+**g) Application-layer enum resolution (Track B5 — integer columns)**
+
+For each entity column that Step 2A-c flagged as an integer CHECK constraint, apply the
+B5 result already computed in Step 1:
+
+- **High / `EXTRACTED (B5-enum)`** — use enum member names in declaration / value order;
+  do not add `[VERIFY]` on sequence. Record `Source: <file>:<line> — EXTRACTED (B5-enum)`.
+- **Medium / `INFERRED (B5-enum)`** — use enum member names; add
+  `[VERIFY — fuzzy match, confirm <EnumName> maps to <ColName>]` on the state machine entry.
+  Record `Source: <file>:<line> — INFERRED (B5-enum)`.
+- **Ambiguous / `AMBIGUOUS (B5-enum)`** — list all candidate enums under `Candidates:` in
+  the glossary entry; add `[VERIFY — multiple candidates, reviewer must select]`.
+  Do not choose a winner automatically.
+- **Not found** — the Step 2A-c secondary-signal result (view/SP heuristic or `State_N`
+  placeholders) stands; label `INFERRED (SQL heuristic)` and `[VERIFY]`.
+
+**2C — Merge when multiple tracks have results**
+
+| Conflict | Resolution |
+|---|---|
+| SQL table exists, no ORM entity | Check if junction or audit table — mark `[VERIFY]` |
+| ORM entity exists, no SQL table | Migration not yet applied or code-first pending — mark `[VERIFY — schema not yet applied]` |
+| SQL `CHECK IN` vs ORM enum for same column | **ORM enum wins** for state sequence; SQL CHECK IN is secondary confirmation; drop sequence `[VERIFY]` |
+| SQL column name ≠ ORM property / field name | Use ORM name as domain vocabulary; note SQL column as alias |
+| ORM skip marker on a SQL column | Skip from glossary (ORM intent overrides) |
+| C1 file (SoT) conflicts with Track B ORM | C1 wins — use C1 entity definition exclusively |
+| SQL integer `CHECK IN (1,2,...)` + B5 High (exact match) | Use B5 enum names in declaration order; no `[VERIFY]` on sequence; label `EXTRACTED (B5-enum)` |
+| SQL integer `CHECK IN (1,2,...)` + B5 Medium (fuzzy match) | Use B5 enum names; add `[VERIFY — confirm enum-to-column match]`; label `INFERRED (B5-enum)` |
+| SQL integer `CHECK IN (1,2,...)` + B5 Ambiguous | List all candidate enums; add `[VERIFY — multiple candidates]`; do not auto-select |
+| SQL integer `CHECK IN (1,2,...)` + B5 not found | Fall back to view/SP heuristic names or `State_N` placeholders; `[VERIFY — integer status, semantic names unknown]` |
+
+Record the merge decision per entity in the glossary under a `Source` field:
+`SQL`, `ORM (<framework>)`, `B5-enum (<file>)`, `schema.prisma`, `db/schema.rb`, `ent/schema`, or `merged`.
+
+### Step 3 — Produce `migration/domain-glossary.md`
+
+One file for the whole migration run (all containers merged; in multi-repo mode annotate
+each entity entry with its source container):
+
+```markdown
+# Domain Glossary — <date>
+> Generated by iconix-migration Phase 5c from SQL schema analysis.
+> [VERIFY] all entries before using as authoritative domain vocabulary.
+> Source: <list of .sql files or .sqlproj>
+
+## Entities
+
+### Order
+- **Source table:** dbo.Orders
+- **Attributes:** OrderDate (temporal, required), TotalAmount (monetary ≥ 0, required),
+  ShippingAddress (required), Notes (optional)
+- **States [VERIFY — confirm sequence]:** Pending | Processing | Shipped | Delivered | Cancelled
+- **Relationships:**
+  - belongs to `Customer` (FK: CustomerId → Customers.Id, required)
+  - contains `Product` via `OrderLineItem` (junction: OrderLineItems table)
+- **Invariants:** TotalAmount ≥ 0 (CHECK); ShippingAddress required (NOT NULL)
+- **Operations detected:** Approve (`sp_ApproveOrder`), Cancel (`sp_CancelOrder`) [VERIFY]
+
+## Technical tables filtered out
+- `__EFMigrationsHistory` — migration tracker
+- `AuditLog` — infrastructure audit
+
+## Stored procedure verbs
+| Procedure | Verb | Entity | Candidate When clause |
+|---|---|---|---|
+| sp_ApproveOrder | Approve | Order | `When the Manager approves the Order` [VERIFY] |
+| sp_CancelOrder | Cancel | Order | `When the User cancels the Order` [VERIFY] |
+```
+
+### Step 4 — Map UC-DRAFTs to glossary entities
+
+For each UC-DRAFT-XXX:
+1. Read the UC's Actor, Preconditions, main course, and alternate courses.
+2. Read its RB-DRAFT — collect all entity node names.
+3. Cross-reference entity names against the domain glossary:
+   - Exact match (case-insensitive) → use glossary entry (states, invariants, relationships).
+   - Partial match (e.g., UC uses `CustomerAccount`, glossary has `Customer`) → flag `[VERIFY]`.
+   - No match → entity is application-layer only; use the UC name directly without
+     glossary enrichment.
+
+### Step 5 — Draft `features/BDD-DRAFT-XXX-<slug>.feature`
+
+One `.feature` file per UC-DRAFT. Follow `templates/feature-template.feature` for structure.
+In multi-repo mode, add the `Source-container:` annotation immediately after the DRAFT stamp.
+
+**File header:**
+```
+# BDD-DRAFT-XXX — generated by iconix-migration Phase 5c on <date>
+# Source UC: UC-DRAFT-XXX-<slug>.md
+# Schema source: <relative path(s) to .sql or .sqlproj>
+# Domain entities: <entity names from glossary cross-reference>
+# [VERIFY] All scenarios require human review — business intent cannot be fully
+#   recovered from schema + code. Confirm: actor identity, operation triggers,
+#   and state-transition sequence before treating any scenario as accepted.
+#
+# DRAFT lifecycle: human review → /iconix-promote → TC-XXX (Tester at M3)
+```
+
+**Feature block** (derived from UC-DRAFT):
+```gherkin
+Feature: <UC-DRAFT title> [VERIFY]
+  As a <actor from UC-DRAFT> [VERIFY — confirm business role name]
+  I want <reconstruct from UC main course outcome> [VERIFY]
+  So that <reconstruct from UC goal or precondition rationale> [VERIFY]
+```
+
+**Background** (only when FK-derived preconditions apply to every scenario):
+```gherkin
+  Background:
+    # Derived from FK relationships in domain glossary
+    Given a <FK-referenced entity> exists [VERIFY — confirm as shared precondition]
+```
+Omit `Background` when no FK relationships are found or when preconditions vary per scenario.
+
+**Scenario — happy path** (from UC main course):
+```gherkin
+  # BDD-DRAFT-XXX-main — basic course
+  Scenario: <main course title> [VERIFY]
+    Given <entity and its initial state — e.g., "an Order in status Pending"> [VERIFY]
+    When <actor> <operation verb> <entity> [VERIFY — confirm trigger and actor]
+    Then <postcondition from last system-response row in UC main course> [VERIFY]
+```
+
+**Scenarios — alternate courses** (one Scenario per alternate course in the UC-DRAFT):
+```gherkin
+  # BDD-DRAFT-XXX-alt-A — <alternate course name from UC>
+  Scenario: <alternate course title> [VERIFY]
+    Given <condition that triggers the alternate> [VERIFY]
+    When <actor> <action> [VERIFY]
+    Then <alternate outcome from UC text> [VERIFY]
+```
+
+**Scenario Outline — state transitions** (only when the UC involves an entity with a
+status column from the domain glossary AND the UC courses mention state changes):
+```gherkin
+  # BDD-DRAFT-XXX-states — <Entity> lifecycle [VERIFY — confirm sequence]
+  Scenario Outline: <Entity> transitions to <to_state> [VERIFY]
+    Given a <Entity> in status "<from_state>"
+    When the <operation> is performed [VERIFY — confirm trigger]
+    Then the <Entity> status becomes "<to_state>"
+
+    Examples:
+      # [VERIFY] Confirm sequence and which transitions are in scope for this UC
+      | from_state | to_state   |
+      | Pending    | Processing |
+      | Processing | Shipped    |
+```
+Omit the `Scenario Outline` block when the UC does not involve entity state transitions.
+
+**Provenance footer:**
+```
+# Provenance
+# Mode: graph-assisted
+# UC-DRAFT: UC-DRAFT-XXX-<slug>.md | RB-DRAFT: RB-DRAFT-XXX.puml
+# Schema entities used: <list of glossary entity names>
+# State machine source: <table.column with CHECK IN constraint>
+# SP verbs used: <sp_ names if any>
+# [VERIFY] count: <total number of [VERIFY] markers in this file>
+```
+
+### Step 6 — Update handoff report
+
+Append a `## BDD-DRAFT inventory (Phase 5c)` section to `migration/handoff-<date>.md`:
+
+```markdown
+## BDD-DRAFT inventory (Phase 5c)
+
+SQL schema source: <source path(s)>
+Entities in glossary: <N> (<M> filtered as technical tables)
+State machines extracted: <list: table.column — N states each>
+
+| BDD-DRAFT | UC-DRAFT | Scenarios | [VERIFY] count | Glossary entities used |
+|---|---|---|---|---|
+| BDD-DRAFT-001 | UC-DRAFT-001 | 3 (1 main, 2 alt) | 8 | Order (states), Customer (FK) |
+
+Entities not matched in any UC-DRAFT (possible missing use cases):
+- <entity names not referenced by any UC-DRAFT's RB-DRAFT>
+```
+
+Entities unmatched in any UC-DRAFT are a signal of potentially missing use cases —
+surface them for PO review in the handoff report's **Recommended next steps** section.
+
+### What Phase 5c does not do
+- Does not generate step definitions (`.cs`, `.js`, etc.) — Tester writes these at Phase 9
+- Does not replace the Tester's formal TC-XXX generation at M3 — BDD-DRAFTs are input
+  to, not replacements for, formal test cases derived from robustness controllers
+- Does not infer NFR scenarios (timeouts, retry, performance) — not recoverable from schema
+- Does not guess actor identity beyond what the UC-DRAFT already states
+
 ## Phase 6 — Test coverage mapping (graph-assisted)
 
 ### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
@@ -960,6 +1451,25 @@ Same as graph-assisted Phase 5b. Without graph clustering you cluster manually:
 - Flag any UC-DRAFT that does not fit a cluster as an orphan in the handoff report
 - Fill in the **UC → package allocation** table in `docs/architecture/package-map.md` (same as graph-assisted Phase 5b step 6)
 
+## Phase 5c — BDD Gherkin scenario synthesis (manual)
+
+Same as graph-assisted Phase 5c. Key differences in code-walking mode:
+
+- **Schema source detection (Steps 1 and 2):** identical to graph-assisted — Track A
+  (SQL), Track B (ORM model classes across all supported stacks), and Track C (schema/
+  migration DSL files) are all schema/source-driven, not graph-driven. All detection
+  signals (entity registry, field annotations, enum declarations, C1 single-source-of-truth
+  files, C2 migration DSL fallback) work the same way in both modes.
+- **Entity-to-UC mapping (Step 4):** use class names from `class-model/class-model.puml`
+  (Phase 2) and entity nodes from `robustness/RB-DRAFT-*.puml` (Phase 4) rather than
+  graph node IDs for the cross-reference.
+- **Provenance footer:** set `Mode: code-walking`; omit graph-node references.
+- **Confidence:** add a caveat in every BDD-DRAFT file header:
+  `Code-walking mode — confidence is lower than graph-assisted output;
+   every scenario requires careful human review before promotion.`
+
+All other rules (Step 1 detection, Step 2 parsing, Step 3 glossary, Steps 4–6) apply unchanged.
+
 ## Phase 6 — Test coverage mapping (manual)
 
 ### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
@@ -1070,6 +1580,8 @@ robustness/RB-DRAFT-*.puml       # Phase 4
 domain-model/domain-model-DRAFT.puml   # Phase 4b
 use-cases/UC-DRAFT-*.md          # Phase 5
 use-case-packages/*-DRAFT.puml   # Phase 5b
+features/BDD-DRAFT-*.feature     # Phase 5c  (DRAFT — only if SQL schema source found)
+migration/domain-glossary.md     # Phase 5c  (domain vocabulary from SQL schema)
 ```
 
 # What you never do
