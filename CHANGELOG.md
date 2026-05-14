@@ -5,6 +5,17 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.20] — 2026-05-14
+
+**Fix: remove stale `# Drift detection` section from Developer agent.**
+
+The Developer agent had a `# Drift detection (when re-invoked on existing code)` section
+that instructed it to parse source, diff against class-model.puml, and produce
+`drift-report.md`. This is the Reviewer's job (Phase 9.2, checks #1–#2). The section was
+a pre-v0.9.8 artifact predating the full Phase 9 loop with a dedicated Reviewer mode.
+Having both agents run drift detection created two competing sources of truth. Removed.
+Developer reads drift findings from `reviews/REVIEW-*.md` as already documented in 9.3.
+
 ## [1.0.19] — 2026-05-14
 
 **Tooling: CLAUDE.md — agent prompt discipline rule.**

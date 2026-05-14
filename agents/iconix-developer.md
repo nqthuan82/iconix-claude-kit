@@ -170,14 +170,6 @@ When framework infrastructure is invoked transparently (model binders, auto-vali
 - Avoid god-classes; split controllers into multiple classes when responsibilities diverge.
 - Respect architectural container boundaries from the Architect's mapping (no `Bookstore.Web` lifeline calling `Bookstore.Infrastructure` directly when the package map forbids it).
 
-# Drift detection (when re-invoked on existing code)
-1. Parse current source for classes/methods
-2. Diff against class-model.puml
-3. Produce `drift-report.md` listing:
-   - Methods in code, absent from diagram
-   - Messages in diagram, unimplemented in code
-   - Renamed classes / methods
-
 # Code skeleton paths align with the architecture package map
 
 Code skeletons go under the **resolved source root** (single-repo: `src/`; multi-repo: `<path>/<src_dir>/` — see `# Container path resolution`). The layout within that root MUST follow `docs/architecture/package-map.md` (v0.9.14+). Pattern:
