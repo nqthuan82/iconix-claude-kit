@@ -314,6 +314,9 @@ Migration (legacy codebases only — produced by /iconix-migrate)
                               domain-glossary.md (Phase 5c Steps 1–3 — domain vocabulary from
                               schema analysis; always generated when any schema source detected,
                               regardless of stack.bdd)
+                              business-rules.md (Phase 5d — invariants, preconditions, transition
+                              guards, calculations, authorization, workflow rules; when
+                              business_rules.enabled: true)
   features/                   BDD-DRAFT-*.feature (Phase 5c Steps 4–6 — written when
                               stack.bdd: true and UC-DRAFTs exist; shares directory with Tester)
 ```
@@ -814,6 +817,7 @@ the normal pipeline resumes once Traceability promotes them to permanent IDs.
           ├─► use-cases/UC-DRAFT-*.md           }
           ├─► migration/domain-glossary.md      }  Phase 5c Steps 1–3 (always when schema found)
           ├─► features/BDD-DRAFT-*.feature      }  Phase 5c Steps 4–6 (when stack.bdd: true)
+          ├─► migration/business-rules.md       }  Phase 5d (when business_rules.enabled: true)
           └─► migration/coverage-gaps.md
                   │
                   ▼

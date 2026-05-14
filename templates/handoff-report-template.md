@@ -33,6 +33,7 @@
 | UC package overviews | `use-case-packages/*-DRAFT.puml` | `<N>` generated | 5b |
 | Domain glossary | `migration/domain-glossary.md` | Generated \| Skipped (no schema source) | 5c Steps 1–3 |
 | BDD-DRAFT files | `features/BDD-DRAFT-*.feature` | `<N>` generated \| Skipped — `stack.bdd: false` \| Skipped — no UC-DRAFTs | 5c Steps 4–6 |
+| Business rules | `migration/business-rules.md` | Generated — `<N>` rules \| Skipped — `business_rules.enabled: false` | 5d |
 | Coverage gaps | `migration/coverage-gaps.md` | Generated | 6 |
 
 **Skipped artifacts** (human-edited since last run or already promoted):

@@ -5,6 +5,37 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.32] — 2026-05-14
+
+**Feature: Migration Phase 5d — business rule extraction.**
+
+New phase added to `agents/iconix-migration.md` (both graph-assisted and manual modes).
+Produces `migration/business-rules.md` from four detection tracks:
+
+- **Track S (Schema):** pulls invariants, transition guards, and operation preconditions
+  directly from `migration/domain-glossary.md` (Phase 5c output) — no extra scanning.
+- **Track V (Validators):** language-aware grep for validator classes and annotations across
+  7 stacks (FluentValidation, Bean Validation, Django clean(), Laravel rules(), Rails validates,
+  class-validator, go-playground/validator). Labels: `EXTRACTED`.
+- **Track D (Domain logic):** guard clauses and throw/raise patterns in domain/service layer
+  paths; specification/policy classes (`ISpecification<T>`, `is_satisfied_by`); `Calculate*`
+  / `Compute*` methods. Labels: `INFERRED [VERIFY]`.
+- **Track T (SQL Triggers):** `RAISERROR`/`THROW` → Invariant/Precondition; `SET` formulas
+  → Calculation; audit inserts skipped. Labels: `INFERRED [VERIFY]`.
+
+Seven rule categories: Invariant, Precondition, Postcondition, Transition guard,
+Calculation, Authorization, Workflow. Classification heuristics with priority order
+(Transition guard > Precondition > Invariant) prevent double-counting.
+
+Manual mode note: Track D uses directory-convention layer detection instead of graph
+classification; all Track D/T results are `INFERRED`; adds confidence caveat to file header.
+
+Controlled by new `business_rules.enabled` key in `iconix.config.yaml` (default `true`).
+Templates updated: `iconix.config.yaml` (new section), `handoff-report-template.md`
+(new artifact row), `README.md` (project layout + flow diagram).
+
+No theory audit required — capability extension within the Migration agent role.
+
 ## [1.0.31] — 2026-05-14
 
 **Docs: README — update `features/` directory entry and migration flow diagram for Phase 5c.**

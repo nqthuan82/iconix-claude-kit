@@ -1297,6 +1297,164 @@ surface them for PO review in the handoff report's **Recommended next steps** se
 - Does not infer NFR scenarios (timeouts, retry, performance) — not recoverable from schema
 - Does not guess actor identity beyond what the UC-DRAFT already states
 
+## Phase 5d — Business rule extraction (graph-assisted)
+
+Produces `migration/business-rules.md` from four detection tracks. Skip when
+`business_rules.enabled: false` in `iconix.config.yaml`. Reads
+`migration/domain-glossary.md` from Phase 5c as primary input for Track S — run after
+Phase 5c Steps 1–3.
+
+### Step 1 — Detect rule sources
+
+**Track S — Schema rules (pull from glossary)**
+
+Read `migration/domain-glossary.md`. For each entity entry, pull:
+- `Invariants:` lines → category **Invariant**; preserve original provenance label.
+- `States:` lines → category **Transition guard**; preserve original provenance label.
+- `Operations:` lines → candidate **Preconditions** (transition triggers); mark `[VERIFY]`.
+
+No additional file scanning required — Track S reuses Phase 5c output.
+
+**Track V — Validator classes (language-aware)**
+
+| Language | File scope | Signals |
+|---|---|---|
+| C# / .NET | `**/*.cs` | `AbstractValidator<T>` (FluentValidation) → `.RuleFor().NotNull()`, `.GreaterThan()`, `.Matches()`; `[Range]`, `[StringLength]`, `[RegularExpression]`, `[EmailAddress]` DataAnnotations; `ValidationAttribute` subclasses |
+| Java | `**/*.java` | `@NotBlank`, `@NotNull`, `@Size`, `@Min`, `@Max`, `@Pattern`, `@Email` (Bean Validation); `ConstraintValidator<A,T>` implementations |
+| Python (Django) | `**/models.py`, `**/forms.py` | `clean()` / `clean_<field>()` methods; `validators=[...]` on field; `ValidationError` raised |
+| Python (SQLAlchemy) | `**/*.py` | `@validates` decorator |
+| PHP | `**/*.php` | Symfony `Constraint` subclasses; Laravel Form Request `rules()` method |
+| Ruby | `app/models/**/*.rb` | `validates :field, presence:`, `length:`, `numericality:`, `format:`; `validate :method_name` callbacks |
+| TypeScript / JS | `**/*.ts`, `**/*.js` | class-validator `@IsEmail`, `@Min`, `@Max`, `@IsNotEmpty`, `@Length`, `@Matches` |
+| Go | `**/*.go` | struct tags `validate:"required,min=0,max=100"` (go-playground/validator) |
+
+Label all validator-derived rules `EXTRACTED`.
+
+**Track D — Domain-layer logic**
+
+Restrict to domain / service / application layer paths — exclude `Controllers/`,
+`Repositories/`, `Adapters/`, `Infrastructure/`, `Migrations/`.
+
+*Guard clauses:*
+
+| Language | Patterns |
+|---|---|
+| C# | `throw new.*Exception` / `Guard.Against.*` inside domain entity or service methods |
+| Java | `Objects.requireNonNull`, `Preconditions.checkArgument`, `throw new IllegalArgumentException` |
+| Python | `raise ValueError` / `raise TypeError` in model or domain service methods |
+| PHP | `throw new \InvalidArgumentException` / `throw new DomainException` |
+| Ruby | `raise ArgumentError` / custom domain exceptions |
+| TypeScript | `throw new Error` / custom domain exception classes |
+| Go | early `return err` with named domain error types |
+
+*Specification / policy classes:*
+
+Grep for classes matching `(?i)(Specification|Spec|Policy|Rule|Guard|Criteria)` suffix,
+or implementing `ISpecification<T>` / `is_satisfied_by` / `satisfied_by?`.
+Extract the predicate body as a candidate **Precondition** or **Invariant**.
+
+*Calculation methods:*
+
+Grep for methods named `Calculate*`, `Compute*`, `Derive*`, `Get*Total`, `Get*Amount`
+in domain layer. Extract method body for formula inference; label `INFERRED [VERIFY]`.
+
+Label all Track D results `INFERRED [VERIFY]`.
+
+**Track T — SQL Triggers**
+
+For each `CREATE TRIGGER <name> ON <table> [AFTER|INSTEAD OF|FOR] [INSERT|UPDATE|DELETE]`:
+- `RAISERROR` / `THROW` in body → candidate **Invariant** or **Precondition**.
+- `SET <col> = <expression>` in body → candidate **Calculation** (postcondition).
+- `INSERT INTO <AuditTable>` → skip (infrastructure audit, not domain rule).
+
+Label all trigger-derived rules `INFERRED [VERIFY — trigger bodies often mix domain and infrastructure]`.
+
+### Step 2 — Classify rules
+
+| Category | When to use | Typical source |
+|---|---|---|
+| **Invariant** | Always true on entity, regardless of operation | NOT NULL, CHECK, validator annotations, guard in constructor |
+| **Precondition** | Must hold before operation proceeds | Guard clause at method entry, specification.IsSatisfiedBy |
+| **Postcondition** | Observable entity state guaranteed after operation | Trigger SET, method return contract |
+| **Transition guard** | Controls whether a state machine transition is allowed | `if (status != Pending) throw`, state-aware specification |
+| **Calculation** | Formula or derivation rule | `Calculate*` method body, trigger SET formula |
+| **Authorization** | Role or permission constraint | `[Authorize]`, `HasRole()` guard, `@PreAuthorize` |
+| **Workflow** | Sequencing constraint between operations | `if (!invoice.Exists) throw`, phase-ordering guard |
+
+Classification heuristics (in priority order):
+- Track S NOT NULL / CHECK → **Invariant**
+- Track S CHECK IN / ORM enum → **Transition guard**
+- Track V field annotation → **Invariant**
+- Track V route/method annotation with role → **Authorization**
+- Track D guard `if (status !=) throw` → **Transition guard**
+- Track D guard at method entry (non-status) → **Precondition**
+- Track D `Calculate*` / `Compute*` → **Calculation**
+- Track D specification / policy → **Precondition** or **Invariant**
+- Track T RAISERROR / THROW → **Invariant** or **Precondition**
+- Track T SET formula → **Calculation**
+
+When a rule fits multiple categories, prefer the most specific:
+`Transition guard > Precondition > Invariant`.
+
+### Step 3 — Produce `migration/business-rules.md`
+
+```markdown
+# Business Rules — <date>
+> Generated by iconix-migration Phase 5d.
+> [VERIFY] all INFERRED entries before treating as authoritative.
+> Sources: domain-glossary.md (S), validator classes (V), domain logic (D), SQL triggers (T).
+
+## Invariants
+*Constraints that always hold on an entity, regardless of operation.*
+
+### <Entity>
+- <description> | Source: <construct — file:line> | <EXTRACTED | INFERRED [VERIFY]>
+
+## Preconditions
+*Conditions that must hold before an operation can proceed.*
+
+### <Operation>
+- <description> | Source: <file:line> | INFERRED [VERIFY]
+
+## Transition guards
+*Conditions controlling allowed state machine transitions.*
+
+### <Entity>.<StatusField>
+- <FromState> → <ToState>: <condition> | Source: <file:line> | <provenance> [VERIFY]
+
+## Calculations
+*Derivation and formula rules.*
+
+### <Entity>
+- <formula description> | Source: <file:line> | INFERRED [VERIFY]
+
+## Authorization
+*Role and permission requirements.*
+
+### <Operation>
+- Requires <role> | Source: <annotation or guard at file:line> | EXTRACTED
+
+## Workflow
+*Sequencing constraints between operations.*
+
+- <description> | Source: <file:line> | INFERRED [VERIFY]
+
+## Candidate missing rules
+Rules suggested by code patterns but too ambiguous to classify:
+- <file:line> — <pattern observed> | AMBIGUOUS [VERIFY — confirm business intent]
+
+## What Phase 5d does not extract
+- NFR rules (performance, availability, SLA) — add these to `docs/nfr-catalog.md`
+- Rules embedded in dynamic SQL strings or reflection-based logic
+- Rules expressed only in comments or external documentation
+```
+
+### What Phase 5d does not do
+- Does not assign permanent IDs — link rules to REQ-XXX or UC-XXX preconditions during
+  human review; Traceability agent promotes when links are confirmed
+- Does not replace Product Owner validation — INFERRED rules require PO sign-off before M1
+- Does not generate test cases — Tester derives TC-XXX from confirmed rules at M3
+
 ## Phase 6 — Test coverage mapping (graph-assisted)
 
 ### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
@@ -1497,6 +1655,22 @@ Same as graph-assisted Phase 5c. Key differences in code-walking mode:
   BDD-DRAFT files. Log messages and handoff report entries are the same as graph-assisted.
 
 All other rules (Step 1 detection, Step 2 parsing, Step 3 glossary, Steps 4–6) apply unchanged.
+
+## Phase 5d — Business rule extraction (manual)
+
+Same as graph-assisted Phase 5d. Key differences in code-walking mode:
+
+- **Track D (domain logic):** grep source files directly rather than querying graph nodes.
+  Restrict to domain/application/service layer paths by directory convention, not by graph
+  classification. When a class path is ambiguous (could be domain or infrastructure), note
+  `[VERIFY — layer classification uncertain]`.
+- **Provenance:** all Track D and Track T entries are `INFERRED` — no graph edges available
+  to label `EXTRACTED`. Track S and Track V entries retain their original provenance.
+- **Confidence caveat:** add to file header:
+  `Code-walking mode — domain-layer classification is heuristic; every INFERRED rule
+   requires careful human review before being linked to REQ-XXX or UC-XXX preconditions.`
+
+All other rules (Steps 1–3, classification categories, output format) apply unchanged.
 
 ## Phase 6 — Test coverage mapping (manual)
 
