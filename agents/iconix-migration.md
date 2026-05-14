@@ -1449,9 +1449,80 @@ Rules suggested by code patterns but too ambiguous to classify:
 - Rules expressed only in comments or external documentation
 ```
 
+### Step 4 — Annotate UC-DRAFT preconditions
+
+**Gate:** skip this step if no `docs/use-cases/UC-DRAFT-*.md` files exist.
+
+For each UC-DRAFT-XXX:
+
+**a) Build entity and operation set**
+
+- Read the UC-DRAFT's Actor, Preconditions, main course, and alternate courses.
+- Read `robustness/RB-DRAFT-XXX.puml` — collect all entity node names.
+- Extract action verbs from main course steps (e.g., "Manager approves the Order" → verb
+  `Approve`, entity `Order`).
+- Resolve canonical entity names via `migration/domain-glossary.md` (handles plural /
+  singular / alias variants).
+
+**b) Match rules from `migration/business-rules.md`**
+
+| Rule category | Match signal | Adds to UC as |
+|---|---|---|
+| **Precondition** | Rule entity in UC entity set OR operation verb matches UC main course | `## Preconditions` entry `[VERIFY]` |
+| **Transition guard** | State change mentioned in UC main/alt course | `## Preconditions` entry `[VERIFY]` |
+| **Authorization** | Role in rule matches UC Actor name or role description | `## Preconditions` entry `[VERIFY]` |
+| **Invariant** | Rule entity in UC entity set | Cross-reference table only (invariants always hold; do not add to Preconditions) |
+| **Calculation** | Rule entity in UC entity set | Cross-reference table only (informs Tester of derived values) |
+| **Workflow** | Operation in UC's main/alt course appears in rule | `## Preconditions` entry `[VERIFY]` |
+
+**c) Append to UC-DRAFT**
+
+Never overwrite or reorder existing UC-DRAFT content.
+
+1. Append matched Precondition / Transition guard / Authorization / Workflow rules to
+   the existing `## Preconditions` section:
+   ```
+   - [BR] <rule description> [VERIFY — inferred from Phase 5d; source: <file:line>]
+   ```
+   Skip if an existing precondition already covers the same entity and constraint.
+
+2. Add `## Business rules cross-reference (Phase 5d)` at the bottom of the UC-DRAFT:
+   ```markdown
+   ## Business rules cross-reference (Phase 5d)
+   > Auto-annotated by iconix-migration — [VERIFY] all entries before promotion.
+   > Remove this section after human review.
+
+   | Category | Rule | Source | Provenance |
+   |---|---|---|---|
+   | Precondition | <description> | <file:line> | INFERRED |
+   | Transition guard | <FromState> → <ToState>: <condition> | <file:line> | INFERRED |
+   | Authorization | Requires <role> | <file:line> | EXTRACTED |
+   | Invariant | <description> | <construct> | EXTRACTED |
+   | Calculation | <formula> | <file:line> | INFERRED |
+   ```
+   AMBIGUOUS rules appear in this table only — never in Preconditions.
+
+**d) Conflict avoidance**
+
+- If UC-DRAFT already has a precondition for the same entity+constraint → skip, do not duplicate.
+- If a rule is `AMBIGUOUS (B5-enum)` or `AMBIGUOUS` → add to cross-reference table only with
+  `[VERIFY — multiple candidates, confirm correct rule]`.
+- If no rules match any UC entity → skip Step 4 for that UC; log in handoff report.
+
+**e) Handoff report entry**
+
+After processing all UC-DRAFTs, append to the handoff report:
+
+```
+Phase 5d UC annotation:
+  UC-DRAFTs annotated: <N>
+  Rules linked: <N Preconditions> + <N Transition guards> + <N Authorization>
+  UC-DRAFTs with no rule match: <list — investigate missing entities in glossary>
+```
+
 ### What Phase 5d does not do
-- Does not assign permanent IDs — link rules to REQ-XXX or UC-XXX preconditions during
-  human review; Traceability agent promotes when links are confirmed
+- Does not assign permanent IDs to rules — link to REQ-XXX during human review;
+  Traceability agent promotes when confirmed
 - Does not replace Product Owner validation — INFERRED rules require PO sign-off before M1
 - Does not generate test cases — Tester derives TC-XXX from confirmed rules at M3
 
@@ -1669,6 +1740,9 @@ Same as graph-assisted Phase 5d. Key differences in code-walking mode:
 - **Confidence caveat:** add to file header:
   `Code-walking mode — domain-layer classification is heuristic; every INFERRED rule
    requires careful human review before being linked to REQ-XXX or UC-XXX preconditions.`
+- **Step 4 (UC annotation):** identical to graph-assisted — entity matching uses class
+  names from `class-model/class-model.puml` (Phase 2) and entity nodes from
+  `robustness/RB-DRAFT-*.puml` (Phase 4) rather than graph node IDs.
 
 All other rules (Steps 1–3, classification categories, output format) apply unchanged.
 

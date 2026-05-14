@@ -5,6 +5,31 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.33] — 2026-05-14
+
+**Feature: Migration Phase 5d Step 4 — auto-annotate UC-DRAFT preconditions from business rules.**
+
+Phase 5d now has a Step 4 that runs after producing `migration/business-rules.md`. For each
+`UC-DRAFT-*.md` found, it:
+
+1. Builds an entity + operation set from the UC's actor, main course, alt courses, and the
+   associated `RB-DRAFT-XXX.puml` entity nodes. Resolves canonical names via domain glossary.
+2. Matches rules from `business-rules.md` by entity name, action verb, and actor/role:
+   - **Precondition / Transition guard / Authorization / Workflow** → appended to the UC's
+     `## Preconditions` section as `[BR] <description> [VERIFY — Phase 5d]`.
+   - **Invariant / Calculation** → cross-reference table only (not Preconditions).
+   - **AMBIGUOUS** rules → cross-reference table only with `[VERIFY — multiple candidates]`.
+3. Adds `## Business rules cross-reference (Phase 5d)` section at bottom of each UC-DRAFT
+   (table of all matched rules by category; removed by reviewer after promotion).
+4. Never overwrites or reorders existing UC-DRAFT content; skips duplicate preconditions.
+5. Appends annotation summary to handoff report (N UC-DRAFTs annotated, N rules linked,
+   UC-DRAFTs with no match listed for investigation).
+
+Manual mode note updated: Step 4 uses class-model.puml and RB-DRAFT entity nodes instead
+of graph node IDs for entity matching.
+
+No theory audit required — capability extension within the Migration agent role.
+
 ## [1.0.32] — 2026-05-14
 
 **Feature: Migration Phase 5d — business rule extraction.**
