@@ -213,7 +213,19 @@ For projects without a multi-project layout (small monoliths), use the package-m
 Triggered when M3 has passed for a UC and Phase 9 begins (sub-state 9.1 in the Orchestrator's routing). Runs again at sub-state 9.3 if the Reviewer requested changes.
 
 ## Initial implementation (9.1)
-Per UC, on branch `feature/UC-XXX-<slug>` (created at M2 entry per v0.9.5):
+
+**Pre-step — Multi-repo branch setup (migrated multi-container UCs only):**
+Read the `Source-container:` annotation from the UC file (`use-cases/<PREFIX>-UC-XXX-<slug>.md`):
+- **No annotation, or one container entry** → the feature branch created at M2 entry covers
+  the correct repo; proceed to step 1.
+- **Multiple container entries** (format: `Frontend @ ../frontend/src/, Backend @ ../backend/src/`
+  — produced by Phase 1b cross-container correlation): this UC spans ≥ 2 repos. Create
+  `feature/UC-XXX-<slug>` in **each** container repo (each unique `path:` in the annotation)
+  before writing any code. Code for each container is placed under that container's resolved
+  source root (see `# Container path resolution`). Commits in each repo use the same
+  `[UC-XXX] Impl: <summary>` format.
+
+Per UC, on branch `feature/UC-XXX-<slug>` (created at M2 entry per v0.9.5, or per pre-step above for multi-container UCs):
 1. Convert each SD message into the corresponding operation/method call in code, in the SD's order. Boundaries map to controllers; entities to domain classes; Controllers (the lifelines, not the boundary stereotype) to services or coordinators.
 2. Implement basic course first; alternate courses next (Ch10 #1: "Remember to implement the alternate courses as well as the basic courses").
 3. **Implement unit test bodies** for each `test-cases/TC-XXX-<slug>.md` with `## Type: unit` covering this UC. Do this alongside the corresponding production method — not as a separate pass (Ch10 #3: "Focus on unit testing *while* implementing code"). Pattern per TC:

@@ -5,6 +5,32 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.17] — 2026-05-14
+
+**Feature: Source-container routing for multi-container UCs through promotion and Phase 9.**
+
+When a UC-DRAFT spans multiple containers (produced by Phase 1b cross-container
+correlation), neither the Traceability agent nor the Developer agent had instructions
+for handling the multi-value `Source-container:` annotation after promotion.
+
+Two gaps closed:
+
+**Traceability agent (`agents/iconix-traceability.md`):**
+- DRAFT promotion Step 4: explicit instruction to preserve `Source-container:` annotation
+  as-is during ID replacement — it is the Developer's routing signal for multi-repo
+  code placement and must not be removed or modified.
+- DRAFT promotion Step 5: after the main summary, check each promoted UC for a
+  multi-value `Source-container:` annotation (contains `,`). If any exist, append a
+  "Multi-container UCs promoted" section listing the repos and instructing the Developer
+  to create feature branches in each before coding.
+
+**Developer agent (`agents/iconix-developer.md`):**
+- Phase 9.1 gains a **Pre-step — Multi-repo branch setup**: read `Source-container:` from
+  the UC file; if one container or no annotation → standard flow; if multiple containers →
+  create `feature/UC-XXX-<slug>` in each container repo before coding, write code under
+  each container's resolved source root, commit with the same `[UC-XXX] Impl:` format
+  in each repo.
+
 ## [1.0.16] — 2026-05-14
 
 **Fix: Phase 6 coverage-gaps.md stale after Phase 1b Case 2 amendment (incremental run).**

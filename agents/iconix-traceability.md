@@ -219,6 +219,8 @@ For each eligible DRAFT:
    - `**ID:** UC-DRAFT-001` → `**ID:** <PREFIX>-UC-001`
    - Traceability block — replace old DRAFT ID with permanent ID
    - PlantUML header comment `' Traceability: ... UC-DRAFT-001 ...` → permanent ID
+   - `Source-container:` annotation — **preserve as-is**; do not remove or modify.
+     This annotation is the Developer's routing signal for multi-repo code placement.
 3. **Update cross-references** — scan all other DRAFT files in `use-cases/`, `robustness/`, `sequence/`, `use-case-packages/` for the old DRAFT ID string; replace with the new permanent ID
 4. **Register in `ids.registry.md`** — add one entry per promoted ID:
    ```
@@ -241,6 +243,21 @@ Skipped — already promoted:
 
 Next: run /iconix-next to continue the pipeline from the promoted artifacts.
 ```
+
+After printing the main summary, check each promoted UC file for a multi-value
+`Source-container:` annotation (i.e., it contains `,` — more than one container entry).
+If any exist, append:
+
+```
+Multi-container UCs promoted:
+  <PREFIX>-UC-001 (checkout): spans
+    Frontend @ ../frontend/src/
+    Backend  @ ../backend/src/
+  → Developer must create feature/UC-001-checkout in each repo before coding.
+    Code for each container goes under that container's resolved source root.
+```
+
+If no multi-container UCs were promoted, omit this section entirely.
 
 # CI counterpart: `.ci/validate-traceability.sh`
 The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` from `templates/git-integration/generic/`) runs a **subset** of your validation in CI as a merge gate:
