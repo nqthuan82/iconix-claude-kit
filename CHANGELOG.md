@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.31] — 2026-05-14
+
+**Docs: README — update `features/` directory entry and migration flow diagram for Phase 5c.**
+
+Three changes to `README.md`:
+
+1. **`## Project layout` — Phase 3 `features/` entry:** added note that Migration Phase 5c
+   also writes `BDD-DRAFT-*.feature` here (when `stack.bdd: true`); these are promoted to
+   TC-XXX by the Tester at M3.
+
+2. **`## Project layout` — Migration section:** updated `domain-glossary.md` description
+   to "Phase 5c Steps 1–3 — always generated when any schema source detected, regardless
+   of `stack.bdd`"; updated `features/` line to "Phase 5c Steps 4–6 — written when
+   `stack.bdd: true` and UC-DRAFTs exist". Removed outdated "when SQL schema found" wording.
+
+3. **Migration flow diagram:** added two new output lines inside the `}` DRAFT block:
+   `migration/domain-glossary.md` (Phase 5c Steps 1–3) and `features/BDD-DRAFT-*.feature`
+   (Phase 5c Steps 4–6).
+
+No theory audit required — documentation sync.
+
 ## [1.0.30] — 2026-05-14
 
 **Feature: Handoff report template — add Phase 5c section and artifact inventory rows.**

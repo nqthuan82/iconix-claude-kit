@@ -278,6 +278,9 @@ Phase 3 — Detailed Design (M3)
   class-model/     [install]  class-model.puml
   test-cases/      [install]  TC-XXX-<slug>.md
   features/        [install]  UC-XXX.feature      ← BDD projects or acceptance-bdd TCs
+                              BDD-DRAFT-*.feature ← also written by Migration Phase 5c
+                                                    (when stack.bdd: true); promoted to
+                                                    TC-XXX by Tester at M3
   test-plan/       [agent]    test-plan-<date>.md
   edge-case-reports/ [agent]  <PREFIX>-UC-XXX-edge-cases.md
   test-matrix.md   [agent]    root level; single living document
@@ -308,8 +311,11 @@ Traceability (root level — accessible by all agents without path resolution)
 
 Migration (legacy codebases only — produced by /iconix-migrate)
   migration/       [agent]    survey-<date>.md, coverage-gaps.md, handoff-<date>.md,
-                              domain-glossary.md (Phase 5c — domain vocabulary from SQL schema)
-  features/                   BDD-DRAFT-*.feature (Phase 5c — also writes here when SQL schema found)
+                              domain-glossary.md (Phase 5c Steps 1–3 — domain vocabulary from
+                              schema analysis; always generated when any schema source detected,
+                              regardless of stack.bdd)
+  features/                   BDD-DRAFT-*.feature (Phase 5c Steps 4–6 — written when
+                              stack.bdd: true and UC-DRAFTs exist; shares directory with Tester)
 ```
 
 ## Usage
@@ -806,6 +812,8 @@ the normal pipeline resumes once Traceability promotes them to permanent IDs.
           ├─► sequence/SD-DRAFT-*.puml          }  until human review
           ├─► robustness/RB-DRAFT-*.puml        }
           ├─► use-cases/UC-DRAFT-*.md           }
+          ├─► migration/domain-glossary.md      }  Phase 5c Steps 1–3 (always when schema found)
+          ├─► features/BDD-DRAFT-*.feature      }  Phase 5c Steps 4–6 (when stack.bdd: true)
           └─► migration/coverage-gaps.md
                   │
                   ▼
