@@ -3,7 +3,7 @@
 > Produced by the Traceability agent. Every column derives from artifact content — do not
 > edit manually. Re-run via `/iconix-status` to refresh.
 >
-> **BR-NNN column:** migration mode only — populated when `migration/business-rules.md` exists
+> **BR-NNN column:** populated when `docs/business-rules.md` exists
 > and Phase 5d Step 4 has annotated UC files. Omit the column when no business rules exist.
 
 ## UC chain table
@@ -45,7 +45,7 @@
 
 ## Business rules coverage (migration mode only)
 
-> Omit this section when `migration/business-rules.md` is absent.
+> Omit this section when `docs/business-rules.md` is absent.
 
 | BR-ID | Category | Provenance | Linked UCs | Linked ADRs |
 |---|---|---|---|---|
@@ -71,5 +71,5 @@
 - **Date:** `<YYYY-MM-DD>`
 - **Source artifacts read:** `ids.registry.md`, `use-cases/UC-*.md`, `robustness/RB-*.puml`,
   `sequence/SD-*.puml`, `adrs/*.md`, `nfr-annotations/*.md`, `iconix.config.yaml` (NFR catalog),
-  `migration/business-rules.md` (when present — migration mode only)
+  `docs/business-rules.md` (when present — migration mode only)
 - **Next action:** resolve any FAIL rows above before the next milestone gate

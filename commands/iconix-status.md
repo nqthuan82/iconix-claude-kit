@@ -17,7 +17,7 @@ Count all artifacts by type. Flag any that are missing an expected downstream ar
 | CLS | | |
 | TC | | |
 | ADR | | |
-| BR | (EXTRACTED: N, INFERRED: N) — omit row when `migration/business-rules.md` absent | Broken ADR citations: N |
+| BR | (EXTRACTED: N, INFERRED: N) — omit row when `docs/business-rules.md` absent | Broken ADR citations: N |
 | [VERIFY] | Total across all DRAFT files (UC-DRAFTs + RB-DRAFTs + domain-glossary.md + BDD-DRAFTs + business-rules.md) — omit row when no DRAFT files exist | Highest-count file: `<filename> (N)` |
 | Test plan (`test-plan/test-plan-<date>.md`) | exists? | — |
 | Change impact reports (`change-impact/CI-*.md`) | open count | — |
@@ -26,11 +26,11 @@ Count all artifacts by type. Flag any that are missing an expected downstream ar
 
 From `iconix.config.yaml` `nfr_catalog`: how many NFRs are cited by ≥1 ADR or container-mapping annotation? List any uncovered NFRs as orphans.
 
-## 2b. Business rules coverage (migration mode only)
+## 2b. Business rules coverage
 
-Skip this section when `migration/business-rules.md` is absent.
+Skip this section when `docs/business-rules.md` is absent.
 
-When present, read `migration/business-rules.md` and report:
+When present, read `docs/business-rules.md` and report:
 
 - **Total rules:** N — EXTRACTED: N | INFERRED [VERIFY]: N | AMBIGUOUS: N
 - **⚠ Investigate categories with no covering ADR** (Invariant / Authorization / Transition guard / Workflow / Calculation): N rules — list BR-IDs. These are ADR candidates the Architect has not yet addressed.
@@ -52,7 +52,7 @@ List any `change-impact/CI-*.md` files present. For each, note: which REQ trigge
 
 Run the standard M1 / PDR / CDR gate checks scoped to current artifact state. Report READY or NOT READY with specific blockers.
 
-For M2, include BR-NNN check #17 in the blocker list when `migration/business-rules.md` exists:
+For M2, include BR-NNN check #17 in the blocker list when `docs/business-rules.md` exists:
 - **BR-NNN citation integrity:** N broken citations (ADR cites BR-ID not in `business-rules.md`) — list each. Each broken citation is an M2 blocker.
 
 ## 6. Next recommended action

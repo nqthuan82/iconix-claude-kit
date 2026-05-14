@@ -1299,7 +1299,7 @@ surface them for PO review in the handoff report's **Recommended next steps** se
 
 ## Phase 5d — Business rule extraction (graph-assisted)
 
-Produces `migration/business-rules.md` from four detection tracks. Skip when
+Produces `docs/business-rules.md` from four detection tracks. Skip when
 `business_rules.enabled: false` in `iconix.config.yaml`. Reads
 `migration/domain-glossary.md` from Phase 5c as primary input for Track S — run after
 Phase 5c Steps 1–3.
@@ -1396,7 +1396,7 @@ Classification heuristics (in priority order):
 When a rule fits multiple categories, prefer the most specific:
 `Transition guard > Precondition > Invariant`.
 
-### Step 3 — Produce `migration/business-rules.md`
+### Step 3 — Produce `docs/business-rules.md`
 
 Maintain a sequential BR-ID counter (`BR-001`, `BR-002` …) across all categories. Assign the
 next available ID to each rule as it is written. Never reuse an ID within a migration run.
@@ -1469,7 +1469,7 @@ For each UC-DRAFT-XXX:
 - Resolve canonical entity names via `migration/domain-glossary.md` (handles plural /
   singular / alias variants).
 
-**b) Match rules from `migration/business-rules.md`**
+**b) Match rules from `docs/business-rules.md`**
 
 | Rule category | Match signal | Adds to UC as |
 |---|---|---|
@@ -1527,7 +1527,7 @@ Phase 5d UC annotation:
 ```
 
 Also populate the `## Phase 5d — Business rules trigger scan` section of the handoff report.
-For each rule in `migration/business-rules.md`, classify by ADR signal using the category table:
+For each rule in `docs/business-rules.md`, classify by ADR signal using the category table:
 
 - **⚠ Investigate** — Invariant, Authorization, Transition guard, Workflow, Calculation
 - **✓ No ADR likely** — Precondition, Postcondition
@@ -1641,7 +1641,7 @@ Fill in every section:
 - **Architecture decisions needed:** mixed-responsibility classes, [VERIFY] counts in arch docs
 - **AMBIGUOUS findings:** polymorphic dispatch, deep call chains (graph-assisted only)
 - **Test coverage gaps:** UC-DRAFTs with no existing test coverage
-- **Phase 5d trigger scan:** when `migration/business-rules.md` was produced, pre-classify each rule by ADR signal (⚠ Investigate vs ✓ No ADR likely) using the category table. One row per rule: Rule ID, Category, one-line summary, Provenance, ADR signal. Fill the Summary block with total counts. Omit section when `business_rules.enabled: false` or no rules extracted.
+- **Phase 5d trigger scan:** when `docs/business-rules.md` was produced, pre-classify each rule by ADR signal (⚠ Investigate vs ✓ No ADR likely) using the category table. One row per rule: Rule ID, Category, one-line summary, Provenance, ADR signal. Fill the Summary block with total counts. Omit section when `business_rules.enabled: false` or no rules extracted.
 - **Cross-container UC groupings** (multi-repo only): list every proposed group from Phase 1b — HIGH-confidence groups (recommended merge) and MEDIUM-confidence groups ([VERIFY]). Human must confirm each grouping before `/iconix-promote`. Unmatched inbound boundaries (external callers) should be reviewed by PO to confirm actor identity.
 - **Recommended next steps:** ordered by risk — always lead with system-architecture [VERIFY] items, then cross-container grouping confirmations (Phase 1b), then PO UC review, then NFR gaps
 

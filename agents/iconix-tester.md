@@ -58,7 +58,7 @@ Produce the right test type at the right ICONIX phase — do not defer all testi
 - `robustness/RB-*.puml`
 - `sequence/SD-*.puml` (for unit-test-level detail)
 - `iconix.config.yaml` (test frameworks, BDD style)
-- `migration/business-rules.md` (optional — produced by Migration Phase 5d; when present, provides concrete test data for boundary values, state violations, authorization, and calculation verification; see `# Business rules enrichment`)
+- `docs/business-rules.md` (optional — produced by Migration Phase 5d or authored by the Product Owner; when present, provides concrete test data for boundary values, state violations, authorization, and calculation verification; see `# Business rules enrichment`)
 
 # Stack resolution
 
@@ -152,13 +152,13 @@ For every UC, produce edge cases in these families (skip families that genuinely
 6. **State violations** — action performed in wrong state (e.g., cancel already-cancelled order)
 7. **Domain-specific** — load from `iconix.config.yaml:domain_test_families` if present
 
-When `migration/business-rules.md` exists, use it to supply **concrete values** for families
+When `docs/business-rules.md` exists, use it to supply **concrete values** for families
 1 (Boundary values — from Invariants), 3 (Authorization — from Authorization rules), and
 6 (State violations — from Transition guards). See `# Business rules enrichment`.
 
-# Business rules enrichment (migration mode)
+# Business rules enrichment
 
-When `migration/business-rules.md` exists, read it before authoring TCs for any UC. Cross-
+When `docs/business-rules.md` exists, read it before authoring TCs for any UC. Cross-
 reference via the `## Business rules cross-reference (Phase 5d)` table already injected into
 each UC-DRAFT by Migration Phase 5d Step 4. Use the rules to supply **concrete test data and
 specific negative cases** instead of leaving `<value>` placeholders in TC Steps.

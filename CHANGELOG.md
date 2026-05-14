@@ -5,6 +5,41 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.44] — 2026-05-14
+
+**Refactor: `docs/business-rules.md` canonical path + greenfield PO authoring + new template.**
+
+Unifies the business rules file location (`docs/business-rules.md`) across all agents and templates,
+matching the pattern of `docs/architecture/system-architecture.md` and `docs/nfr-catalog.md`.
+Adds PO-authored business rules for greenfield projects and a new scaffold template.
+
+Changes across 11 files:
+
+1. **`templates/business-rules-template.md`** — NEW. Scaffold for both modes:
+   - Greenfield (PO-authored): all 7 categories with DEFINED provenance, usage guidance.
+   - Migration (Phase 5d extracted): EXTRACTED / INFERRED [VERIFY] provenance reminder.
+   - Save path: `docs/business-rules.md`.
+
+2. **`agents/iconix-product-owner.md`** — new `# Business rules authoring` section:
+   when to produce `docs/business-rules.md` (greenfield), DEFINED provenance, format
+   conventions, incremental update guidance. M1 checklist: `docs/business-rules.md` exists.
+
+3. **Path refactor — `migration/business-rules.md` → `docs/business-rules.md`** in:
+   - `agents/iconix-architect.md` — inputs + section title ("migration mode only" removed)
+   - `agents/iconix-tester.md` — inputs + section title updated
+   - `agents/iconix-traceability.md` — chain diagram, check #17, matrix population guide
+   - `agents/iconix-migration.md` — Phase 5d output path
+   - `commands/iconix-status.md` — section 2b title and path
+   - `templates/handoff-report-template.md` — artifact inventory row
+   - `templates/traceability-matrix-template.md` — business rules coverage section
+   - `templates/milestone-report-template.md` — ADR health line
+   - `templates/iconix.config.yaml` — `business_rules:` comment
+
+4. **Installers** — `iconix-init` (bash) and `iconix-init.ps1` (PowerShell): copy
+   `business-rules-template.md` to `docs/iconix/templates/`.
+
+5. **`README.md`** — template listings + project layout updated.
+
 ## [1.0.43] — 2026-05-14
 
 **Feature: `/iconix-status` — `[VERIFY]` total row in artifact inventory.**

@@ -33,7 +33,7 @@
 | UC package overviews | `use-case-packages/*-DRAFT.puml` | `<N>` generated | 5b |
 | Domain glossary | `migration/domain-glossary.md` | Generated \| Skipped (no schema source) | 5c Steps 1–3 |
 | BDD-DRAFT files | `features/BDD-DRAFT-*.feature` | `<N>` generated \| Skipped — `stack.bdd: false` \| Skipped — no UC-DRAFTs | 5c Steps 4–6 |
-| Business rules | `migration/business-rules.md` | Generated — `<N>` rules \| Skipped — `business_rules.enabled: false` | 5d |
+| Business rules | `docs/business-rules.md` | Generated — `<N>` rules \| Skipped — `business_rules.enabled: false` | 5d |
 | Coverage gaps | `migration/coverage-gaps.md` | Generated | 6 |
 
 **Skipped artifacts** (human-edited since last run or already promoted):
@@ -74,7 +74,7 @@
 | RB-DRAFTs | `robustness/RB-DRAFT-*.puml` | `<N>` |
 | Domain glossary | `migration/domain-glossary.md` | `<N>` |
 | BDD-DRAFTs | `features/BDD-DRAFT-*.feature` | `<N>` (omit row if none generated) |
-| Business rules | `migration/business-rules.md` | `<N>` (omit row if Phase 5d skipped) |
+| Business rules | `docs/business-rules.md` | `<N>` (omit row if Phase 5d skipped) |
 | **Total** | | **`<N>`** |
 
 > Zero `[VERIFY]` items on a DRAFT does not mean it is correct — it means the agent had
@@ -120,7 +120,7 @@
 
 ## Phase 5d — Business rules trigger scan
 
-> Pre-computed by `iconix-migration` from `migration/business-rules.md`.
+> Pre-computed by `iconix-migration` from `docs/business-rules.md`.
 > This is a preliminary view — the Architect performs the definitive cross-container analysis at M2.
 > Omit this section when `business_rules.enabled: false` or when no rules were extracted.
 

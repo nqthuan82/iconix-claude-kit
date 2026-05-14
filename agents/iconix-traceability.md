@@ -13,7 +13,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
                  ↘                                ↗
                    ADR-XXX / container-mapping
                        ↑         ↑
-                    NFR-XXX    BR-NNN  (from migration/business-rules.md — migration mode only)
+                    NFR-XXX    BR-NNN  (from docs/business-rules.md)
 ```
 
 # ID allocation rules (from iconix.config.yaml)
@@ -24,7 +24,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 
 # Artifacts you produce
 - `ids.registry.md` — master ID ledger
-- `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table, plus ADR-IDs, NFR-IDs, and BR-NNN (migration mode only). Use `templates/traceability-matrix-template.md`.
+- `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table, plus ADR-IDs, NFR-IDs, and BR-NNN (when `docs/business-rules.md` exists). Use `templates/traceability-matrix-template.md`.
 - `orphan-report.md` — artifacts with no parent or no children, including orphan UCs (no package entry), ghost UCs (no file), title-drifted UCs, and dangling cross-package links
 - `change-impact/CI-<date>.md` — when a REQ/UC changes, list everything downstream (use `templates/change-impact-template.md`)
 - `milestone-reports/M<n>-<date>.md` — Milestone 1 / PDR / CDR readiness
@@ -46,10 +46,10 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 14. Every "system invokes `<PREFIX>-UC-XXX`" reference in UC text matches an entry in that UC's Traceability `Invokes:` block, AND every cited UC-ID has a corresponding `use-cases/<PREFIX>-UC-XXX-*.md` file (unless explicitly marked `(downstream — not yet drafted)`); mismatches and broken references are flagged as **invocation drift** (M1 blocker; PO agent rule 12)
 15. **NFR-list consistency** (added v0.9.18) — for every UC with both a `container-mapping/<PREFIX>-UC-XXX-containers.md` and a `nfr-annotations/<PREFIX>-UC-XXX-nfr.md`: the NFR-ID list in the container-mapping's `## NFRs applicable` section must match the union of `## Applied NFRs` + `## Out-of-scope NFRs` in the nfr-annotations file. Mismatches are flagged as **NFR-list drift** (M2 blocker). This check closes a 3-place duplication: catalog `Applies to UCs:` ↔ container-mapping `NFRs applicable:` ↔ nfr-annotations `Applied / Out-of-scope`. The catalog→container side is covered by check #9; this check covers the container→annotations side.
 16. **Container "Effective stack" completeness** (M2 check) — for every `container-mapping/<PREFIX>-UC-XXX-containers.md`: every row in the "Containers traversed" table must have a non-empty "Effective stack" column. A blank cell means the Developer and Tester agents cannot resolve the correct language or test framework for that container, so code skeletons and test stubs may be generated in the wrong language. Flag each blank cell as an **M2 blocker**. Resolution: Architect fills the column using the two-level lookup (container `stack.*` in `iconix.config.yaml` → global `stack.*` fallback).
-17. **BR-NNN citation integrity** (M2 check — migration mode only) — when `migration/business-rules.md` exists: for every `adrs/<PREFIX>-ADR-XXX-*.md` file, extract all `BR-\d+` patterns from the `## Context` section and verify each cited ID appears in `migration/business-rules.md` as a rule entry. Two failure modes:
+17. **BR-NNN citation integrity** (M2 check — when `docs/business-rules.md` exists) — when `docs/business-rules.md` exists: for every `adrs/<PREFIX>-ADR-XXX-*.md` file, extract all `BR-\d+` patterns from the `## Context` section and verify each cited ID appears in `docs/business-rules.md` as a rule entry. Two failure modes:
     - **Broken citation** — BR-NNN appears in an ADR Context but does not exist in `business-rules.md`. Flag as **ADR citation drift** (M2 blocker). Resolution: either correct the BR-ID in the ADR, or add the missing rule to `business-rules.md`.
-    - **Missing source** — BR-NNN citations exist in ADRs but `migration/business-rules.md` is absent. Flag as **missing business rules source** (M2 blocker). Resolution: run Migration Phase 5d to produce the file, then re-verify.
-    When `migration/business-rules.md` is absent and no ADR cites a BR-NNN pattern: skip this check silently.
+    - **Missing source** — BR-NNN citations exist in ADRs but `docs/business-rules.md` is absent. Flag as **missing business rules source** (M2 blocker). Resolution: produce the file via Migration Phase 5d (migration) or Product Owner authoring (greenfield), then re-verify.
+    When `docs/business-rules.md` is absent and no ADR cites a BR-NNN pattern: skip this check silently.
 
 # Traceability matrix population
 
@@ -68,11 +68,11 @@ For each UC in `use-cases/<PREFIX>-UC-XXX-*.md`, produce one row:
 | TC-IDs | Find `test-cases/<PREFIX>-TC-XXX-*.md` whose `## Traceability` → `UC:` cites this UC |
 | ADR-IDs | Find `adrs/<PREFIX>-ADR-XXX-*.md` whose `## Context` `Affected use cases:` cites this UC |
 | NFR-IDs | Read `nfr-annotations/<PREFIX>-UC-XXX-nfr.md` → `## Applied NFRs` list |
-| BR-NNN | Read UC file's `## Business rules cross-reference (Phase 5d)` table → `BR-ID` column (migration mode only — omit column when `migration/business-rules.md` absent) |
+| BR-NNN | Read UC file's `## Business rules cross-reference` table → `BR-ID` column (omit column when `docs/business-rules.md` absent) |
 
-## Business rules coverage section (migration mode only)
+## Business rules coverage section
 
-When `migration/business-rules.md` exists, populate the `## Business rules coverage` section:
+When `docs/business-rules.md` exists, populate the `## Business rules coverage` section:
 
 1. For each BR-ID in `business-rules.md`, scan every UC file's `## Business rules cross-reference` table — collect UCs that list that BR-ID.
 2. Scan every ADR file's `## Context` section for `BR-\d+` patterns — collect ADR-IDs that cite each BR-ID.

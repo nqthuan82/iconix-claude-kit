@@ -198,7 +198,7 @@ git:
 
 # Business rule extraction — Phase 5d (optional, v1.0.32+)
 # Scans validator classes, domain-layer guard clauses, specification/policy classes,
-# and SQL triggers to produce migration/business-rules.md.
+# and SQL triggers to produce docs/business-rules.md.
 # Runs after Phase 5c (reads domain-glossary.md as primary input).
 # Disabling skips Phase 5d only — domain glossary and BDD-DRAFTs are unaffected.
 business_rules:

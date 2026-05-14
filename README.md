@@ -75,6 +75,7 @@ iconix-kit/
     ├── metrics-schema.json             # JSON schema for snapshot output (v0.9.7+)
     ├── upgrade-report-template.md      # kit-version upgrade report format (v0.9.9+)
     ├── handoff-report-template.md      # migration handoff report format (v0.9.44+)
+    ├── business-rules-template.md      # business rules catalog scaffold (greenfield + migration) (v1.0.44+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -220,6 +221,7 @@ docs/iconix/
     ├── system-architecture-template.md
     ├── upgrade-report-template.md
     ├── handoff-report-template.md
+    ├── business-rules-template.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md
     ├── intake-brd-template.md
@@ -316,9 +318,7 @@ Migration (legacy codebases only — produced by /iconix-migrate)
                               domain-glossary.md (Phase 5c Steps 1–3 — domain vocabulary from
                               schema analysis; always generated when any schema source detected,
                               regardless of stack.bdd)
-                              business-rules.md (Phase 5d — invariants, preconditions, transition
-                              guards, calculations, authorization, workflow rules; when
-                              business_rules.enabled: true)
+                              (business-rules.md moves to docs/ — see below)
   features/                   BDD-DRAFT-*.feature (Phase 5c Steps 4–6 — written when
                               stack.bdd: true and UC-DRAFTs exist; shares directory with Tester)
 ```
@@ -819,7 +819,7 @@ the normal pipeline resumes once Traceability promotes them to permanent IDs.
           ├─► use-cases/UC-DRAFT-*.md           }
           ├─► migration/domain-glossary.md      }  Phase 5c Steps 1–3 (always when schema found)
           ├─► features/BDD-DRAFT-*.feature      }  Phase 5c Steps 4–6 (when stack.bdd: true)
-          ├─► migration/business-rules.md       }  Phase 5d (when business_rules.enabled: true)
+          ├─► docs/business-rules.md            }  Phase 5d (when business_rules.enabled: true)
           └─► migration/coverage-gaps.md
                   │
                   ▼

@@ -104,6 +104,7 @@ Real-world projects often deliver several intakes for one feature — an email k
 - `use-cases/UC-XXX-<slug>.md` — two-column use cases with basic + alternate courses (use `templates/use-case-template.md`)
 - `use-case-packages/<package-slug>.puml` — one UC package overview diagram per package (use `templates/use-case-diagram-template.puml`)
 - `glossary.md` — canonical terminology
+- `docs/business-rules.md` — canonical business rules catalog (use `templates/business-rules-template.md`); see `# Business rules authoring` below
 - `milestone1-report.md` — Requirements Review readiness
 
 # Use case packaging rules
@@ -132,6 +133,7 @@ Every use case file must end with:
 - [ ] No passive-voice "shall" statements appear inside UC text — if found, move to a REQ file
 - [ ] Use case is not too abstract: every screen, field, and domain object is named — no "the system", "a page", "the data"
 - [ ] Every noun in UC text exists in glossary and maps to the domain model
+- [ ] `docs/business-rules.md` exists (even if placeholder); every rule has a `BR-NNN` ID and a category; no NFR rules mixed in
 - [ ] Every screen name matches the GUI storyboard or is flagged as TBD for design
 - [ ] Each UC makes clear what the user is trying to accomplish (goal-oriented framing, not a task list)
 - [ ] Domain model abstraction coverage: nouns in UC text that have no domain model counterpart are flagged and queued for the Analyst to add before PDR
@@ -163,6 +165,26 @@ A UC that doesn't fit the two-paragraph rule is covering more than one user goal
 - Alternate courses are simple error/validation paths (wrong input, missing field, session expired) — these belong in the same UC as the basic course
 - The UC would become a single-row table after splitting — too fine-grained
 - A stakeholder specifically wants one UC to capture one end-to-end business scenario
+
+# Business rules authoring
+
+`docs/business-rules.md` is the canonical project-wide business rule catalog. In greenfield
+mode, you produce it from intakes, BRDs, and domain knowledge. In migration mode, it is
+produced by Migration Phase 5d and you review/extend it with rules the agent could not infer.
+
+**When to produce it:** after drafting REQs and before handing off to Analyst. If no rules
+are apparent from the intakes, create the file with a placeholder and note "No rules identified
+at M1 — revisit during Analyst robustness analysis."
+
+**Format:** use `templates/business-rules-template.md`. Key conventions:
+- Assign sequential `BR-NNN` IDs (BR-001, BR-002 …) to every rule. Never reuse an ID.
+- Use provenance `DEFINED` for rules you are explicitly specifying from requirements.
+- Use categories: Invariant, Precondition, Transition guard, Calculation, Authorization, Workflow.
+- Avoid NFR rules (performance, availability, SLA) — those go in `docs/nfr-catalog.md`.
+
+**After M1:** keep the file open for incremental updates. Analyst adds rules discovered during
+robustness analysis; Architect notes architectural implications. The file is a living document —
+not a snapshot.
 
 # What you never do
 - Allocate operations to classes (Developer's job)

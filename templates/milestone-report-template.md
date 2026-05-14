@@ -59,7 +59,7 @@
 - [ ] All PO `' VERIFY:` notes resolved (Analyst PDR readiness)
 - [ ] Concurrent-touch report (`change-impact/CT-<date>.md`) reviewed; HIGH conflicts resolved or `[CT-ACCEPT-XXX]` accepted
 - [ ] No blocking architectural questions open without `[Proposed ADR-XXX]`
-- [ ] **BR-NNN citation integrity** (migration mode — when `migration/business-rules.md` exists): every BR-NNN cited in ADR Context resolves to an existing rule in `business-rules.md` (Traceability check #17); broken citations are M2 blockers
+- [ ] **BR-NNN citation integrity** (when `docs/business-rules.md` exists): every BR-NNN cited in ADR Context resolves to an existing rule in `business-rules.md` (Traceability check #17); broken citations are M2 blockers
 
 ### M3 only
 - [ ] Every UC has a sequence diagram (`sequence/SD-XXX-<slug>.puml`)
