@@ -387,9 +387,11 @@ is found for the previous-run container:**
   - Append the current-run container's entry point to the `Source-container:` annotation
   - Add the new boundary lifeline and cross-container flow to the existing RB-DRAFT and SD-DRAFT
     (or flag that they need re-drafting if they were manually edited)
-  - Record the amendment in the survey under `### Amendment proposals (incremental run)`
+  - Record the amendment in the survey under `### Amendment proposals (incremental run)` —
+    the agent **proposes** the changes; a human applies them to the DRAFT files by hand
   - If the DRAFT was modified by a human since the last run (detected in the pre-run
-    idempotency check), flag it as **MANUAL MERGE REQUIRED** instead of auto-applying
+    idempotency check), flag it as **MANUAL MERGE REQUIRED** — the proposed changes may
+    conflict with existing human edits and must be reconciled carefully
 
 **Case 3 — Group involves a previous-run UC that has been promoted (permanent ID assigned):**
 - Do **NOT** modify the existing UC — promoted IDs go through REQ change flow
@@ -447,10 +449,9 @@ Required changes:
 - Append `Frontend @ ../frontend/src/` to `Source-container:` annotation
 - Add Frontend boundary lifeline to `robustness/RB-DRAFT-003-place-order.puml`
 - Extend flow in `sequence/SD-DRAFT-003-place-order.puml` to include Frontend → Backend leg
-Status: READY — auto-apply (DRAFT unmodified since last run)
-
-<!-- If DRAFT was human-edited since last run: -->
-Status: MANUAL MERGE REQUIRED — DRAFT was edited on <date>; apply changes by hand
+Status: READY — apply changes above by hand (DRAFT unmodified; no conflicts expected)
+<!-- OR, if DRAFT was human-edited since last run: -->
+Status: MANUAL MERGE REQUIRED — DRAFT was edited on <date>; reconcile conflicts before applying
 
 ### Change flow candidates (promoted UCs)
 <!-- Include only when Case 3 matches exist; omit entire section if none -->

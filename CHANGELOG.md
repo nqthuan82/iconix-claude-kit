@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.15] — 2026-05-14
+
+**Fix: Phase 1b Case 2 — clarify amendment proposals are human-applied, not auto-written.**
+
+The term "auto-apply" in Phase 1b Step 4 and the survey template implied the migration
+agent would directly edit existing DRAFT files. The agent's role is to propose — humans
+apply changes by hand (consistent with migration being a read/propose workflow, not a
+write-to-existing-artifacts workflow).
+
+Changes in `agents/iconix-migration.md`:
+- Step 4 Case 2: replaced "flag it as MANUAL MERGE REQUIRED instead of auto-applying"
+  with explicit wording that the agent *proposes* changes and a human applies them; the
+  MANUAL MERGE REQUIRED flag now explains it means conflicts may exist with human edits.
+- Step 5 survey template: replaced `Status: READY — auto-apply` with
+  `Status: READY — apply changes above by hand (DRAFT unmodified; no conflicts expected)`;
+  the MANUAL MERGE REQUIRED variant updated to say "reconcile conflicts before applying".
+
 ## [1.0.14] — 2026-05-14
 
 **Feature: Incremental migration — Phase 1b handles containers added across separate runs.**
