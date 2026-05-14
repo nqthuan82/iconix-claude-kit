@@ -5,6 +5,26 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.19] — 2026-05-14
+
+**Tooling: CLAUDE.md — agent prompt discipline rule.**
+
+Added `## Agent prompt discipline` section to `CLAUDE.md` to prevent instructions
+meant for one agent from being written into another agent's prompt across sessions.
+
+Three rules:
+1. State ownership explicitly before writing — ownership table maps each responsibility
+   (drift detection, ID assignment, routing, code generation, test plan, etc.) to its
+   owning agent.
+2. Grep before writing — check other agent files for the same concept to avoid
+   duplication.
+3. Cross-agent instructions go in the receiving agent — Agent A may reference that
+   Agent B handles X, but must not encode B's logic.
+
+Motivated by a session error where drift-check logic was written into the Developer
+agent (Phase 9.1 migration mode) before the user correctly identified it as the
+Reviewer's responsibility.
+
 ## [1.0.18] — 2026-05-14
 
 **Fix: Developer agent Phase 9.1 — migration-originated UCs must not be re-implemented from scratch.**

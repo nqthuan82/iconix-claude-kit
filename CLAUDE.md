@@ -95,6 +95,33 @@ description: <one-line summary>
 
 Missing or malformed frontmatter will fail CI. Agent names must be globally unique across all files in `agents/`.
 
+## Agent prompt discipline
+
+When adding or modifying an instruction in any `agents/*.md` file, before writing:
+
+1. **State ownership explicitly.** Ask: "If this behavior were wrong, which agent's
+   *role* would be violated?" — that is the agent that owns the instruction.
+
+   | Responsibility | Owner agent |
+   |---|---|
+   | Drift detection between code and design | Reviewer |
+   | ID assignment, DRAFT promotion | Traceability |
+   | Phase routing, gate enforcement | Orchestrator |
+   | Code generation, unit test bodies | Developer |
+   | Test plan, integration/system/acceptance tests | Tester |
+   | Container mapping, stack decisions, ADRs | Architect |
+   | Use case text, robustness diagrams | Analyst |
+   | Actor goals, requirements | Product Owner |
+   | Reverse-engineering existing code | Migration |
+
+2. **Grep before writing.** Before adding new behavior to Agent X, grep the other
+   agent files for the same concept — if it already exists in Agent Y, do not
+   duplicate it; reference or cross-link instead.
+
+3. **Cross-agent instructions go in the receiving agent.** If Agent A requires Agent B
+   to do something, write the instruction in Agent B's file. Agent A may say
+   "Agent B will handle X" but must not encode B's logic.
+
 ## Installing Into a Project
 
 ```bash
