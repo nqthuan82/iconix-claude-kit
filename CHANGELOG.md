@@ -5,6 +5,34 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.36] — 2026-05-14
+
+**Feature: Analyst agent — domain glossary integration (migration mode).**
+
+When `migration/domain-glossary.md` exists (produced by Migration Phase 5c), the Analyst agent
+now reads it before extracting nouns and uses glossary canonical names throughout all M2 work.
+Four additions to `agents/iconix-analyst.md`:
+
+1. **Workflow step 2** — pointer: read `migration/domain-glossary.md` first and resolve each
+   noun candidate against glossary canonical names before proceeding.
+2. **Domain model rule 3** — extended: when `migration/domain-glossary.md` exists, the glossary
+   is the authoritative source of canonical entity names; name drift between UC text, domain model,
+   and glossary is resolved using the glossary — not by choosing arbitrarily between UC and model.
+3. **`# Domain glossary integration (migration mode)`** — new section specifying:
+   - Step 0: build a lookup map (canonical name, plural, snake_case table name, aliases).
+   - Noun resolution: exact/synonym match → use glossary name; partial match → use glossary name
+     + `[VERIFY]` in analysis notes; no match → use noun as-is + `[VERIFY — not in domain glossary]`.
+   - Domain model refinement: class names match glossary; `States:` and `Invariants:` copied
+     verbatim; renaming a glossary entity requires `[VERIFY]` justification.
+   - Drift detection: every discrepancy recorded in `analysis-notes/UC-XXX-notes.md` under
+     `## Glossary drift` heading — human reviewer must confirm which side is authoritative.
+4. **PDR readiness check** — new item: when `migration/domain-glossary.md` exists, every RB entity
+   node and every domain model class either matches a glossary canonical name or is flagged
+   `[VERIFY — not in domain glossary]`. Silent deviations are M2 PDR blockers.
+
+Theory audit: Ch2 #4 (domain model as project glossary) already ✅ — change strengthens
+existing enforcement without shifting coverage status. Matrix unchanged.
+
 ## [1.0.35] — 2026-05-14
 
 **Feature: Tester agent — business rules enrichment from `migration/business-rules.md`.**

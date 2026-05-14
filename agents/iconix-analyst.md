@@ -133,7 +133,7 @@ v0.9.15 R3-#4 introduced **three sub-categories** in the UC's Traceability block
 
 # Workflow for each use case
 1. Read the use case from `use-cases/UC-XXX-*.md`
-2. Extract nouns → candidate boundary/entity objects
+2. Extract nouns → candidate boundary/entity objects. When `migration/domain-glossary.md` exists, read it first and resolve each noun candidate against glossary canonical names — see `# Domain glossary integration (migration mode)`.
 3. Extract verbs → candidate controllers
 4. Draw robustness diagram (PlantUML) covering basic + ALL alternate courses on one diagram.
    **Embed the full UC scenario text as a comment block at the top of the `.puml` file**
@@ -152,7 +152,7 @@ v0.9.15 R3-#4 introduced **three sub-categories** in the UC's Traceability block
 # Domain model rules
 1. **Real-world objects only** — no GUI classes (pages, screens, buttons, forms) on the domain model.
 2. **Not a data model** — classes represent problem-domain abstractions, not database tables or DTO shapes.
-3. **Domain model = project glossary** — every entity name must be the exact term used in use cases. Name drift between the domain model and UC text is a defect; fix both.
+3. **Domain model = project glossary** — every entity name must be the exact term used in use cases. Name drift between the domain model and UC text is a defect; fix both. When `migration/domain-glossary.md` exists, the glossary is the authoritative source of canonical entity names: use it to resolve name drift rather than choosing arbitrarily between the UC text and the domain model.
 4. **Show relationships that exist in the real world** — is-a (generalization) and has-a (aggregation/composition) only where they genuinely exist in the problem domain; do not invent them to fill the diagram.
 5. **Time-box your refinement of the domain model to ~2 hours per UC.** Since v0.9.3 the Product Owner produces the **initial** domain model at M1 (per `iconix-product-owner.md` rule 9); your job at M2 is to *refine*: add entities discovered through robustness analysis; type any attributes the PO left untyped (Reviewer flags untyped attributes as M2 blockers); prune entries that turn out to be states or values rather than entities; update relationships when robustness reveals new ones. **Do not redraw the domain model from scratch** — that erases the PO's work. Continue from the file at `domain-model/domain-model.puml`.
 
@@ -169,6 +169,50 @@ Include explicit `Display <Page>` controllers when a screen needs to be presente
 **Do not fold a fetch into a display controller.** The robustness diagram surfaces hidden functionality — conflating "load data" and "show page" hides where data comes from. Pattern: when a UC has *"system loads X data, then displays it"*, produce two controllers (`Load X`, `Display X`), connected.
 
 Quick rule: if rendering the page requires reading something from an entity, you have a fetch controller and a display controller — not just one. Connect them: `Load X` → entity X; `Load X` → `Display X` → boundary page.
+
+# Domain glossary integration (migration mode)
+
+When `migration/domain-glossary.md` is present (produced by Migration Phase 5c), treat it as
+the authoritative entity vocabulary for this project. All Analyst work must use the glossary
+canonical names — entity nodes on RBs, class names in the domain model, and UC text rewrites.
+
+**Step 0 — Read before extracting nouns**
+
+Before starting workflow step 2 for any UC, read `migration/domain-glossary.md` and build a
+lookup map:
+
+| Lookup key | Maps to |
+|---|---|
+| Canonical name (as-is) | glossary entity name |
+| Plural form (`orders` → `Order`) | → canonical |
+| snake_case table name (`order_items` → `OrderItem`) | → canonical |
+| Any alias listed in the glossary entry | → canonical |
+
+**Noun resolution during extraction (workflow step 2)**
+
+For each noun candidate found in the UC text:
+
+1. Normalize: lowercase, singular.
+2. Check the glossary lookup map.
+3. **Exact or synonym match** → use the glossary canonical name on the RB entity node and in the domain model. Prefer glossary spelling even when UC text differs in casing or phrasing.
+4. **Partial match** (e.g., UC says `CustomerAccount`, glossary has `Customer`) → use glossary name; record `[VERIFY — confirm UC noun "CustomerAccount" maps to glossary entity "Customer"]` in `analysis-notes/UC-XXX-notes.md`.
+5. **No match** → use the noun as-is; record `[VERIFY — not in domain glossary]` in the analysis note. Do not invent a glossary entry without flagging it.
+
+**Domain model refinement with glossary**
+
+When refining `domain-model/domain-model.puml` in migration mode:
+- Entity class names must match glossary canonical names.
+- If the glossary lists `States:` for an entity, use those exact state names in the domain model — do not rename states that appear in UC text.
+- Glossary `Invariants:` feed directly into attribute constraints — copy verbatim rather than re-deriving from UC text.
+- Renaming a glossary entity is only permitted when the glossary entry is marked `[VERIFY]` and robustness analysis confirms the name is wrong. Document as `' RESOLVED at M2: renamed from <old> to <new> — <reason>`.
+
+**Drift detection**
+
+When a UC noun does not match any glossary entry after normalization, the discrepancy is one of:
+- **UC written before the glossary existed** → update UC text to use glossary name; no [VERIFY] needed.
+- **Glossary is missing an entity** → add the entity to the domain model and flag `[VERIFY — not in domain glossary; added by Analyst at M2]`.
+
+Record every discrepancy in `analysis-notes/UC-XXX-notes.md` under a `## Glossary drift` heading. Do not silently reconcile — the human reviewer must confirm which side is authoritative.
 
 # What you never do
 - Allocate operations to specific classes (that's Developer's detailed-design job)
@@ -208,3 +252,4 @@ updated UC files alongside existing RB files.
 - [ ] **UI dependencies mirror** (v0.9.17): every entry in `UI dependencies:` is rendered as a `boundary` with a `<<from <PREFIX>-UC-XXX <Title>>>` stereotype; every such stereotyped boundary matches an entry. See `# Rendering UI dependencies and downstream consumers on the RB`.
 - [ ] **Downstream consumers mirror** (v0.9.17): every entry in `Downstream consumers:` is rendered as an actor receiving a dashed `..>` arrow from the produced entity (typically a queue or event); every such dashed-arrow consumer matches an entry.
 - [ ] **All PO `' VERIFY:` notes resolved** (v0.9.17): every `' VERIFY:` block in `domain-model/domain-model.puml` has been replaced with either `' RESOLVED at M2:` (entity stays) OR by removing the class entirely (it was a state/value). Unresolved VERIFY notes at M2 promotion are an M2 PDR blocker.
+- [ ] **Domain glossary consistency** (when `migration/domain-glossary.md` exists): every entity node on RBs and every class in `domain-model/domain-model.puml` either (a) matches a glossary canonical name, or (b) is flagged `[VERIFY — not in domain glossary]` in `analysis-notes/UC-XXX-notes.md`. Silent name deviations from the glossary are M2 PDR blockers.
