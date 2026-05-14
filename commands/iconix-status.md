@@ -18,6 +18,7 @@ Count all artifacts by type. Flag any that are missing an expected downstream ar
 | TC | | |
 | ADR | | |
 | BR | (EXTRACTED: N, INFERRED: N) — omit row when `migration/business-rules.md` absent | Broken ADR citations: N |
+| [VERIFY] | Total across all DRAFT files (UC-DRAFTs + RB-DRAFTs + domain-glossary.md + BDD-DRAFTs + business-rules.md) — omit row when no DRAFT files exist | Highest-count file: `<filename> (N)` |
 | Test plan (`test-plan/test-plan-<date>.md`) | exists? | — |
 | Change impact reports (`change-impact/CI-*.md`) | open count | — |
 

@@ -5,6 +5,16 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.43] — 2026-05-14
+
+**Feature: `/iconix-status` — `[VERIFY]` total row in artifact inventory.**
+
+`commands/iconix-status.md`: new `[VERIFY]` row added to the artifact inventory table,
+directly after the BR row. Shows total `[VERIFY]` marker count across all DRAFT files
+(UC-DRAFTs, RB-DRAFTs, domain-glossary.md, BDD-DRAFTs, business-rules.md) with the
+highest-count file called out in the Orphans/gaps column. Row omitted when no DRAFT files
+exist. Read-only — no files written.
+
 ## [1.0.42] — 2026-05-14
 
 **Feature: Migration handoff report — auto-count `[VERIFY]` items per artifact group.**
