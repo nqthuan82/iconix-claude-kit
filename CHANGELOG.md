@@ -5,6 +5,36 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.13] — 2026-05-14
+
+**Feature: Phase 1b — cross-container boundary correlation in migration agent.**
+
+In multi-repo mode the migration agent surveyed each container independently and produced
+separate UC-DRAFTs per entry point. A user action that flows Frontend → Backend API →
+Database would become three separate drafts instead of one unified UC — a significant gap
+for multi-container architectures.
+
+New `# Phase 1b — Cross-container boundary correlation` section (runs in both modes,
+skipped in single-repo). After Phase 1 completes for all containers, Phase 1b:
+
+1. Collects inbound boundaries per container (HTTP routes, gRPC methods, message topics)
+2. Collects outbound cross-container calls per container (HTTP client calls, gRPC stubs,
+   message publishes) — graph-assisted uses graph outbound nodes; code-walking greps for
+   HTTP client patterns
+3. Matches inbound ↔ outbound pairs with confidence levels (HIGH = exact URL+method/topic,
+   MEDIUM = pattern/prefix match); records unmatched boundaries (external actors/services)
+4. Proposes UC groupings: HIGH-confidence → recommend merge to one UC-DRAFT; MEDIUM →
+   flag `[VERIFY]` for human review
+5. Appends `## Cross-container boundary correlation` section to `migration/survey-<date>.md`
+   with matched pairs table, unmatched lists, and proposed grouping narrative
+
+Phase 5 (both modes) updated: check Phase 1b results before drafting — entry points in
+the same group produce one UC-DRAFT covering the full multi-container flow with
+`Source-container:` annotation listing all containers.
+
+Phase 7 handoff report updated: new "Cross-container UC groupings" section listing all
+proposed groups; human must confirm before `/iconix-promote`.
+
 ## [1.0.12] — 2026-05-13
 
 **Feature: Tester and Reviewer dependency_sources awareness.**

@@ -280,6 +280,127 @@ Types **not found** in the registry during Phase 2/3/4 fall back to name-based h
 
 ---
 
+# Phase 1b — Cross-container boundary correlation
+
+Run this step in **both modes** immediately after Phase 1 completes for all containers,
+before Phase 2. **Skip in single-repo mode** (no container has `path:` defined in
+`iconix.config.yaml` — in that case cross-container calls are traced within a single
+entry point's call chain and no correlation step is needed).
+
+This phase answers: *are two entry points in different containers actually two ends of the
+same user-visible use case?* Without it, a user action that flows Frontend → Backend API →
+Database would produce separate UC-DRAFTs per container instead of one unified UC.
+
+## Step 1 — Collect inbound boundaries per container
+
+From Phase 1 survey results, for each container, list every **inbound boundary** (the
+surface where an external caller enters this container):
+
+| Protocol | What to collect |
+|---|---|
+| HTTP | URL route pattern + HTTP method (normalize path params: `/orders/{id}` and `/orders/{orderId}` → `/orders/{param}`) |
+| gRPC | Service name + method name |
+| Message bus (consume) | Topic / queue / exchange name + consumer class |
+| CLI | Command name |
+
+## Step 2 — Collect outbound cross-container calls per container
+
+For each container, list every **outbound call** that targets another surveyed container
+(not an external third-party service):
+
+| Protocol | What to collect |
+|---|---|
+| HTTP | Target URL pattern + HTTP method (from HTTP client usage) |
+| gRPC | Stub service + method called |
+| Message bus (publish) | Topic / queue published to |
+
+In **graph-assisted mode**: query for `outbound` boundary nodes (HTTP client, gRPC stub,
+message publisher imports); filter to calls whose target URL/topic is also an inbound
+boundary of another surveyed container.
+
+In **code-walking mode**: grep for HTTP client usage patterns (`HttpClient`, `axios`,
+`requests.post`, `fetch`, etc.) and extract the literal or templated URL; grep for
+message publisher calls and extract topic names.
+
+## Step 3 — Match inbound ↔ outbound pairs
+
+For each outbound call in container A, find a matching inbound in container B (B ≠ A):
+
+| Protocol | Match condition | Confidence |
+|---|---|---|
+| HTTP | Exact normalized URL + method | HIGH |
+| HTTP | Normalized URL match, method differs | MEDIUM |
+| HTTP | URL prefix match (≥ 2 non-trivial path segments) | MEDIUM |
+| gRPC | Exact service + method | HIGH |
+| Message bus | Exact topic/queue name | HIGH |
+| Message bus | Topic pattern (prefix/wildcard) | MEDIUM |
+
+Unmatched outbound calls (no inbound in any surveyed container) are likely calls to
+external third-party services — record them as **unmatched outbound** in the report.
+
+Unmatched inbound boundaries (no outbound caller found in any surveyed container) are
+likely entry points called by external actors (webhooks, external clients) — record as
+**unmatched inbound**.
+
+## Step 4 — Propose UC groupings
+
+For each match group (possibly spanning > 2 containers through a chain: A→B→C):
+
+- **HIGH confidence** → propose a merged UC-DRAFT covering all containers in the chain
+- **MEDIUM confidence** → flag for human review; propose tentatively; mark `[VERIFY]`
+- Do NOT propose groupings for unmatched pairs
+
+## Step 5 — Append correlation report to survey
+
+Append a `## Cross-container boundary correlation` section to `migration/survey-<date>.md`:
+
+```markdown
+## Cross-container boundary correlation
+
+Mode: multi-repo — N containers surveyed
+
+### Matched pairs
+
+| # | From | Outbound call | Protocol | To | Inbound handler | Confidence |
+|---|---|---|---|---|---|---|
+| 1 | Frontend | `axios.post('/api/orders')` | HTTP POST /api/orders | Backend | `OrdersController.Post` | HIGH |
+| 2 | Backend | `_paymentClient.Charge()` | HTTP POST /v1/charges | PaymentService | `ChargesController.Post` | MEDIUM — [VERIFY] |
+
+### Unmatched outbound (targets not in surveyed containers)
+- Frontend: `GET /api/products` — no inbound found; likely external service
+
+### Unmatched inbound (no caller found in surveyed containers)
+- Backend: `POST /api/webhooks/stripe` — likely called by external Stripe; actor = ExternalSystem
+
+### Proposed UC groupings
+
+**Group 1 — HIGH confidence**
+Containers: Frontend → Backend → Database (via Backend repository)
+Entry points: `CheckoutPage.handleSubmit` (Frontend), `OrdersController.Post` (Backend)
+Suggested UC title: [VERIFY — human confirms business intent]
+Action: draft ONE UC-DRAFT for Group 1 in Phase 5 (not separate drafts per entry point)
+
+**Group 2 — MEDIUM confidence [VERIFY]**
+Containers: Backend → PaymentService
+Entry points: `OrdersController.Post` (Backend outbound), `ChargesController.Post` (PaymentService)
+Note: PaymentService may be an external vendor — confirm before merging into Group 1
+Action: [VERIFY] merge into Group 1 or keep as separate inlined outbound boundary
+```
+
+## Step 6 — Feed into Phase 5
+
+When Phase 5 drafts UC text, consult the correlation report:
+- Entry points in the same proposed group → draft **one** UC-DRAFT, not one per entry point
+- The UC-DRAFT title captures the **user's business intent**, not the container name
+- The UC-DRAFT's `Source-container:` annotation lists **all** containers in the group:
+  ```
+  <!-- Source-container: Frontend @ ../frontend/src/, Backend @ ../backend/src/ -->
+  ```
+- The robustness and sequence diagrams for this UC will have lifelines from multiple
+  containers — annotate each lifeline with its container name in a `note over` block
+
+---
+
 # Workflow — Graph-assisted mode
 
 ## Phase 0 — Graph readiness check (graph-assisted mode only)
@@ -551,13 +672,20 @@ A filtered projection of the class model — entities only, attributes only, rea
    - Stamp the file header: `> **DRAFT — generated by iconix-migration on <date>. UC → package allocation will be filled in Phase 5b. All entries require human review before M2.**`
 
 ## Phase 5 — Use case draft (graph-assisted)
+Before drafting, read the `## Cross-container boundary correlation` section in
+`migration/survey-<date>.md` (Phase 1b output). Entry points in the same proposed
+group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
+
 From each robustness diagram + relevant doc nodes from the graph:
 
 1. Query the graph for documentation nodes (PDF, MD, comments) related to this entry point
 2. Use any extracted requirement-like text as candidate UC source
-3. Reconstruct the user-visible flow from the actor → boundary → controller chain
+3. Reconstruct the user-visible flow from the actor → boundary → controller chain. For
+   multi-container groups, the flow spans containers: actor → Frontend boundary →
+   Backend boundary → service → DB boundary. Show the full chain.
 4. Write `use-cases/UC-DRAFT-XXX.md` in the standard two-column format
-5. Mark every assumption with `[VERIFY]`
+5. Mark every assumption with `[VERIFY]`; mark MEDIUM-confidence groupings with
+   `[VERIFY — cross-container grouping; confirm with human before promoting]`
 6. Cite source: graph node IDs + file paths (graph gives you both)
 
 ## Phase 5b — Use case package overview synthesis (graph-assisted)
@@ -651,7 +779,8 @@ Fill in every section:
 - **Architecture decisions needed:** mixed-responsibility classes, [VERIFY] counts in arch docs
 - **AMBIGUOUS findings:** polymorphic dispatch, deep call chains (graph-assisted only)
 - **Test coverage gaps:** UC-DRAFTs with no existing test coverage
-- **Recommended next steps:** ordered by risk — always lead with system-architecture [VERIFY] items, then PO UC review, then NFR gaps
+- **Cross-container UC groupings** (multi-repo only): list every proposed group from Phase 1b — HIGH-confidence groups (recommended merge) and MEDIUM-confidence groups ([VERIFY]). Human must confirm each grouping before `/iconix-promote`. Unmatched inbound boundaries (external callers) should be reviewed by PO to confirm actor identity.
+- **Recommended next steps:** ordered by risk — always lead with system-architecture [VERIFY] items, then cross-container grouping confirmations (Phase 1b), then PO UC review, then NFR gaps
 
 ---
 
@@ -717,7 +846,11 @@ Same as graph-assisted Phase 4b. Without the graph you walk the class model from
 - Produce draft `docs/architecture/package-map.md` (same rules as graph-assisted Phase 4b step 7, but without graph provenance — derive package names from directories/namespaces, layers from RB-DRAFT classification, dependencies from import statements). Flag every entry `[VERIFY]`.
 
 ## Phase 5 — Use case draft (manual)
-Same as graph-assisted Phase 5 but only from code + on-disk docs
+Before drafting, read the `## Cross-container boundary correlation` section in
+`migration/survey-<date>.md` (Phase 1b output). Entry points in the same proposed
+group produce **one** UC-DRAFT covering the full multi-container flow. Same rules
+as graph-assisted Phase 5 step 3, 5, 6 — apply `[VERIFY]` on MEDIUM-confidence
+groupings. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
 
 ## Phase 5b — Use case package overview synthesis (manual)
 Same as graph-assisted Phase 5b. Without graph clustering you cluster manually:
@@ -815,7 +948,7 @@ This footer is non-negotiable. It tells reviewers what to trust and what to veri
 docs/architecture/system-architecture.md  # Phase 1   (DRAFT — skipped if file exists)
 docs/architecture/package-map.md          # Phase 4b + 5b  (DRAFT — skipped if file exists)
 migration/
-├── survey-<date>.md             # Phase 1
+├── survey-<date>.md             # Phase 1 + Phase 1b (cross-container correlation appended)
 ├── coverage-gaps.md             # Phase 6
 └── handoff-<date>.md            # Phase 7
 class-model/class-model.puml     # Phase 2  (DRAFT)
