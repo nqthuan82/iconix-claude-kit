@@ -5,6 +5,22 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.22] — 2026-05-14
+
+**Fix: PO agent rule 9 — remove duplicated domain model heuristics and VERIFY convention.**
+
+PO rule 9 had a "Critical heuristics (inline so you don't have to bounce to the Analyst
+file)" block with 6 entity/attribute rules, followed by a pointer to `iconix-analyst.md
+# Domain model rules`. This was deliberate duplication — but it means two agents maintain
+overlapping domain model guidance that can drift independently. The `' VERIFY:` annotation
+convention was also defined in PO, while the Analyst owns the `' VERIFY:` lifecycle
+(resolution at M2, PDR blocker if unresolved).
+
+Both removed. Rule 9 now reads: "Apply the entity/attribute rules in
+`iconix-analyst.md # Domain model rules` when classifying nouns. Flag uncertain entities
+with `' VERIFY:` for the Analyst to resolve at M2 — do not silently choose when a noun's
+classification is ambiguous."
+
 ## [1.0.21] — 2026-05-14
 
 **Fix: Traceability agent concurrent-touch Step 6 — remove duplicated Architect resolution options.**
