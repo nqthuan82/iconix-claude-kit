@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.30] — 2026-05-14
+
+**Feature: Handoff report template — add Phase 5c section and artifact inventory rows.**
+
+`templates/handoff-report-template.md` updated in two places:
+
+1. **Artifact inventory table** — two new rows for Phase 5c outputs:
+   - `migration/domain-glossary.md` (Steps 1–3) — shows Generated or Skipped (no schema source).
+   - `features/BDD-DRAFT-*.feature` (Steps 4–6) — shows N generated, or which skip reason
+     applied (`stack.bdd: false` vs no UC-DRAFTs found).
+
+2. **New `## Phase 5c — BDD scenario synthesis` section** (after "Successfully reverse-engineered"):
+   - Summary table: schema source, active tracks, entity count, integer status resolution
+     breakdown (High/Medium/Ambiguous/not found), glossary status, BDD-DRAFT status.
+   - Two contextual notes: one for when BDD-DRAFTs were generated (review guidance),
+     one for when Steps 4–6 were skipped (explains glossary is still usable; how to enable).
+
+No theory audit required — template documentation update.
+
 ## [1.0.29] — 2026-05-14
 
 **Fix: Phase 5c — add `stack.bdd` comment to config template; fix `bdd.enabled` naming mismatch.**

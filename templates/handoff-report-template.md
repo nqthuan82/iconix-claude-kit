@@ -31,6 +31,8 @@
 | Package map | `docs/architecture/package-map.md` | Generated DRAFT \| Skipped (exists) | 4b+5b |
 | Use case drafts | `use-cases/UC-DRAFT-*.md` | `<N>` generated | 5 |
 | UC package overviews | `use-case-packages/*-DRAFT.puml` | `<N>` generated | 5b |
+| Domain glossary | `migration/domain-glossary.md` | Generated \| Skipped (no schema source) | 5c Steps 1–3 |
+| BDD-DRAFT files | `features/BDD-DRAFT-*.feature` | `<N>` generated \| Skipped — `stack.bdd: false` \| Skipped — no UC-DRAFTs | 5c Steps 4–6 |
 | Coverage gaps | `migration/coverage-gaps.md` | Generated | 6 |
 
 **Skipped artifacts** (human-edited since last run or already promoted):
@@ -72,6 +74,28 @@
 - **Domain entities:** `<N>` entities identified; `<N>` relationships mapped
 - **Use cases:** `<N>` UC-DRAFTs produced; `<N>` UC packages drafted
 - **Per-container stack overrides:** suggested YAML snippet in `migration/survey-<date>.md` (Section: Suggested per-container stack overrides)
+
+---
+
+## Phase 5c — BDD scenario synthesis
+
+| Item | Result |
+|---|---|
+| **Schema source** | `<SQL (.sqlproj / .sql) \| ORM (<framework>) \| schema.prisma \| db/schema.rb \| ent/schema \| migration DSL \| none>` |
+| **Tracks active** | `<e.g., Track A + Track B (EF Core) + Track B5 (app enum) \| Track C1 (schema.prisma)>` |
+| **Entities in glossary** | `<N>` — `<N>` with state machines, `<N>` with [VERIFY] |
+| **Integer status columns resolved** | `<N High (EXTRACTED) \| N Medium (INFERRED) \| N Ambiguous \| N not found>` |
+| **Domain glossary** | Generated at `migration/domain-glossary.md` \| Skipped — no schema source detected |
+| **BDD-DRAFTs** | `<N>` files generated in `features/` \| Skipped — `stack.bdd: false` \| Skipped — no UC-DRAFTs found |
+
+> When BDD-DRAFTs were generated: every scenario is marked `[VERIFY]` — confirm actor
+> identity, operation triggers, and state-transition sequence before promoting to TC-XXX.
+> Lifecycle: human review → `/iconix-promote` → Tester at M3.
+
+> When Steps 4–6 were skipped: the domain glossary at `migration/domain-glossary.md` is
+> still valid for use by the Analyst (UC vocabulary), Architect (entity naming), and Tester
+> (state machine reference). Enable BDD generation by setting `stack.bdd: true` in
+> `iconix.config.yaml` and re-running Phase 5c.
 
 ---
 
