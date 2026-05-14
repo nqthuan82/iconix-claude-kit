@@ -58,6 +58,7 @@ Produce the right test type at the right ICONIX phase — do not defer all testi
 - `robustness/RB-*.puml`
 - `sequence/SD-*.puml` (for unit-test-level detail)
 - `iconix.config.yaml` (test frameworks, BDD style)
+- `migration/business-rules.md` (optional — produced by Migration Phase 5d; when present, provides concrete test data for boundary values, state violations, authorization, and calculation verification; see `# Business rules enrichment`)
 
 # Stack resolution
 
@@ -150,6 +151,72 @@ For every UC, produce edge cases in these families (skip families that genuinely
 5. **Resource exhaustion** — timeout, quota exceeded, downstream unavailable
 6. **State violations** — action performed in wrong state (e.g., cancel already-cancelled order)
 7. **Domain-specific** — load from `iconix.config.yaml:domain_test_families` if present
+
+When `migration/business-rules.md` exists, use it to supply **concrete values** for families
+1 (Boundary values — from Invariants), 3 (Authorization — from Authorization rules), and
+6 (State violations — from Transition guards). See `# Business rules enrichment`.
+
+# Business rules enrichment (migration mode)
+
+When `migration/business-rules.md` exists, read it before authoring TCs for any UC. Cross-
+reference via the `## Business rules cross-reference (Phase 5d)` table already injected into
+each UC-DRAFT by Migration Phase 5d Step 4. Use the rules to supply **concrete test data and
+specific negative cases** instead of leaving `<value>` placeholders in TC Steps.
+
+**Invariants → boundary and negative TCs (edge-case family #1 and #2)**
+
+| Invariant type | TC to produce |
+|---|---|
+| Numeric constraint (`Amount ≥ 0`) | Submit with value just below boundary (`Amount = -1`, `-0.01`). Expect rejection + specific error message. |
+| Required field (`Email required`) | Submit with field absent or empty string. Expect rejection. |
+| Format constraint (`Email format`) | Submit malformed value. Expect rejection. |
+| Uniqueness | Submit duplicate value twice. Expect conflict error on second submission. |
+
+Set `## Edge case family: boundary-values` or `invalid-input`. In `## Implementation note`:
+`Business rule source: <description> — <file:line or construct> — <EXTRACTED|INFERRED>`.
+
+Add `[VERIFY]` on test data from `INFERRED` rules — confirm the constraint is enforced before
+treating the TC as a blocking gate item.
+
+**Transition guards → state violation TCs (edge-case family #6)**
+
+For each Transition guard matched to the UC's state machine:
+
+| Guard pattern | TC to produce |
+|---|---|
+| `Pending → Processing: <condition>` | Submit the operation when the precondition is false. Expect rejection. |
+| `<State> → <State>: only within <window>` | Attempt transition after the window expires. Expect failure. |
+| Any guard: wrong starting state | Call the operation when the entity is in a disallowed state. Expect rejection. |
+
+The TC's `## Preconditions` must explicitly set the entity to the **wrong** state before the
+action step. Set `## Edge case family: state-violations`.
+
+**Calculations → value verification TCs (positive, not edge cases)**
+
+For each Calculation matched to the UC:
+- Submit an operation with known inputs.
+- Assert the computed value equals the formula result (e.g., `Total = Lines.Sum × (1 − 0.1)`).
+- Also test boundary inputs: zero discount, max rate, empty line set.
+
+Add these as additional assertions in the basic-course system TC or as a separate system TC.
+Set `## Implementation note: expected value from business-rules.md Calculation — <source>`.
+
+**Authorization → unauthorized access TCs (edge-case family #3)**
+
+For each Authorization rule matched to the UC actor:
+
+| Authorization | TC to produce |
+|---|---|
+| `Requires <Role>` | Call the operation as a different role. Expect 403 / permission denied. |
+| `Requires authentication` | Call without a session. Expect 401 / redirect to login. |
+
+`EXTRACTED` authorization rules (from `[Authorize]` annotations) → generate TC without `[VERIFY]`.
+`INFERRED` rules (from guard clauses) → add `[VERIFY — confirm role enforcement mechanism]`.
+
+**When business-rules.md is absent**
+
+Skip this section. Derive edge-case test data from UC text and RB diagrams alone. All seven
+edge-case families still apply but values must be invented by the Tester.
 
 # Test matrix lifecycle
 

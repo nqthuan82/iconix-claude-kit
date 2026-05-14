@@ -5,6 +5,33 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.35] — 2026-05-14
+
+**Feature: Tester agent — business rules enrichment from `migration/business-rules.md`.**
+
+When `migration/business-rules.md` exists (produced by Migration Phase 5d), the Tester agent
+now uses it to generate more concrete, less generic test cases. Three additions to
+`agents/iconix-tester.md`:
+
+1. **`# Inputs` section** — `migration/business-rules.md` listed as optional input with a
+   one-line summary of its purpose.
+2. **`# Edge case generation rules`** — pointer added: when the file exists, use it to supply
+   concrete values for edge-case families 1 (Boundary values ← Invariants), 3 (Authorization
+   ← Authorization rules), and 6 (State violations ← Transition guards).
+3. **`# Business rules enrichment (migration mode)`** — new section specifying exactly how each
+   rule category maps to TC families:
+   - **Invariants → boundary/negative TCs:** numeric constraint gives -1/-0.01; required field
+     gives absent-field test; format constraint gives invalid-format test; uniqueness gives
+     duplicate-submission test.
+   - **Transition guards → state violation TCs:** wrong starting state is set up in TC
+     Preconditions; operation called; response asserted as rejection.
+   - **Calculations → value verification TCs:** assert computed value equals formula for
+     known inputs.
+   - **Authorization → unauthorized-access TCs:** EXTRACTED rules generate tests without
+     [VERIFY]; INFERRED rules add [VERIFY — confirm enforcement point].
+   - Provenance labeling in `## Implementation note`: EXTRACTED = confirmed, INFERRED = [VERIFY].
+   - Fallback when file absent: generate generic placeholder test data as before.
+
 ## [1.0.34] — 2026-05-14
 
 **Docs: process reference matrix — update Last reviewed to v1.0.33 for Phase 5c/5d.**
