@@ -1520,6 +1520,18 @@ Phase 5d UC annotation:
   UC-DRAFTs with no rule match: <list — investigate missing entities in glossary>
 ```
 
+Also populate the `## Phase 5d — Business rules trigger scan` section of the handoff report.
+For each rule in `migration/business-rules.md`, classify by ADR signal using the category table:
+
+- **⚠ Investigate** — Invariant, Authorization, Transition guard, Workflow, Calculation
+- **✓ No ADR likely** — Precondition, Postcondition
+
+Fill one row per rule in the trigger scan table: Rule ID, Category, one-line rule summary,
+Provenance (EXTRACTED / INFERRED [VERIFY]), and ADR signal. Then fill the Summary block with
+total counts. Do not perform cross-container analysis — that is the Architect's job at M2.
+
+When `business_rules.enabled: false` or no rules were extracted: omit the section entirely.
+
 ### What Phase 5d does not do
 - Does not assign permanent IDs to rules — link to REQ-XXX during human review;
   Traceability agent promotes when confirmed
@@ -1623,6 +1635,7 @@ Fill in every section:
 - **Architecture decisions needed:** mixed-responsibility classes, [VERIFY] counts in arch docs
 - **AMBIGUOUS findings:** polymorphic dispatch, deep call chains (graph-assisted only)
 - **Test coverage gaps:** UC-DRAFTs with no existing test coverage
+- **Phase 5d trigger scan:** when `migration/business-rules.md` was produced, pre-classify each rule by ADR signal (⚠ Investigate vs ✓ No ADR likely) using the category table. One row per rule: Rule ID, Category, one-line summary, Provenance, ADR signal. Fill the Summary block with total counts. Omit section when `business_rules.enabled: false` or no rules extracted.
 - **Cross-container UC groupings** (multi-repo only): list every proposed group from Phase 1b — HIGH-confidence groups (recommended merge) and MEDIUM-confidence groups ([VERIFY]). Human must confirm each grouping before `/iconix-promote`. Unmatched inbound boundaries (external callers) should be reviewed by PO to confirm actor identity.
 - **Recommended next steps:** ordered by risk — always lead with system-architecture [VERIFY] items, then cross-container grouping confirmations (Phase 1b), then PO UC review, then NFR gaps
 

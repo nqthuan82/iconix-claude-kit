@@ -5,6 +5,31 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.38] — 2026-05-14
+
+**Feature: Migration handoff report — Phase 5d business rules trigger scan section.**
+
+The Migration agent's handoff report now includes a pre-computed business rules trigger scan
+so the human reviewer can anticipate which rules are likely to require Architect ADRs before
+handing off to M2. Three changes:
+
+1. **`templates/handoff-report-template.md`** — new `## Phase 5d — Business rules trigger scan`
+   section (inserted between Phase 5c and "Requires human input"):
+   - One row per rule: Rule ID, Category, one-line summary, Provenance, ADR signal
+     (⚠ Investigate = Invariant/Authorization/Transition guard/Workflow/Calculation;
+     ✓ No ADR likely = Precondition/Postcondition).
+   - Summary block: total rule count, EXTRACTED vs INFERRED split, ⚠/✓ counts.
+   - Omitted when `business_rules.enabled: false` or no rules extracted.
+2. **`agents/iconix-migration.md` Phase 5d step e)** — extended handoff report entry:
+   after logging UC annotation counts, also populate the trigger scan section using the
+   same category classification as the Architect's trigger table. Explicitly does NOT
+   perform cross-container analysis — flags that as Architect's job at M2.
+3. **`agents/iconix-migration.md` Phase 7 (graph-assisted)** — added `Phase 5d trigger scan`
+   bullet to the fill-in list, with the same skip condition.
+
+The manual Phase 7 (code-walking) inherits automatically via "Same template and sections as
+graph-assisted Phase 7."
+
 ## [1.0.37] — 2026-05-14
 
 **Feature: Architect agent — business rules feed into ADRs (migration mode).**

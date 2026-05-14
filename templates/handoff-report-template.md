@@ -100,6 +100,31 @@
 
 ---
 
+## Phase 5d — Business rules trigger scan
+
+> Pre-computed by `iconix-migration` from `migration/business-rules.md`.
+> This is a preliminary view — the Architect performs the definitive cross-container analysis at M2.
+> Omit this section when `business_rules.enabled: false` or when no rules were extracted.
+
+| Rule ID | Category | Rule summary | Provenance | ADR signal |
+|---|---|---|---|---|
+| BR-001 | Invariant | `<rule summary>` | EXTRACTED \| INFERRED [VERIFY] | ⚠ Investigate |
+| BR-002 | Authorization | `<rule summary>` | EXTRACTED \| INFERRED [VERIFY] | ⚠ Investigate |
+| BR-003 | Transition guard | `<rule summary>` | EXTRACTED \| INFERRED [VERIFY] | ⚠ Investigate |
+| BR-004 | Precondition | `<rule summary>` | INFERRED [VERIFY] | ✓ No ADR likely |
+| (none) | | | | |
+
+**ADR signal key:**
+- ⚠ **Investigate** — category (Invariant / Authorization / Transition guard / Workflow / Calculation) may require an ADR if enforcement spans containers. Architect confirms at M2.
+- ✓ **No ADR likely** — category (Precondition / Postcondition) typically enforced within a single layer.
+
+**Summary:**
+- Total rules: `<N>` (`<N>` EXTRACTED, `<N>` INFERRED [VERIFY])
+- ⚠ Investigate: `<N>` rules — `<list BR-IDs>`
+- ✓ No ADR likely: `<N>` rules — `<list BR-IDs>`
+
+---
+
 ## Requires human input
 
 ### Business intent gaps
