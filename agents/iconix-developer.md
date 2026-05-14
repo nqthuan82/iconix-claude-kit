@@ -225,6 +225,17 @@ Read the `Source-container:` annotation from the UC file (`use-cases/<PREFIX>-UC
   source root (see `# Container path resolution`). Commits in each repo use the same
   `[UC-XXX] Impl: <summary>` format.
 
+**Detect mode before starting:** check whether this UC is migration-originated or greenfield:
+- **Migration-originated** — UC file has a `Source-container:` annotation **or** the UC ID
+  appears in any `migration/survey-*.md`. The code already exists; the SD was reverse-engineered
+  from it. → Follow **Migration annotate + gap-fill mode** below.
+- **Greenfield** — no `Source-container:` annotation and not in any survey. → Follow
+  **Greenfield implement mode** below.
+
+---
+
+### Greenfield implement mode
+
 Per UC, on branch `feature/UC-XXX-<slug>` (created at M2 entry per v0.9.5, or per pre-step above for multi-container UCs):
 1. Convert each SD message into the corresponding operation/method call in code, in the SD's order. Boundaries map to controllers; entities to domain classes; Controllers (the lifelines, not the boundary stereotype) to services or coordinators.
 2. Implement basic course first; alternate courses next (Ch10 #1: "Remember to implement the alternate courses as well as the basic courses").
@@ -236,6 +247,33 @@ Per UC, on branch `feature/UC-XXX-<slug>` (created at M2 entry per v0.9.5, or pe
 4. Add `Traceability: UC-XXX | RB-XXX | SD-XXX` comment to every new source file and `Traceability: UC-XXX | TC-XXX` to every new unit test file.
 5. Commit format: `[UC-XXX] Impl: <imperative summary>` per v0.9.5 commit conventions.
 6. When the SD's basic + alternate courses are all implemented, unit test bodies are complete, and the Tester's integration/system tests are green, signal "ready" — Phase 9 advances to 9.2 (Reviewer pre-merge drift check).
+
+---
+
+### Migration annotate + gap-fill mode
+
+The existing codebase IS the implementation. Do **not** rewrite, overwrite, or drift-check
+it — drift detection is the Reviewer's job in Phase 9.2, not yours here. Instead:
+
+1. **Add traceability comments** — for every source file whose class appears as a lifeline
+   on the SD, open the file and add (or update) the `Traceability: UC-XXX | RB-XXX | SD-XXX`
+   comment. For test files, add `Traceability: UC-XXX | TC-XXX`. Do not change any logic.
+
+2. **Unit test gap-fill** — for each `test-cases/TC-XXX-<slug>.md` with `## Type: unit`
+   covering this UC:
+   - Test file with a non-empty body already exists → do nothing.
+   - Only a stub exists (empty body from CDR) → fill in arrange / act / assert from the TC steps.
+   - No test file exists at all → create it following the greenfield unit-test pattern.
+
+3. **Do not touch business logic** — if you notice anything that looks wrong or inconsistent
+   with the SD, record it in the commit message as a note for the Reviewer. Do not silently
+   fix it; structural changes require Reviewer classification first (drift fix or Type 2).
+
+4. Commit format: `[UC-XXX] Migrate: <imperative summary>` (use `Migrate:` not `Impl:` to
+   distinguish migration phase work in git log).
+5. When traceability comments are in place and unit test bodies are complete, signal "ready"
+   — Phase 9 advances to 9.2. The Reviewer checks drift between the SD and the existing
+   code; any findings route to 9.3 as usual.
 
 ## Drift fix iteration (9.3)
 Triggered by Reviewer verdict `REQUEST CHANGES` or `BLOCK MERGE` from the Pre-merge drift check.

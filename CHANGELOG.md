@@ -5,6 +5,32 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.18] — 2026-05-14
+
+**Fix: Developer agent Phase 9.1 — migration-originated UCs must not be re-implemented from scratch.**
+
+When Phase 9 starts on a UC that was reverse-engineered by the migration agent, the code
+already exists. The SD was derived FROM that code. Running Phase 9.1 in greenfield mode
+would overwrite working code with skeleton implementations.
+
+New mode-detection step in Phase 9.1: check whether the UC is migration-originated
+(has a `Source-container:` annotation **or** its ID appears in `migration/survey-*.md`).
+
+Two explicit sub-modes now documented under Phase 9.1:
+
+**Greenfield implement mode** (unchanged behavior):
+Write code from SD. Implement all SD messages, alternate courses, unit test bodies.
+Commit format: `[UC-XXX] Impl: <summary>`.
+
+**Migration annotate + gap-fill mode** (new):
+Code already exists — do NOT rewrite or drift-check it (drift is the Reviewer's job
+at 9.2). Instead:
+1. Add `Traceability:` comments to existing source and test files.
+2. Unit test gap-fill — fill stub bodies where missing; skip files that already have bodies.
+3. Do not touch business logic — record anything suspicious in the commit message for
+   the Reviewer; do not silently fix it.
+Commit format: `[UC-XXX] Migrate: <summary>` (distinguishable in git log from Impl: commits).
+
 ## [1.0.17] — 2026-05-14
 
 **Feature: Source-container routing for multi-container UCs through promotion and Phase 9.**
