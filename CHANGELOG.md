@@ -5,6 +5,35 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.37] — 2026-05-14
+
+**Feature: Architect agent — business rules feed into ADRs (migration mode).**
+
+When `migration/business-rules.md` exists (produced by Migration Phase 5d), the Architect agent
+now reads it before drafting ADRs and uses extracted business rules to drive architectural
+decisions. Four additions to `agents/iconix-architect.md`:
+
+1. **`# Inputs`** — `migration/business-rules.md` listed as optional input with a one-line
+   summary of its purpose.
+2. **Decision rule 6** — extended to allow `BR-NNN` citations (business rule IDs from
+   `migration/business-rules.md`) in ADR Context sections when no formal REQ-ID exists yet
+   in migration mode.
+3. **`# Business rules integration (migration mode)`** — new section with three steps:
+   - **Step 1 — Trigger scan:** read `business-rules.md` once before any ADR work; evaluate
+     each rule against a trigger table (Invariant, Authorization, Transition guard, Workflow,
+     Calculation → ADR when cross-container; Precondition/Postcondition → no ADR unless at
+     infrastructure layer). Produce a markdown trigger scan table.
+   - **Step 2 — Populate ADR Context:** cite BR-NNN, category, provenance (EXTRACTED → no
+     [VERIFY]; INFERRED → [VERIFY — confirm enforcement point]). Merge related rules into one
+     ADR when they concern the same decision.
+   - **Step 3 — Close audit trail:** for non-trigger rules, add a one-line "no ADR — single-
+     container enforcement" note in the relevant `container-mapping/*.md` file. Every rule in
+     `business-rules.md` must be either ADR-covered or explicitly acknowledged.
+4. **PDR readiness check** — new item: when `migration/business-rules.md` exists, every
+   cross-container Invariant/Authorization/Transition guard/Workflow/Calculation rule either
+   has a covering ADR or an explicit single-container acknowledgment. Unacknowledged rules
+   are M2 PDR blockers.
+
 ## [1.0.36] — 2026-05-14
 
 **Feature: Analyst agent — domain glossary integration (migration mode).**
