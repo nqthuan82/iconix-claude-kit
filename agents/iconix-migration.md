@@ -291,10 +291,33 @@ This phase answers: *are two entry points in different containers actually two e
 same user-visible use case?* Without it, a user action that flows Frontend → Backend API →
 Database would produce separate UC-DRAFTs per container instead of one unified UC.
 
+## Step 0 — Detect incremental run and load previous boundary data
+
+Before collecting current-run boundaries, determine whether this is an **incremental run**
+(some containers were migrated in an earlier run and already have UC-DRAFTs or promoted IDs).
+
+1. Scan `migration/survey-*.md` — if previous surveys exist, load the most recent one.
+   For each container listed in its **Containers surveyed** table:
+   - If the container is **not** in the current run's surveyed set → it is a
+     **previous-run container**. Load its inbound/outbound boundary data from the
+     `## Cross-container boundary correlation` section of the old survey (if present),
+     OR re-derive its entry points from the old survey's **Entry points** section.
+   - Scan `use-cases/UC-DRAFT-*.md` for files whose `Source-container:` annotation
+     matches this container — record them as **existing DRAFTs**.
+   - Check `ids.registry.md` — if any of those UC-DRAFTs have a permanent ID,
+     mark them **promoted** (REQ change flow required — cannot be amended directly).
+
+2. Build two sets going into Steps 1–5:
+   - **Current-run containers** — containers surveyed in this Phase 1 run
+   - **Previous-run containers** — containers from old surveys, boundaries loaded above
+
+If no previous surveys exist OR every container in `iconix.config.yaml` is in the current
+run → skip this step (standard single-run; Steps 1–5 behave as documented).
+
 ## Step 1 — Collect inbound boundaries per container
 
-From Phase 1 survey results, for each container, list every **inbound boundary** (the
-surface where an external caller enters this container):
+From Phase 1 survey results (current-run containers) **and** Step 0 loaded data
+(previous-run containers), list every **inbound boundary** per container:
 
 | Protocol | What to collect |
 |---|---|
@@ -335,6 +358,12 @@ For each outbound call in container A, find a matching inbound in container B (B
 | Message bus | Exact topic/queue name | HIGH |
 | Message bus | Topic pattern (prefix/wildcard) | MEDIUM |
 
+For each matched pair, record which **run** each container belongs to (from Step 0):
+- **current-run** — surveyed in this Phase 1 run
+- **previous-run** — loaded from an earlier survey in Step 0
+
+This classification drives the three-case logic in Step 4.
+
 Unmatched outbound calls (no inbound in any surveyed container) are likely calls to
 external third-party services — record them as **unmatched outbound** in the report.
 
@@ -344,11 +373,32 @@ likely entry points called by external actors (webhooks, external clients) — r
 
 ## Step 4 — Propose UC groupings
 
-For each match group (possibly spanning > 2 containers through a chain: A→B→C):
+For each match group (possibly spanning > 2 containers through a chain: A→B→C), apply
+the three-case rule based on which containers are current-run versus previous-run (Step 3):
 
-- **HIGH confidence** → propose a merged UC-DRAFT covering all containers in the chain
-- **MEDIUM confidence** → flag for human review; propose tentatively; mark `[VERIFY]`
-- Do NOT propose groupings for unmatched pairs
+**Case 1 — All containers in the group are current-run:**
+- HIGH confidence → draft ONE new unified UC-DRAFT for the group (standard single-run behaviour)
+- MEDIUM confidence → propose tentatively; mark `[VERIFY]`
+
+**Case 2 — Group mixes current-run and previous-run containers, and an existing UC-DRAFT
+is found for the previous-run container:**
+- HIGH or MEDIUM confidence → do **NOT** create a new UC-DRAFT. Instead propose an
+  **amendment** to the existing UC-DRAFT(s):
+  - Append the current-run container's entry point to the `Source-container:` annotation
+  - Add the new boundary lifeline and cross-container flow to the existing RB-DRAFT and SD-DRAFT
+    (or flag that they need re-drafting if they were manually edited)
+  - Record the amendment in the survey under `### Amendment proposals (incremental run)`
+  - If the DRAFT was modified by a human since the last run (detected in the pre-run
+    idempotency check), flag it as **MANUAL MERGE REQUIRED** instead of auto-applying
+
+**Case 3 — Group involves a previous-run UC that has been promoted (permanent ID assigned):**
+- Do **NOT** modify the existing UC — promoted IDs go through REQ change flow
+- Record the match under `### Change flow candidates (promoted UCs)` with the permanent
+  UC ID and the new boundary details
+- Recommend invoking `/iconix-impact <UC-ID>` to trigger a REQ change flow for the
+  extended cross-container scope
+
+Do NOT propose groupings for unmatched pairs (no matching inbound/outbound found).
 
 ## Step 5 — Append correlation report to survey
 
@@ -357,14 +407,14 @@ Append a `## Cross-container boundary correlation` section to `migration/survey-
 ```markdown
 ## Cross-container boundary correlation
 
-Mode: multi-repo — N containers surveyed
+Mode: multi-repo — N containers surveyed (M current-run, K previous-run)
 
 ### Matched pairs
 
-| # | From | Outbound call | Protocol | To | Inbound handler | Confidence |
-|---|---|---|---|---|---|---|
-| 1 | Frontend | `axios.post('/api/orders')` | HTTP POST /api/orders | Backend | `OrdersController.Post` | HIGH |
-| 2 | Backend | `_paymentClient.Charge()` | HTTP POST /v1/charges | PaymentService | `ChargesController.Post` | MEDIUM — [VERIFY] |
+| # | From | Outbound call | Protocol | To | Inbound handler | Confidence | Run |
+|---|---|---|---|---|---|---|---|
+| 1 | Frontend | `axios.post('/api/orders')` | HTTP POST /api/orders | Backend | `OrdersController.Post` | HIGH | both current |
+| 2 | Backend | `_paymentClient.Charge()` | HTTP POST /v1/charges | PaymentService | `ChargesController.Post` | MEDIUM — [VERIFY] | Backend: current; PaymentService: previous |
 
 ### Unmatched outbound (targets not in surveyed containers)
 - Frontend: `GET /api/products` — no inbound found; likely external service
@@ -374,17 +424,44 @@ Mode: multi-repo — N containers surveyed
 
 ### Proposed UC groupings
 
-**Group 1 — HIGH confidence**
+**Group 1 — HIGH confidence (Case 1: all current-run)**
 Containers: Frontend → Backend → Database (via Backend repository)
 Entry points: `CheckoutPage.handleSubmit` (Frontend), `OrdersController.Post` (Backend)
 Suggested UC title: [VERIFY — human confirms business intent]
 Action: draft ONE UC-DRAFT for Group 1 in Phase 5 (not separate drafts per entry point)
 
-**Group 2 — MEDIUM confidence [VERIFY]**
+**Group 2 — MEDIUM confidence [VERIFY] (Case 1: all current-run)**
 Containers: Backend → PaymentService
 Entry points: `OrdersController.Post` (Backend outbound), `ChargesController.Post` (PaymentService)
 Note: PaymentService may be an external vendor — confirm before merging into Group 1
 Action: [VERIFY] merge into Group 1 or keep as separate inlined outbound boundary
+
+### Amendment proposals (incremental run)
+<!-- Include only when Case 2 matches exist; omit entire section if none -->
+
+**Amendment A — HIGH confidence**
+Existing UC-DRAFT: `use-cases/UC-DRAFT-003-place-order.md` (from OrderService, previous run)
+New container: Frontend (current run)
+New entry point: `CheckoutPage.handleSubmit`
+Required changes:
+- Append `Frontend @ ../frontend/src/` to `Source-container:` annotation
+- Add Frontend boundary lifeline to `robustness/RB-DRAFT-003-place-order.puml`
+- Extend flow in `sequence/SD-DRAFT-003-place-order.puml` to include Frontend → Backend leg
+Status: READY — auto-apply (DRAFT unmodified since last run)
+
+<!-- If DRAFT was human-edited since last run: -->
+Status: MANUAL MERGE REQUIRED — DRAFT was edited on <date>; apply changes by hand
+
+### Change flow candidates (promoted UCs)
+<!-- Include only when Case 3 matches exist; omit entire section if none -->
+
+**Candidate A**
+Promoted UC: PRJ-UC-012-checkout (permanent ID — cannot amend directly)
+New container: MobileApp (current run)
+New boundary: `MobileCheckoutController.submitOrder` → calls Backend `POST /api/orders`
+Recommended action: run `/iconix-impact PRJ-UC-012` to assess impact and open a REQ
+change flow for the extended mobile scope. Do NOT edit PRJ-UC-012-checkout.md or
+its diagrams directly.
 ```
 
 ## Step 6 — Feed into Phase 5

@@ -5,6 +5,42 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.14] — 2026-05-14
+
+**Feature: Incremental migration — Phase 1b handles containers added across separate runs.**
+
+When a project migrates Container 1 in one run and adds Container 2 in a later run,
+Phase 1b previously had no mechanism to correlate the new container's boundaries against
+the old one's existing UC-DRAFTs or promoted IDs. A cross-container match would either
+silently create a duplicate UC-DRAFT or be missed entirely.
+
+Three new cases in Phase 1b cover all incremental scenarios:
+
+- **Case 1 (all current-run):** both containers are in the current run → standard unified
+  UC-DRAFT, same as before.
+- **Case 2 (mix of current-run + previous-run with existing DRAFT):** propose an
+  **amendment** to the existing UC-DRAFT — append the new container's entry point to
+  `Source-container:`, extend the RB-DRAFT and SD-DRAFT. If the DRAFT was human-edited
+  since the last run, flag as MANUAL MERGE REQUIRED instead of auto-applying.
+- **Case 3 (previous-run UC already promoted to permanent ID):** do NOT modify the
+  promoted UC directly — flag as a **change flow candidate** and recommend
+  `/iconix-impact <UC-ID>` to trigger a REQ change flow for the extended scope.
+
+Concrete changes in `agents/iconix-migration.md`:
+- **Phase 1b Step 0** (new): detect incremental run, load previous surveys, identify
+  previous-run containers with their boundary data, existing DRAFTs, and promoted IDs.
+  Build two sets: current-run containers and previous-run containers.
+- **Phase 1b Step 1**: updated header — collects from both current-run (Phase 1 survey)
+  and previous-run (Step 0 loaded data) containers.
+- **Phase 1b Step 3**: updated — for each matched pair, record which run each container
+  belongs to (current-run / previous-run); this classification feeds Step 4.
+- **Phase 1b Step 4**: replaced single-case logic with explicit three-case dispatch
+  (Case 1 / Case 2 / Case 3) as described above.
+- **Phase 1b Step 5**: survey template updated — Mode line shows current-run vs
+  previous-run count; Matched pairs table gains a "Run" column; Proposed UC groupings
+  labelled with their Case number; two new conditional sections added:
+  `### Amendment proposals (incremental run)` and `### Change flow candidates (promoted UCs)`.
+
 ## [1.0.13] — 2026-05-14
 
 **Feature: Phase 1b — cross-container boundary correlation in migration agent.**
