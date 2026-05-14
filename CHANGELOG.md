@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.34] — 2026-05-14
+
+**Docs: process reference matrix — update Last reviewed to v1.0.33 for Phase 5c/5d.**
+
+Prepended new "Last reviewed: v1.0.33" entry to the Summary Coverage Matrix in
+`docs/iconix/iconix-process-reference.md`. Covers methodology audit for:
+
+- **Phase 5c extensions (v1.0.24–v1.0.29):** cross-stack detection (7 language families),
+  Track C (SoT files + migration DSL), Track B5 (integer status columns), skip logic
+  decoupled from `stack.bdd`, config naming fix.
+- **Phase 5d (v1.0.32–v1.0.33):** business rule extraction (4 tracks, 7 categories),
+  Step 4 UC-DRAFT precondition annotation.
+
+Theory audit results (no status shifts):
+- Ch2 #4 (domain model as glossary ✅) — `domain-glossary.md` + `business-rules.md`
+  together serve as reverse-engineered domain vocabulary.
+- Ch12 #4 (scenario-level acceptance ✅) — Phase 5c/5d feed into Tester's UC coverage.
+- Ch13 #9 (link requirements to UCs ✅) — Phase 5d Step 4 strengthens REQ→UC chain.
+
+Coverage table unchanged — all changes are Migration agent kit extensions reinforcing
+existing ✅ rows, not closing ❌ gaps in ICONIX book rules.
+
 ## [1.0.33] — 2026-05-14
 
 **Feature: Migration Phase 5d Step 4 — auto-annotate UC-DRAFT preconditions from business rules.**
