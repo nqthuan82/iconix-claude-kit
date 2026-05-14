@@ -12,6 +12,9 @@
 #   4. Every changed container-mapping/*.md file has a non-empty "Effective stack"
 #      column on every data row (M2 blocker per Traceability check #16).
 #      (Check 4 is skipped in --full-scan mode; it is PR-specific.)
+#   5. Every BR-NNN cited in an ADR Context section resolves to an entry in
+#      docs/business-rules.md (M2 blocker per Traceability check #17).
+#      Skipped silently when docs/business-rules.md does not exist.
 #
 # Usage:
 #   validate-traceability.sh [--full-scan] [<base-ref>] [<head-ref>]
@@ -137,7 +140,7 @@ while IFS= read -r f; do
 
 done <<< "${CHANGED_FILES}"
 
-# ── Check 3: changed container-mapping files have Effective stack filled ─
+# ── Check 4: changed container-mapping files have Effective stack filled ─
 # Skipped in --full-scan mode (PR-specific check; not meaningful for full scans).
 if [[ "$FULL_SCAN" == "true" ]]; then
   CHANGED_MAPS=""
@@ -167,6 +170,32 @@ while IFS= read -r f; do
   done < <(grep '^|' "$f")
 
 done <<< "${CHANGED_MAPS}"
+
+# ── Check 5: BR-NNN citation integrity (Traceability check #17) ─────────
+# Only runs when docs/business-rules.md exists. Skipped silently otherwise.
+BR_FILE="${ARTIFACT_ROOT}/docs/business-rules.md"
+
+if [[ -f "$BR_FILE" ]]; then
+  if [[ "$FULL_SCAN" == "true" ]]; then
+    CHANGED_ADRS="$(git ls-files -- "${ARTIFACT_ROOT}/adrs/*.md" 2>/dev/null || true)"
+  else
+    CHANGED_ADRS="$(git diff --name-only --diff-filter=AM "${BASE_REF}...${HEAD_REF}" -- 'adrs/*.md' 2>/dev/null || true)"
+  fi
+
+  while IFS= read -r f; do
+    [[ -z "$f" || ! -f "$f" ]] && continue
+
+    cited_brs="$(grep -oE 'BR-[0-9]+' "$f" | sort -u || true)"
+    while IFS= read -r br_id; do
+      [[ -z "$br_id" ]] && continue
+      if ! grep -q "${br_id}" "$BR_FILE"; then
+        echo "BROKEN_BR_CITE: ${f} cites ${br_id} but no matching entry found in ${BR_FILE}" >&2
+        violations=$((violations + 1))
+      fi
+    done <<< "$cited_brs"
+
+  done <<< "${CHANGED_ADRS}"
+fi
 
 # ── Summary ─────────────────────────────────────────────────────────────
 if [[ "$violations" -eq 0 ]]; then

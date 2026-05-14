@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.46] — 2026-05-14
+
+**Feature: CI validator — BR-NNN citation integrity (Traceability check #17).**
+
+`templates/git-integration/generic/validate-traceability.sh` extended with a new check:
+
+- **Check 5 (header) / Check 5 (code):** when `docs/business-rules.md` exists, scan every
+  changed ADR file (`adrs/*.md`) for `BR-NNN` patterns and verify each cited ID appears as
+  an entry in `docs/business-rules.md`. Emits `BROKEN_BR_CITE: <adr-file> cites <BR-NNN>
+  but no matching entry found` to stderr; increments the violation counter (M2 blocker).
+  Skipped silently when `docs/business-rules.md` is absent (non-migration projects or
+  projects that haven't authored business rules yet).
+- In `--full-scan` mode: scans all tracked `adrs/*.md` (not just PR-changed files).
+- Also fixes internal numbering mismatch: container-mapping check comment label was
+  "Check 3" in the code body but "Check 4" in the header — corrected to "Check 4" throughout.
+
+`agents/iconix-traceability.md` CI counterpart note updated: removed the now-stale
+"does not validate BR-NNN citations" caveat; replaced with accurate description of Check 5.
+
 ## [1.0.45] — 2026-05-14
 
 **Feature: `iconix-upgrade` — migration awareness for `migration/business-rules.md` → `docs/business-rules.md`.**

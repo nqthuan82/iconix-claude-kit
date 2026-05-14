@@ -293,7 +293,7 @@ The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` f
 - Every changed file under `src/` and `tests/` has a `Traceability:` comment
 - Every cited REQ/UC/RB/SD/TC/ADR ID points to an artifact that actually exists
 
-It does **not** check the full chain (REQ→UC→RB→SD→CLS→TC), and it does **not** validate BR-NNN citations (business rule IDs are entries in a markdown file, not standalone artifact files — the pattern-match required is not suitable for a shell grep gate). BR-NNN citation integrity is your responsibility via check #17. The script is the fast pre-merge guard; you remain the canonical auditor.
+It does **not** check the full chain (REQ→UC→RB→SD→CLS→TC). It does validate BR-NNN citations when `docs/business-rules.md` is present (Check 5 — Traceability check #17): any ADR file changed in the PR is scanned for `BR-NNN` patterns and each is verified against an entry in `docs/business-rules.md`. The script is the fast pre-merge guard; you remain the canonical auditor for the full chain.
 
 **Multi-repo CI:** In a service repo's CI pipeline, set `ICONIX_CONFIG_PATH` to the path of the checked-out meta-project. The script will read the ID prefix from the meta-project's `iconix.config.yaml` and resolve artifact folders (`use-cases/`, `robustness/`, etc.) relative to the meta-project root rather than the service repo root:
 ```yaml
