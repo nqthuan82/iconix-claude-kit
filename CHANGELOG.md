@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.29] — 2026-05-14
+
+**Fix: Phase 5c — add `stack.bdd` comment to config template; fix `bdd.enabled` naming mismatch.**
+
+Two changes bundled:
+
+1. **`templates/iconix.config.yaml`** — expanded `stack.bdd` with a multi-line comment
+   explaining the two-part behaviour: `false` skips only BDD-DRAFT file generation
+   (Steps 4–6); schema analysis and domain glossary (Steps 1–3) still run. Also added
+   `jasmine` to `bdd_framework` comment.
+
+2. **`agents/iconix-migration.md`** — corrected all four references from `bdd.enabled`
+   to `stack.bdd` to match the actual key name in `iconix.config.yaml`. The agent was
+   using a non-existent top-level key; the template has always used `stack.bdd`.
+
+No theory audit required — config documentation and naming consistency fix.
+
 ## [1.0.28] — 2026-05-14
 
 **Fix: Migration Phase 5c (manual mode) — propagate two-part skip logic and Step 4 gate.**

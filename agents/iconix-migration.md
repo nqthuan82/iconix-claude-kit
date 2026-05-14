@@ -787,10 +787,10 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 Phase 5c has two independent parts with separate skip conditions:
 
 - **Steps 1–3 — schema analysis → domain glossary:** always run when any SQL, ORM, or
-  migration DSL source is detected, regardless of `bdd.enabled`. Produces
+  migration DSL source is detected, regardless of `stack.bdd`. Produces
   `migration/domain-glossary.md` — used by Analyst, Architect, and Tester independently
   of BDD feature files.
-- **Steps 4–6 — glossary → BDD-DRAFT feature files:** run only when `bdd.enabled: true`
+- **Steps 4–6 — glossary → BDD-DRAFT feature files:** run only when `stack.bdd: true`
   in `iconix.config.yaml` AND UC-DRAFTs exist. Evaluated at the Step 4 gate; skipping
   Steps 4–6 does not affect glossary generation.
 
@@ -1167,9 +1167,9 @@ each entity entry with its source container):
 
 Before running Step 4, evaluate both conditions:
 
-1. **`bdd.enabled` in `iconix.config.yaml`** — if `false` or absent: stop here. Log in
+1. **`stack.bdd` in `iconix.config.yaml`** — if `false` or absent: stop here. Log in
    the handoff report:
-   `Phase 5c Steps 4–6 skipped — bdd.enabled: false. Domain glossary produced at migration/domain-glossary.md.`
+   `Phase 5c Steps 4–6 skipped — stack.bdd: false. Domain glossary produced at migration/domain-glossary.md.`
    Move to Phase 6.
 2. **UC-DRAFTs exist** — if no `docs/use-cases/UC-DRAFT-*.md` files found: stop here.
    Log: `Phase 5c Steps 4–6 skipped — no UC-DRAFTs found. Run Analyst phase first.
@@ -1492,8 +1492,8 @@ Same as graph-assisted Phase 5c. Key differences in code-walking mode:
   `Code-walking mode — confidence is lower than graph-assisted output;
    every scenario requires careful human review before promotion.`
 - **Two-part skip logic and Step 4 gate:** identical to graph-assisted — Steps 1–3
-  (domain glossary) always run when schema sources are found, regardless of `bdd.enabled`;
-  the gate before Step 4 checks `bdd.enabled` and UC-DRAFT existence before generating
+  (domain glossary) always run when schema sources are found, regardless of `stack.bdd`;
+  the gate before Step 4 checks `stack.bdd` and UC-DRAFT existence before generating
   BDD-DRAFT files. Log messages and handoff report entries are the same as graph-assisted.
 
 All other rules (Step 1 detection, Step 2 parsing, Step 3 glossary, Steps 4–6) apply unchanged.

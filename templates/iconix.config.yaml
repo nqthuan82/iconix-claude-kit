@@ -13,8 +13,15 @@ project:
 stack:
   language: "csharp"       # csharp | java | python | typescript | go
   test_framework: "xunit"  # xunit | nunit | junit | pytest | jest
+  # Controls BDD-DRAFT feature file generation in Migration Phase 5c (Steps 4–6).
+  #   true  — Migration agent generates BDD-DRAFT-*.feature files in addition to the
+  #            domain glossary (migration/domain-glossary.md).
+  #   false — Migration agent still runs schema analysis (Tracks A/B/C) and produces
+  #            the domain glossary (Steps 1–3); only BDD-DRAFT file generation is skipped.
+  #            Set false when your team is not yet adopting BDD but still wants the
+  #            domain vocabulary output.
   bdd: true
-  bdd_framework: "specflow" # specflow | cucumber | behave
+  bdd_framework: "specflow" # specflow | cucumber | behave | jasmine
 
 diagrams:
   format: "plantuml"       # plantuml | mermaid
