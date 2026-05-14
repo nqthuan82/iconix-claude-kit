@@ -5,6 +5,32 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.39] — 2026-05-14
+
+**Feature: Traceability agent — BR-NNN citation validation (migration mode).**
+
+The Traceability agent now validates that business rule IDs cited in ADR Context sections
+resolve to actual entries in `migration/business-rules.md`. Three additions to
+`agents/iconix-traceability.md`:
+
+1. **Traceability chain diagram** — `BR-NNN` added as a second upstream source into
+   `ADR-XXX / container-mapping`, alongside `NFR-XXX`:
+   ```
+   ADR-XXX / container-mapping
+       ↑         ↑
+    NFR-XXX    BR-NNN  (from migration/business-rules.md — migration mode only)
+   ```
+2. **Validation check #17 — BR-NNN citation integrity** (M2 check, migration mode only):
+   - Scans every `adrs/<PREFIX>-ADR-XXX-*.md` for `BR-\d+` patterns in `## Context`.
+   - **Broken citation:** BR-NNN cited but not found in `business-rules.md` →
+     **ADR citation drift** (M2 blocker).
+   - **Missing source:** BR-NNN cited but `business-rules.md` absent →
+     **missing business rules source** (M2 blocker — run Migration Phase 5d first).
+   - When `business-rules.md` absent and no ADR cites BR-NNN: skip silently.
+3. **CI counterpart note** — clarified that the shell script does NOT validate BR-NNN
+   citations (business rule IDs are markdown entries, not standalone artifact files);
+   check #17 is the Traceability agent's exclusive responsibility.
+
 ## [1.0.38] — 2026-05-14
 
 **Feature: Migration handoff report — Phase 5d business rules trigger scan section.**
