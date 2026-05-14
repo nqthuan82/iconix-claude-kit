@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.45] — 2026-05-14
+
+**Feature: `iconix-upgrade` — migration awareness for `migration/business-rules.md` → `docs/business-rules.md`.**
+
+Projects that ran the migration agent before v1.0.44 will have `business-rules.md` at the old
+`migration/` path; all agents now look for it at `docs/business-rules.md`. The upgrade agent
+handles the transition automatically:
+
+- **Step 1b heuristic table**: new row — `docs/business-rules.md` at canonical path → ≥ v1.0.44.
+  Absence of the canonical file while `migration/business-rules.md` exists → predates v1.0.44.
+- **Layer C auto-copy**: when target ≥ 1.0.44 AND `migration/business-rules.md` exists AND
+  `docs/business-rules.md` does not yet exist → copy to canonical path (additive, idempotent;
+  original left intact). Logged in the upgrade report.
+- **Layer D check #9**: detects stale-path state and flags severity:
+  - MEDIUM — old path only (auto-copied by Layer C; verify + delete `migration/` copy).
+  - LOW — both paths exist (old is stale; delete `migration/business-rules.md`).
+  - Both cases scan `adrs/*.md` for literal `migration/business-rules.md` path citations and
+    flag any found as stale citations needing manual update.
+
 ## [1.0.44] — 2026-05-14
 
 **Refactor: `docs/business-rules.md` canonical path + greenfield PO authoring + new template.**

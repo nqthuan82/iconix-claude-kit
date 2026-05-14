@@ -67,6 +67,7 @@ If the field is missing (project predates v0.9.9), use **two-pass heuristic dete
 | `meta:` section in config OR any container has `path:` field | v1.0.0 |
 | any container has `graph_path:` field in config | v1.0.1 |
 | `.ci/scripts/setup-branch-protection.sh` OR `.ci/scripts/setup-branch-policies.sh` | v1.0.3 |
+| `docs/business-rules.md` exists at canonical path (not under `migration/`) | v1.0.44 |
 
 **v1.0.2 note:** v1.0.2 contains only agent-prompt fixes (reviewer, metrics, trace-check, upgrade) with no new folders, config keys, or templates. There is no structural signal to distinguish v1.0.1 from v1.0.2. If Pass 1 concludes v1.0.1 and the user knows they are on v1.0.2, use `--from 1.0.2` to override.
 
@@ -130,6 +131,8 @@ For each template file in `<kit-source>/templates/` not present in `docs/iconix/
 
 **If a reference template has been hand-edited** in the project (file content differs from any prior kit-version's shipped template): preserve the user's version with a `.backup` suffix and copy the new one alongside. Log as "kept user customization with .backup; review and merge if needed" in the report.
 
+**Business rules path migration (v1.0.44+):** when the target version ≥ 1.0.44 AND `migration/business-rules.md` exists AND `docs/business-rules.md` does NOT yet exist: copy `migration/business-rules.md` to `docs/business-rules.md`. This is additive and idempotent — the original at `migration/business-rules.md` is left intact. Log as "auto-copied business rules to canonical path (`docs/business-rules.md`)" in the report. Recommend that the user verify the copy and then delete `migration/business-rules.md` when satisfied.
+
 ### Layer D: project artifacts (DETECT ONLY)
 Scan existing artifacts for differences from the current template format. Do NOT modify them.
 
@@ -174,6 +177,11 @@ Scan existing artifacts for differences from the current template format. Do NOT
    - Do they follow the v0.9.5 naming convention (`bugfix/T1-<slug>` / `bugfix/T2-UC-XXX-<slug>`)?
 
 8. **`dependency_sources` config** (v1.0.7+, when present) — for each entry in `dependency_sources:`:
+
+9. **Business rules stale path** (v1.0.44+, when target ≥ 1.0.44):
+   - If `migration/business-rules.md` exists AND `docs/business-rules.md` does NOT exist: record as MEDIUM finding — the file was auto-copied to the canonical path by Layer C; recommend verifying the copy then deleting `migration/business-rules.md`.
+   - If both `migration/business-rules.md` AND `docs/business-rules.md` exist: record as LOW informational — old path is stale; recommend deleting `migration/business-rules.md` after verifying `docs/` copy is complete.
+   - In both cases: scan `adrs/*.md` for literal string `migration/business-rules.md` (free-text path citations, distinct from BR-NNN citations) — flag any hits as "stale path citation; update to `docs/business-rules.md`."
    - Has `path:` defined? Verify the path exists locally (`Test-Path` / `-d`). If not, flag as broken dependency source path — migration agent Step 0b will silently skip it without this check.
    - Has `role:` absent? Note that no role is specified; the agent will attempt auto-detection but may misclassify (flag as informational, not a blocker).
 
