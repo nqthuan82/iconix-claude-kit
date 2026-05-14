@@ -5,6 +5,30 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.27] — 2026-05-14
+
+**Fix: Migration Phase 5c — decouple domain glossary generation from `bdd.enabled` flag.**
+
+Previously, setting `bdd.enabled: false` skipped the entire Phase 5c including the domain
+glossary (`migration/domain-glossary.md`). The glossary is independently valuable — Analyst,
+Architect, and Tester all use it regardless of BDD output — so skipping it under `bdd.enabled:
+false` was incorrect.
+
+Phase 5c now has two independent parts with separate skip conditions:
+
+- **Steps 1–3 (schema analysis → domain glossary):** always run when any SQL, ORM, or
+  migration DSL source is detected. Skip only when Tracks A, B, and C all yield zero
+  entity definitions.
+- **Steps 4–6 (glossary → BDD-DRAFT feature files):** controlled by a new gate inserted
+  before Step 4. The gate stops here (logs to handoff report, moves to Phase 6) when:
+  - `bdd.enabled: false` or absent in `iconix.config.yaml`, OR
+  - No `docs/use-cases/UC-DRAFT-*.md` files found.
+
+The Phase 5c header updated to describe both parts and their independent skip conditions.
+The single skip condition at the end of Step 1 updated to scope it to Steps 1–3 only.
+
+No theory audit required — this is a skip-logic correction within the Migration agent.
+
 ## [1.0.26] — 2026-05-14
 
 **Feature: Migration Phase 5c — Track B5 (application-layer enum lookup for integer status columns).**

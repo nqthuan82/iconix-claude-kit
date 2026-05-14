@@ -784,9 +784,15 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 
 ## Phase 5c — BDD Gherkin scenario synthesis (graph-assisted)
 
-Produces `BDD-DRAFT-XXX-<slug>.feature` files by combining schema analysis (SQL, ORM, or migration DSL) with
-UC-DRAFT content. Skip this phase and log in the handoff report when no SQL schema
-source is detected, or when `bdd.enabled: false` in `iconix.config.yaml`.
+Phase 5c has two independent parts with separate skip conditions:
+
+- **Steps 1–3 — schema analysis → domain glossary:** always run when any SQL, ORM, or
+  migration DSL source is detected, regardless of `bdd.enabled`. Produces
+  `migration/domain-glossary.md` — used by Analyst, Architect, and Tester independently
+  of BDD feature files.
+- **Steps 4–6 — glossary → BDD-DRAFT feature files:** run only when `bdd.enabled: true`
+  in `iconix.config.yaml` AND UC-DRAFTs exist. Evaluated at the Step 4 gate; skipping
+  Steps 4–6 does not affect glossary generation.
 
 ### Step 1 — Detect schema source
 
@@ -932,9 +938,13 @@ found in C2 files — DSL may include DBA-only constraints with no domain meanin
 C1 (SoT file)  >  Track B (ORM classes)  >  C2 (migration DSL)  >  Track A (SQL)
 ```
 
-**Skip condition:** if Track A, B, and C all yield zero entity definitions after all
-containers are scanned: log `Phase 5c skipped — no SQL, ORM, or migration DSL source
-detected` in `migration/survey-<date>.md` and the handoff report, then move to Phase 6.
+**Skip conditions (two independent gates):**
+
+- **Steps 1–3 skip:** if Track A, B, and C all yield zero entity definitions after all
+  containers are scanned: log `Phase 5c skipped — no SQL, ORM, or migration DSL source
+  detected` in `migration/survey-<date>.md` and the handoff report, then move to Phase 6.
+- **Steps 4–6 skip:** evaluated separately at the Step 4 gate — does not affect glossary
+  generation.
 
 **Report at start of Phase 5c:**
 
@@ -1152,6 +1162,20 @@ each entity entry with its source container):
 | sp_ApproveOrder | Approve | Order | `When the Manager approves the Order` [VERIFY] |
 | sp_CancelOrder | Cancel | Order | `When the User cancels the Order` [VERIFY] |
 ```
+
+**Gate — Steps 4–6 (BDD-DRAFT generation)**
+
+Before running Step 4, evaluate both conditions:
+
+1. **`bdd.enabled` in `iconix.config.yaml`** — if `false` or absent: stop here. Log in
+   the handoff report:
+   `Phase 5c Steps 4–6 skipped — bdd.enabled: false. Domain glossary produced at migration/domain-glossary.md.`
+   Move to Phase 6.
+2. **UC-DRAFTs exist** — if no `docs/use-cases/UC-DRAFT-*.md` files found: stop here.
+   Log: `Phase 5c Steps 4–6 skipped — no UC-DRAFTs found. Run Analyst phase first.
+   Domain glossary produced at migration/domain-glossary.md.` Move to Phase 6.
+
+If both conditions pass, continue to Step 4.
 
 ### Step 4 — Map UC-DRAFTs to glossary entities
 
