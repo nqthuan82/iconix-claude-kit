@@ -132,6 +132,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/architecture-package-map-template.md"     "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/integration-surface-template.md"          "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/milestone-report-template.md"             "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/traceability-matrix-template.md"          "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/class-model-template.puml"                "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/cdr-report-template.md"                   "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/edge-case-report-template.md"             "docs/iconix/templates/" 2>/dev/null || true

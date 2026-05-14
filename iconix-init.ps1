@@ -109,6 +109,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\architecture-package-map-template.md")     "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\integration-surface-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\milestone-report-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\traceability-matrix-template.md")          "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\class-model-template.puml")                "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\cdr-report-template.md")                   "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\edge-case-report-template.md")             "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue

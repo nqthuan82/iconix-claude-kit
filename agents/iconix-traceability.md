@@ -24,7 +24,7 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 
 # Artifacts you produce
 - `ids.registry.md` — master ID ledger
-- `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table
+- `traceability-matrix.md` — full REQ↔UC↔RB↔SD↔CLS↔TC table, plus ADR-IDs, NFR-IDs, and BR-NNN (migration mode only). Use `templates/traceability-matrix-template.md`.
 - `orphan-report.md` — artifacts with no parent or no children, including orphan UCs (no package entry), ghost UCs (no file), title-drifted UCs, and dangling cross-package links
 - `change-impact/CI-<date>.md` — when a REQ/UC changes, list everything downstream (use `templates/change-impact-template.md`)
 - `milestone-reports/M<n>-<date>.md` — Milestone 1 / PDR / CDR readiness
@@ -50,6 +50,34 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
     - **Broken citation** — BR-NNN appears in an ADR Context but does not exist in `business-rules.md`. Flag as **ADR citation drift** (M2 blocker). Resolution: either correct the BR-ID in the ADR, or add the missing rule to `business-rules.md`.
     - **Missing source** — BR-NNN citations exist in ADRs but `migration/business-rules.md` is absent. Flag as **missing business rules source** (M2 blocker). Resolution: run Migration Phase 5d to produce the file, then re-verify.
     When `migration/business-rules.md` is absent and no ADR cites a BR-NNN pattern: skip this check silently.
+
+# Traceability matrix population
+
+Use `templates/traceability-matrix-template.md`. Save as `traceability-matrix.md`.
+
+## UC chain table
+
+For each UC in `use-cases/<PREFIX>-UC-XXX-*.md`, produce one row:
+
+| Column | How to derive |
+|---|---|
+| REQ-IDs | `## Traceability` → `Upstream:` field in the UC file |
+| RB-ID | Find `robustness/<PREFIX>-RB-XXX-*.puml` whose header cites this UC |
+| SD-IDs | Find `sequence/<PREFIX>-SD-XXX-*.puml` whose header cites this UC |
+| CLS names | Entity nodes (`entity "…"`) on the matching RB |
+| TC-IDs | Find `test-cases/<PREFIX>-TC-XXX-*.md` whose `## Traceability` → `UC:` cites this UC |
+| ADR-IDs | Find `adrs/<PREFIX>-ADR-XXX-*.md` whose `## Context` `Affected use cases:` cites this UC |
+| NFR-IDs | Read `nfr-annotations/<PREFIX>-UC-XXX-nfr.md` → `## Applied NFRs` list |
+| BR-NNN | Read UC file's `## Business rules cross-reference (Phase 5d)` table → `BR-ID` column (migration mode only — omit column when `migration/business-rules.md` absent) |
+
+## Business rules coverage section (migration mode only)
+
+When `migration/business-rules.md` exists, populate the `## Business rules coverage` section:
+
+1. For each BR-ID in `business-rules.md`, scan every UC file's `## Business rules cross-reference` table — collect UCs that list that BR-ID.
+2. Scan every ADR file's `## Context` section for `BR-\d+` patterns — collect ADR-IDs that cite each BR-ID.
+3. Flag rules with no Linked UC as **unlinked rules** (investigate — entity names in Phase 5d may not have matched any UC).
+4. Flag ⚠ Investigate category rules (Invariant / Authorization / Transition guard / Workflow / Calculation) with no Linked ADR as **uncovered triggers** — surface for Architect.
 
 # Change impact analysis
 When asked "what breaks if REQ-042 changes?":

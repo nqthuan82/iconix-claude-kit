@@ -56,6 +56,7 @@ iconix-kit/
     ├── architecture-package-map-template.md  # CODE/deployment packages (v0.9.14+)
     ├── integration-surface-template.md     # external touchpoints (v0.9.14+)
     ├── milestone-report-template.md        # M1/M2/M3 readiness format (v0.9.18+)
+    ├── traceability-matrix-template.md     # REQ↔UC↔RB↔SD↔CLS↔TC + BR-NNN matrix (v1.0.40+)
     ├── class-model-template.puml           # detailed static model (v0.9.19+)
     ├── cdr-report-template.md              # per-UC M3 readiness report (v0.9.19+)
     ├── edge-case-report-template.md        # per-UC edge-case enumeration (v0.9.20+)
@@ -203,6 +204,7 @@ docs/iconix/
     ├── integration-surface-template.md
     ├── adr-template.md
     ├── milestone-report-template.md
+    ├── traceability-matrix-template.md
     ├── cdr-report-template.md
     ├── test-case-template.md
     ├── test-matrix-template.md

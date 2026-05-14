@@ -5,6 +5,39 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.40] — 2026-05-14
+
+**Feature: Traceability matrix — BR-NNN column + Phase 5d rule IDs.**
+
+Closes the gap that BR-NNN IDs were referenced in check #17, trigger scan, and ADR Context
+but never actually assigned during Phase 5d extraction. Seven changes across six files:
+
+1. **`agents/iconix-migration.md` Phase 5d Step 3** — rules now carry sequential `BR-NNN`
+   IDs (BR-001, BR-002 …) assigned as they are written. ID counter is sequential across all
+   categories; IDs are stable across incremental runs. Format change:
+   `- <description>` → `- **BR-NNN** | <description>`.
+2. **`agents/iconix-migration.md` Phase 5d Step 4** — UC annotation updated:
+   - Preconditions use `[BR-NNN]` (exact ID) instead of generic `[BR]`.
+   - `## Business rules cross-reference` table gains a `BR-ID` column so Traceability can
+     scan UC files and collect which BR-IDs are linked to each UC.
+3. **`templates/traceability-matrix-template.md`** — new template. UC-centric table with
+   columns: UC-ID, Title, REQ-IDs, RB-ID, SD-IDs, CLS names, TC-IDs, ADR-IDs, NFR-IDs,
+   BR-NNN (migration mode only — omit when no business rules). Includes:
+   - Population guide (how to derive each column from artifact files)
+   - Chain integrity summary table
+   - `## Business rules coverage` section: BR-ID → Linked UCs + Linked ADRs; flags unlinked
+     rules and uncovered ⚠ Investigate category rules (no ADR).
+4. **`agents/iconix-traceability.md`** — two additions:
+   - Artifacts section: reference `templates/traceability-matrix-template.md`.
+   - New `# Traceability matrix population` section: per-column derivation guide including
+     BR-NNN column; business rules coverage population steps (unlinked + uncovered flag).
+5. **`templates/milestone-report-template.md`** — two additions:
+   - ADR health line: `with no upstream REQ/NFR/UC/BR ref` + `broken BR-NNN citations: <n>`.
+   - M2-only check: BR-NNN citation integrity (Traceability check #17) as M2 blocker.
+6. **`README.md`** — `traceability-matrix-template.md` added to both template listings.
+7. **`iconix-init.ps1` + `iconix-init`** — installer copies new template to
+   `docs/iconix/templates/`.
+
 ## [1.0.39] — 2026-05-14
 
 **Feature: Traceability agent — BR-NNN citation validation (migration mode).**

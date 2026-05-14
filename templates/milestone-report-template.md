@@ -34,7 +34,7 @@
 - **NFR catalog:** `<total>` | orphan (no covering ADR / mapping): `<n>`
 - **NFR annotations:** `<total>` | UCs without one: `<n>` | NFR-list mismatches with container-mapping: `<n>`
 - **Architecture artifacts:** package-map present: `<yes/no>` | integration-surface present: `<yes/no>`
-- **ADRs:** `<total>` | with no upstream REQ/NFR/UC ref: `<n>` | `Proposed` past M2: `<n>`
+- **ADRs:** `<total>` | with no upstream REQ/NFR/UC/BR ref: `<n>` | `Proposed` past M2: `<n>` | broken BR-NNN citations: `<n>` (migration mode only)
 - **SDs:** `<total>` | drift from code: `<n>` (M3 only)
 - **TCs:** `<total>` | failing: `<n>` | uncovered controllers: `<n>` (M3 only)
 - **Test plan:** present at `test-plan/test-plan-<date>.md`: `<yes/no>` (M3 only)
@@ -59,6 +59,7 @@
 - [ ] All PO `' VERIFY:` notes resolved (Analyst PDR readiness)
 - [ ] Concurrent-touch report (`change-impact/CT-<date>.md`) reviewed; HIGH conflicts resolved or `[CT-ACCEPT-XXX]` accepted
 - [ ] No blocking architectural questions open without `[Proposed ADR-XXX]`
+- [ ] **BR-NNN citation integrity** (migration mode — when `migration/business-rules.md` exists): every BR-NNN cited in ADR Context resolves to an existing rule in `business-rules.md` (Traceability check #17); broken citations are M2 blockers
 
 ### M3 only
 - [ ] Every UC has a sequence diagram (`sequence/SD-XXX-<slug>.puml`)
