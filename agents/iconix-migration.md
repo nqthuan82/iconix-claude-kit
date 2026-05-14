@@ -1633,7 +1633,7 @@ Use `templates/handoff-report-template.md` (or `docs/iconix/templates/handoff-re
 Fill in every section:
 - **Migration run:** mode, phases completed, scope, previous run date
 - **Artifact inventory:** one row per output file; mark Skipped items with reason
-- **Confidence summary:** EXTRACTED / INFERRED / AMBIGUOUS counts per artifact type; overall % confidence
+- **Confidence summary:** EXTRACTED / INFERRED / AMBIGUOUS counts per artifact type; overall % confidence. Also populate the `### [VERIFY] item breakdown` table: for each artifact group, count occurrences of the literal string `[VERIFY]` across the matching files (UC-DRAFTs, RB-DRAFTs, domain-glossary.md, BDD-DRAFTs when generated, business-rules.md when Phase 5d ran). Omit a row when the file group was skipped or produced zero files. Sum to a Total row.
 - **Successfully reverse-engineered:** entry point count, layer count, class count, UC count
 - **Business intent gaps:** UC-DRAFTs where alternate courses or actor intent needs PO input
 - **NFR gaps:** observed signals (retry loops, auth checks) that imply an NFR but lack a formal target

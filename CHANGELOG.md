@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.42] — 2026-05-14
+
+**Feature: Migration handoff report — auto-count `[VERIFY]` items per artifact group.**
+
+The Confidence summary section of the handoff report now includes a `### [VERIFY] item breakdown`
+table showing how many `[VERIFY]` markers exist in each artifact group. Two changes:
+
+1. **`templates/handoff-report-template.md`** — new `### [VERIFY] item breakdown` sub-section
+   added inside `## Confidence summary`:
+   - Table rows: UC-DRAFTs, RB-DRAFTs, domain glossary, BDD-DRAFTs (omitted when not
+     generated), business rules (omitted when Phase 5d skipped), Total.
+   - Note: zero `[VERIFY]` on a DRAFT means high agent confidence, not correctness —
+     human review still required.
+2. **`agents/iconix-migration.md` Phase 7 (graph-assisted)** — Confidence summary bullet
+   extended: count literal `[VERIFY]` occurrences across the matching file globs for each
+   artifact group; omit rows for skipped groups; sum to Total.
+
+Manual Phase 7 inherits automatically via "Same template and sections as graph-assisted Phase 7."
+
 ## [1.0.41] — 2026-05-14
 
 **Feature: `/iconix-status` — BR-NNN stats (migration mode, read-only).**

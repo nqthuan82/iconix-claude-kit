@@ -62,6 +62,24 @@
 > Code-walking mode: confidence is uniformly lower. Every artifact is flagged `[VERIFY]`.
 > Treat all outputs as hypotheses until a human confirms the business intent.
 
+### [VERIFY] item breakdown
+
+> Count of `[VERIFY]` markers per artifact group. These are the items the human reviewer
+> must confirm before running `/iconix-promote`. High counts in UC-DRAFTs or RB-DRAFTs
+> are the most critical — they block promotion directly.
+
+| Artifact group | Files | [VERIFY] count |
+|---|---|---|
+| UC-DRAFTs | `use-cases/UC-DRAFT-*.md` | `<N>` |
+| RB-DRAFTs | `robustness/RB-DRAFT-*.puml` | `<N>` |
+| Domain glossary | `migration/domain-glossary.md` | `<N>` |
+| BDD-DRAFTs | `features/BDD-DRAFT-*.feature` | `<N>` (omit row if none generated) |
+| Business rules | `migration/business-rules.md` | `<N>` (omit row if Phase 5d skipped) |
+| **Total** | | **`<N>`** |
+
+> Zero `[VERIFY]` items on a DRAFT does not mean it is correct — it means the agent had
+> high confidence. Human review is still required before promotion.
+
 ---
 
 ## Successfully reverse-engineered
