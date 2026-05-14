@@ -784,6 +784,23 @@ One overview diagram per cluster of related UCs. Reverse-engineered after UC dra
 
 ## Phase 6 — Test coverage mapping (graph-assisted)
 
+### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
+
+If this is an incremental run and Phase 1b produced amendment proposals:
+
+1. Read the `### Amendment proposals (incremental run)` section of
+   `migration/survey-<date>.md`.
+2. For each amended UC-DRAFT, build its **full entry-point set**: original entry
+   points from the previous run's survey + new entry points from the current Phase 1 run.
+3. Carry this full set into Steps 2 and 3 — use it in place of current-run entry points
+   alone when evaluating coverage for that UC-DRAFT.
+4. If `migration/coverage-gaps.md` already exists and was **not** flagged as human-edited
+   by the pre-run idempotency check: after Step 3, update only the rows for amended
+   UC-DRAFTs in-place (do not recreate the whole file). If the file was human-edited:
+   flag as **MANUAL MERGE REQUIRED** in the handoff report and skip the in-place update.
+
+If no amendments exist → skip this step.
+
 ### Step 1 — Locate test nodes
 Query the graph for test nodes. Test nodes are files or classes that match the test-detection patterns for `stack.language`:
 
@@ -811,6 +828,11 @@ For each UC-DRAFT, collect all class nodes from its RB-DRAFT (boundary, controll
 - **Full coverage**: ≥1 integration test calls this UC's entry-point boundary AND exercises its controller chain
 - **Partial coverage**: ≥1 test calls at least one class in this UC's RB-DRAFT, but not the entry point, or only one layer deep
 - **No coverage**: zero tests call any class in this UC's RB-DRAFT
+
+For UC-DRAFTs flagged as amended in Step 0, evaluate coverage against the **full
+entry-point set** (all containers) — a UC spanning Frontend → Backend requires an
+integration test covering the **Frontend** entry point to qualify as Full coverage.
+A test that only covers the Backend entry point downgrades to Partial for that UC.
 
 ### Step 4 — Produce `migration/coverage-gaps.md`
 
@@ -940,6 +962,14 @@ Same as graph-assisted Phase 5b. Without graph clustering you cluster manually:
 
 ## Phase 6 — Test coverage mapping (manual)
 
+### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
+Same as graph-assisted Phase 6 Step 0. If this is an incremental run, read the
+`### Amendment proposals (incremental run)` section of `migration/survey-<date>.md`,
+build the full entry-point set for each amended UC-DRAFT, and carry it into Steps 2–3.
+If `migration/coverage-gaps.md` already exists and was not human-edited, update only the
+amended rows in-place after Step 3; if it was human-edited, flag as MANUAL MERGE REQUIRED.
+If no amendments exist → skip.
+
 ### Step 1 — Locate test files
 Use Glob to find test files using the same language-specific patterns as graph-assisted Phase 6 Step 1. Read `stack.language` from `iconix.config.yaml` to select the right patterns. In multi-repo mode, search each container's resolved test root (from `# Multi-repo source resolution`) rather than `./tests/`.
 
@@ -957,6 +987,11 @@ Same logic as graph-assisted Step 3: for each UC-DRAFT, collect class names from
 In code-walking mode, coverage classification is conservative:
 - Mark as **Full** only when an integration test clearly exercises the entry-point boundary
 - When uncertain (test file content is ambiguous), default to **Partial** and add a `[VERIFY]` note
+
+For UC-DRAFTs flagged as amended in Step 0, use the full entry-point set (all containers)
+— same rule as graph-assisted Step 3: a test covering only the previously-surveyed
+container's entry point downgrades to Partial until the new container's entry point is
+also covered.
 
 ### Step 4 — Produce `migration/coverage-gaps.md`
 Same format as graph-assisted Phase 6 Step 4. Note in the file header: `> Mode: code-walking — coverage classification is conservative; mark integration tests as Partial until confirmed.`

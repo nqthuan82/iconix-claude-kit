@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.16] — 2026-05-14
+
+**Fix: Phase 6 coverage-gaps.md stale after Phase 1b Case 2 amendment (incremental run).**
+
+When a UC-DRAFT is amended in Phase 1b Case 2 (new container added to an existing DRAFT),
+Phase 6 would still evaluate coverage against the old single-container entry point only.
+A test covering Frontend → Backend was downgraded to Partial because the Frontend entry
+point was not in the original coverage-gaps.md row — leading to false coverage gaps.
+
+New `### Step 0 — Sync amended UC-DRAFTs from Phase 1b` added to both Phase 6 modes
+(graph-assisted and code-walking):
+- Reads `### Amendment proposals (incremental run)` from the survey
+- Builds the full entry-point set for each amended UC-DRAFT (old + new containers)
+- Carries this full set into Steps 2–3 so coverage is evaluated across all containers
+- If coverage-gaps.md already exists and was not human-edited: updates only the amended
+  rows in-place. If it was human-edited: flags MANUAL MERGE REQUIRED in handoff report.
+
+Step 3 updated in both modes: UC-DRAFTs with amendments are evaluated against the full
+entry-point set — a test covering only the old container's entry point downgrades to
+Partial until the new container's entry point is also covered.
+
 ## [1.0.15] — 2026-05-14
 
 **Fix: Phase 1b Case 2 — clarify amendment proposals are human-applied, not auto-written.**
