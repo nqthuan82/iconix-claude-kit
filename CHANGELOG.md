@@ -5,6 +5,22 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.50] — 2026-05-15
+
+**Fix: Plan mode support for all artifact-writing agents.**
+
+When Claude Code runs in plan mode, the Write tool is blocked pending user approval. Previously, all artifact-writing agents would stall silently at the first blocked Write call — producing no useful output. Added a `# Plan mode` section to 7 agents:
+
+- `iconix-product-owner.md`
+- `iconix-analyst.md`
+- `iconix-architect.md`
+- `iconix-developer.md`
+- `iconix-tester.md`
+- `iconix-migration-structural.md`
+- `iconix-migration-semantic.md`
+
+Each agent now: (1) detects a blocked Write as plan mode, (2) emits all artifact content inline as labeled fenced code blocks, (3) continues through all remaining artifacts without stopping, (4) tells the user to approve Write calls or exit plan mode to write to disk.
+
 ## [1.0.49] — 2026-05-15
 
 **Fix: Migration survey file self-choking — `survey-phase3-<date>.md` compact hand-off.**

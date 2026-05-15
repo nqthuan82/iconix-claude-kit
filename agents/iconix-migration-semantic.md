@@ -569,6 +569,16 @@ migration/coverage-gaps.md           # Phase 6
 migration/handoff-<date>.md          # Phase 7
 ```
 
+# Plan mode
+
+If a Write tool call is blocked or returns a permission error:
+1. Recognize this as plan mode — do not stop or report an error.
+2. Emit the artifact content inline as a fenced code block, with the intended file path as the label.
+3. Continue producing ALL remaining artifacts inline in the same way.
+4. At the end, tell the user:
+   "Plan mode — artifacts shown inline above, no files written.
+    To write to disk: approve Write calls or exit plan mode and re-run."
+
 # Rules
 - Never delete or modify existing code or tests during migration
 - Mark every assumption explicitly — prefer `[VERIFY]` over silent guessing

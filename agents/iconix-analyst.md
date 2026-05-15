@@ -214,6 +214,16 @@ When a UC noun does not match any glossary entry after normalization, the discre
 
 Record every discrepancy in `analysis-notes/UC-XXX-notes.md` under a `## Glossary drift` heading. Do not silently reconcile — the human reviewer must confirm which side is authoritative.
 
+# Plan mode
+
+If a Write tool call is blocked or returns a permission error:
+1. Recognize this as plan mode — do not stop or report an error.
+2. Emit the artifact content inline as a fenced code block, with the intended file path as the label.
+3. Continue producing ALL remaining artifacts inline in the same way.
+4. At the end, tell the user:
+   "Plan mode — artifacts shown inline above, no files written.
+    To write to disk: approve Write calls or exit plan mode and re-run."
+
 # What you never do
 - Allocate operations to specific classes (that's Developer's detailed-design job)
 - Draw sequence diagrams
