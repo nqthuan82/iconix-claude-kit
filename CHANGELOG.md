@@ -5,6 +5,29 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.56] — 2026-05-15
+
+**Feature: `[VERIFY]` severity tiers (HIGH / MEDIUM / LOW) in migration artifacts and handoff report.**
+
+On large systems (15–20 containers), handoff reports can contain 200–400 `[VERIFY]` markers
+all appearing at equal weight. Reviewers cannot identify what to resolve first.
+
+**Semantic agent — `# [VERIFY] severity classification` section (new):**
+Every `[VERIFY]` marker now carries a tier suffix: `[VERIFY:HIGH]`, `[VERIFY:MEDIUM]`, or `[VERIFY:LOW]`.
+Classification rules applied throughout all phases:
+
+- **HIGH** — blocks promotion; resolve before `/iconix-promote`: cross-container UC grouping (MEDIUM confidence), AMBIGUOUS graph edges, SQL-only state machine sequences, INFERRED Invariant/Transition-guard business rules, unknown actor identity, unclear try/catch alternate courses.
+- **MEDIUM** — resolve before M1/M2 gate: specific-but-unconfirmed actor role names, try/catch alternate courses with plausible intent, INFERRED Precondition/Authorization/Workflow rules, ORM enum state machine sequences (order reliable, meaning needs PO sign-off).
+- **LOW** — cosmetic; review last: FK-derived preconditions, stored procedure verb mappings, EXTRACTED attribute names, Track V validator rules, UC package cluster groupings.
+
+**Semantic agent — Phase 7 instruction updated:**
+Populate both `### [VERIFY] priority summary` and `### [VERIFY] breakdown by artifact group` tables with HIGH/MEDIUM/LOW counts per artifact group.
+
+**`templates/handoff-report-template.md` updated:**
+Replaced the single-count `### [VERIFY] item breakdown` table with:
+- `### [VERIFY] priority summary` — cross-tab (tier × artifact group) showing total per tier at a glance
+- `### [VERIFY] breakdown by artifact group` — per-artifact-group HIGH/MEDIUM/LOW columns
+
 ## [1.0.55] — 2026-05-15
 
 **Fix: BDD generation in reverse-order workflow (application scope before DB scope).**

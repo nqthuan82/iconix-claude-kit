@@ -29,6 +29,44 @@ After the gate check, state the mode and confirm which RB-DRAFTs and SD-DRAFTs a
 
 ---
 
+# [VERIFY] severity classification
+
+Every `[VERIFY]` marker must carry a severity tier: `[VERIFY:HIGH]`, `[VERIFY:MEDIUM]`, or `[VERIFY:LOW]`. Apply throughout all phases. The handoff report Phase 7 summary counts markers by tier.
+
+## HIGH — blocks promotion; resolve before `/iconix-promote`
+
+| Source | Examples |
+|---|---|
+| Cross-container UC grouping — MEDIUM confidence | URL prefix match only; method differs; "are these the same use case?" unclear |
+| AMBIGUOUS graph edge used in any artifact | Concrete implementation unknown; cannot determine correct class |
+| State machine sequence from SQL heuristic only (no ORM enum) | Transition order inferred from CHECK IN values alone — often wrong |
+| Business rule Invariant or Transition guard from Track D or T (INFERRED) | Domain guard clause or trigger RAISERROR inferred as invariant |
+| UC actor identity unknown or generic | Actor shown as "User", "System", or "Unknown" — cannot identify from code |
+| Missing alternate course — try/catch present, business intent unknown | Exception handler found but whether it is a real user journey is unclear |
+
+## MEDIUM — affects artifact quality; resolve before M1/M2 gate
+
+| Source | Examples |
+|---|---|
+| Actor role name specific but unconfirmed | `Manager`, `Operator`, `Admin` — plausible from code context, not confirmed |
+| Alternate course inferred from try/catch (intent is plausible) | Error mapped to alternate course — confirm it is a real user journey |
+| Business rule Precondition, Authorization, or Workflow from Track D or T | INFERRED but lower-stakes than invariants and transition guards |
+| State machine sequence from ORM enum (EXTRACTED order) | Declaration order reliable; business meaning of each state needs PO sign-off |
+| MEDIUM-confidence cross-container grouping | URL prefix match with matching method — grouping likely correct but not certain |
+
+## LOW — cosmetic; review last or skip under deadline pressure
+
+| Source | Examples |
+|---|---|
+| FK-derived precondition | `Customer must exist` — almost always correct from FK constraint |
+| Stored procedure verb → operation name | `sp_ApproveOrder → Approve` — reliably accurate |
+| Entity or attribute names from ORM or SQL schema (EXTRACTED) | Field names from class definitions or normalized table names |
+| Business rules from Track V (validator annotations, EXTRACTED) | `[NotNull]`, `[Range]`, `[StringLength]` — accurate, low business risk |
+| UC package cluster grouping | Namespace/directory-based grouping — structural, not semantic |
+| Cross-container grouping — HIGH confidence | Exact URL + method match; almost certainly correct |
+
+---
+
 # Workflow — Graph-assisted mode (Phases 5–7)
 
 ## Phase 5 — Use case draft (graph-assisted)
@@ -512,7 +550,7 @@ Use `templates/handoff-report-template.md` (or `docs/iconix/templates/handoff-re
 Fill in every section:
 - **Migration run:** mode, phases completed, scope, previous run date
 - **Artifact inventory:** one row per output file; mark Skipped items with reason
-- **Confidence summary:** EXTRACTED / INFERRED / AMBIGUOUS counts per artifact type; overall % confidence. Populate the `### [VERIFY] item breakdown` table: count occurrences of `[VERIFY]` across UC-DRAFTs, RB-DRAFTs, domain-glossary.md, BDD-DRAFTs, business-rules.md per artifact group. Sum to a Total row.
+- **Confidence summary:** EXTRACTED / INFERRED / AMBIGUOUS counts per artifact type; overall % confidence. Populate the `### [VERIFY] priority summary` table and `### [VERIFY] breakdown by artifact group` table: count occurrences of `[VERIFY:HIGH]`, `[VERIFY:MEDIUM]`, and `[VERIFY:LOW]` markers across UC-DRAFTs, RB-DRAFTs, domain-glossary.md, BDD-DRAFTs, business-rules.md. Sum each tier and each artifact group to a Total row. Apply tier rules from `# [VERIFY] severity classification` above.
 - **Successfully reverse-engineered:** entry point count, layer count, class count, UC count
 - **Business intent gaps:** UC-DRAFTs where alternate courses or actor intent needs PO input
 - **NFR gaps:** observed signals (retry loops, auth checks) that imply an NFR but lack a formal target
