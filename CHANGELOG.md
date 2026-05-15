@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.51] — 2026-05-15
+
+**Feature: Migration scoped execution — `--scope` and `--max-uc` parameters.**
+
+Large systems (500+ entry points) previously required a full single-run migration. Added two optional parameters for incremental, prioritized migration:
+
+- **`--scope <ContainerName>`** — survey only entry points from the named container in Phase 1. Other containers are skipped this run. Combine with subsequent runs (`--scope PaymentService`, `--scope UserService`) to process containers incrementally.
+- **`--max-uc N`** — cap UC-DRAFT production at N in Phase 5 (semantic), ordered by confidence (EXTRACTED first). Remaining entry points are listed at the end with a re-run suggestion.
+
+**Cross-container UC handling:** `--scope` does not filter Phase 1b cross-container correlation. Phase 1b always loads all `migration/survey-phase1-*.md` files from previous runs to detect UCs spanning multiple containers. A UC-DRAFT created for OrderService in Run 1 will be proposed as an amendment (not duplicated) when PaymentService is scoped in Run 2 and the pairing is detected.
+
+Files changed:
+- `agents/iconix-migration-infra.md` — `# Scope and run parameters` section added; checkpoint template gains `max_uc` field; `scope` and `max_uc` populated from user message.
+- `agents/iconix-migration-structural.md` — scope filter gate added after entry gate; Phase 1b Step 0 (both modes) gains explicit note: load all surveys regardless of scope.
+- `agents/iconix-migration-semantic.md` — Phase 5 (both modes) gains max-uc cap logic with remaining-entry-points log.
+- `agents/iconix-migration.md` (thin router) — Case A shows optional parameters and example.
+
 ## [1.0.50] — 2026-05-15
 
 **Fix: Plan mode support for all artifact-writing agents.**

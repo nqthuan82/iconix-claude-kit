@@ -36,6 +36,18 @@ Before drafting, read the `## Cross-container boundary correlation` section in
 `migration/survey-phase3-<date>.md` (compact hand-off from structural). Entry points in the same proposed
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
+**Max-uc cap:** If `max_uc` field in the checkpoint is non-null:
+- Draft UC-DRAFTs ordered by entry-point confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
+- Stop after producing `max_uc` UC-DRAFTs.
+- After reaching the cap, log:
+  ```
+  Max-uc cap reached: <N> UC-DRAFTs produced (<M> entry points remaining).
+  Remaining entry points: <list of entry point names/routes not yet drafted>
+  To continue: re-run iconix-migration-infra with same scope (or a different --scope)
+  after the current batch's pipeline is complete.
+  ```
+- Continue to Phase 5b, 5c, 5d, 6, 7 using only the UC-DRAFTs produced in this run.
+
 From each robustness diagram + relevant doc nodes from the graph:
 
 1. Query the graph for documentation nodes (PDF, MD, comments) related to this entry point
@@ -501,7 +513,7 @@ Fill in every section:
 # Workflow — Code-walking mode (Phases 5–7)
 
 ## Phase 5 — Use case draft (manual)
-Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
+Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Apply the same max-uc cap logic as graph-assisted Phase 5 if `max_uc` is set in the checkpoint. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
 
 ## Phase 5b — Use case package overview synthesis (manual)
 Same as graph-assisted Phase 5b. Without graph clustering, cluster manually:

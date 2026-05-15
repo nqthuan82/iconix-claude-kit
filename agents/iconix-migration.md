@@ -29,6 +29,13 @@ No migration checkpoint found. Starting fresh migration.
 Step 1 of 3: Run iconix-migration-infra
   It will: detect mode, resolve source roots, check idempotency, build the dependency
   registry, and write the initial checkpoint.
+
+  Optional parameters (for large systems):
+    --scope <ContainerName>   Survey only this container (e.g. --scope OrderService)
+    --max-uc N                Stop after N UC-DRAFTs (e.g. --max-uc 20)
+
+  Example: "Run iconix-migration-infra --scope OrderService --max-uc 20"
+  Run again with a different --scope after each batch's pipeline completes.
 ```
 STOP. Do not invoke infra yourself — Claude Code will invoke the sub-agent when the user runs it.
 

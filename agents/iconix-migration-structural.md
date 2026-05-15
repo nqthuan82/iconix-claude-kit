@@ -25,6 +25,11 @@ registry in context for Phases 2–4.
 
 After the gate check, state the mode and entry_point_count from the checkpoint.
 
+**Scope filter:** If `scope` field in the checkpoint is non-null:
+- Phase 1: survey ONLY entry points from the container named in `scope`. Skip all other containers entirely.
+- Log at the start of Phase 1: `Scope active: processing <scope> only. Other containers skipped this run.`
+- Phase 1b: load ALL `migration/survey-phase1-*.md` files from previous runs regardless of scope. The scope filter applies only to Phase 1 entry-point collection — cross-container pairing detection requires complete historical data from all containers.
+
 ---
 
 # Workflow — Graph-assisted mode
@@ -110,6 +115,8 @@ Run this step in **both modes** immediately after Phase 1 completes for all cont
 This phase answers: *are two entry points in different containers actually two ends of the same user-visible use case?* Without it, a user action flowing Frontend → Backend API → Database would produce separate UC-DRAFTs per container instead of one unified UC.
 
 ### Step 0 — Detect incremental run and load previous boundary data
+
+**Scope note:** When `scope` is active in the checkpoint, this step still scans ALL `migration/survey-phase1-*.md` files — do not filter by scope. Cross-container UC pairing requires complete historical data. A UC spanning OrderService (Run 1) and PaymentService (Run 2) can only be detected when Run 2's Phase 1b loads Run 1's survey.
 
 1. Scan `migration/survey-phase1-*.md` — if previous surveys exist, load the most recent. For each container listed in its **Containers surveyed** table:
    - If **not** in the current run's surveyed set → it is a **previous-run container**. Load its inbound/outbound boundary data from the `## Cross-container boundary correlation` section of the old survey (if present), OR re-derive its entry points from the old survey's **Entry points** section.
@@ -376,6 +383,8 @@ A filtered projection of the class model — entities only, attributes only, rea
 
 ## Phase 1b — Cross-container boundary correlation (multi-repo mode only)
 Same as graph-assisted Phase 1b above. Key difference: for Step 2 (outbound calls), grep for HTTP client usage patterns and topic names rather than querying graph nodes. All other steps (0–5) are identical.
+
+**Scope note (Step 0):** When `scope` is active, still scan ALL `migration/survey-phase1-*.md` files — do not filter by scope. Cross-container pairing requires complete historical data across all runs.
 
 ## Phase 2 — Class model extraction (manual)
 1. Parse classes via grep/AST tools available; capture fields and public methods.
