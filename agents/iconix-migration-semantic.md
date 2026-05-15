@@ -164,9 +164,13 @@ One file for the whole migration run (all containers merged; in multi-repo mode 
 
 Before running Step 4, evaluate:
 1. **`stack.bdd` in `iconix.config.yaml`** — if `false` or absent: log `Phase 5c Steps 4–6 skipped — stack.bdd: false. Domain glossary produced at migration/domain-glossary.md.` Move to Phase 6.
-2. **UC-DRAFTs exist** — if no `docs/use-cases/UC-DRAFT-*.md` files found: log `Phase 5c Steps 4–6 skipped — no UC-DRAFTs found. Domain glossary produced.` Move to Phase 6.
+2. **UC-DRAFTs exist (project-wide scan)** — scan ALL `use-cases/UC-DRAFT-*.md` in the project, including those from previous scope runs. If none found anywhere: log `Phase 5c Steps 4–6 skipped — no UC-DRAFTs found in project. Domain glossary produced.` Move to Phase 6.
+   - **Database container scope:** When the current scope has schema sources but zero entry points (database container run), this project-wide scan is critical — it finds UC-DRAFTs produced by earlier application-container runs and generates BDD for them. This makes the reverse-order workflow (application scope first, DB scope second) produce BDD without requiring a third run.
+   - **Duplicate guard:** skip any UC-DRAFT that already has a corresponding `features/BDD-DRAFT-<same-slug>.feature` file — it was processed in a previous run.
 
 ### Step 4 — Map UC-DRAFTs to glossary entities
+
+Process ALL UC-DRAFTs that passed the gate above — both those produced in this run and those from previous scope runs found in the project-wide scan. Skip any UC-DRAFT that already has a `features/BDD-DRAFT-*.feature` file (already processed).
 
 For each UC-DRAFT-XXX:
 1. Read Actor, Preconditions, main course, alternate courses.
@@ -623,7 +627,7 @@ If a Write tool call is blocked or returns a permission error:
 <gate id="semantic-complete" mandatory="true">
 Before stopping, verify:
   1. migration/checkpoint-<date>.json updated with phases_completed: ["infra", "structural", "semantic"] and next_phase: "review"
-  2. At least one UC-DRAFT-*.md exists in use-cases/
+  2. At least one UC-DRAFT-*.md exists in use-cases/ — OR the current scope is a database container (schema sources found, zero entry points in scope), in which case zero UC-DRAFTs is expected and acceptable.
   3. migration/handoff-<date>.md exists
   4. migration/domain-glossary.md exists (or Phase 5c was explicitly skipped — log the reason)
 

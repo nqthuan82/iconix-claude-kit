@@ -5,6 +5,43 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.55] — 2026-05-15
+
+**Fix: BDD generation in reverse-order workflow (application scope before DB scope).**
+
+When a user runs `--scope ServiceA` first (producing UC-DRAFTs) and then runs `--scope DatabaseContainer` (producing domain-glossary.md), the semantic agent now correctly generates BDD for ServiceA's UC-DRAFTs during the DB container run — without requiring a third run.
+
+Two targeted fixes in `iconix-migration-semantic.md`:
+
+**1. Phase 5c Gate (Steps 4–6) — project-wide UC-DRAFT scan:**
+Clarified that the gate scans ALL `use-cases/UC-DRAFT-*.md` project-wide (including those from previous scope runs), not just UC-DRAFTs produced in the current run. Added explicit database-container note: when schema sources exist but zero entry points are found in scope, the project-wide scan is the primary mechanism for finding UC-DRAFTs to generate BDD for. Added duplicate guard: skip UC-DRAFTs that already have a corresponding `BDD-DRAFT-*.feature` file.
+
+**2. Phase 5c Step 4 — explicit scope:**
+Added leading instruction: process ALL UC-DRAFTs that passed the gate (current run + previous runs); skip those already having BDD-DRAFT files.
+
+**3. `semantic-complete` gate — condition 2 loosened:**
+Zero UC-DRAFTs is now acceptable when the current scope is a database container (schema found, zero entry points). Previously this would fail the completion check even though it's expected behavior for a DB-scoped run.
+
+Correct incremental workflows now supported in both orders:
+```
+Order 1 (recommended): --scope DB → glossary  →  --scope App → BDD via Case B
+Order 2 (also works):  --scope App → UC-DRAFTs  →  --scope DB → glossary + BDD for App's UCs
+```
+
+## [1.0.54] — 2026-05-15
+
+**Fix: Database container readiness warning for scoped runs.**
+
+When running `--scope <AppContainer>` and database-like containers exist but no `domain-glossary.md` has been built yet, the migration infra agent now stops and warns the user before proceeding:
+
+- Detects containers with SQL schema files and zero application entry points
+- Warns that Phase 5c BDD generation will be silently skipped without a glossary
+- Presents two options: cancel (run DB container first) or continue (get UC-DRAFTs now, BDD later)
+- Waits for user reply before writing the checkpoint
+- Skip condition: if `domain-glossary.md` already exists (DB run already done), warning is suppressed — Phase 5c Case B will fire and BDD will be generated normally
+
+This prevents the "why didn't I get BDD?" confusion that occurs when a user runs an application container before the database container in a `.sqlproj` / SqlClient architecture.
+
 ## [1.0.53] — 2026-05-15
 
 **Feature: `model:` field in all agent frontmatter — 3-tier model assignment.**

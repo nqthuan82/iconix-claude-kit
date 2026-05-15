@@ -235,6 +235,53 @@ Before starting Phase 1, output a pre-run summary:
 
 If all artifacts are already promoted or human-edited, abort and tell the user there is nothing left to migrate.
 
+## Step 4b — Database container readiness check (scoped runs only)
+
+Run this check only when `scope` is non-null AND the current scope container is an application container (has entry points such as controllers, handlers, CLI, gRPC services).
+
+**Step 1 — Detect database-like containers in config**
+
+Scan all containers in `architecture.containers` *other than* the current scope. For each, check for database container signals:
+- Schema files present: `*.sql`, `*.sqlproj`, `schema.prisma`, `V*__*.sql`, `*.flyway.sql`, `db/migrate/*.rb`, `alembic/versions/*.py`
+- Zero application entry points (no controllers, handlers, gRPC services, CLI entry points)
+
+**Step 2 — Check for existing domain-glossary.md**
+
+Check whether `migration/domain-glossary.md` exists.
+
+**Step 3 — Warn if needed**
+
+If **at least one database-like container is found** AND **no `domain-glossary.md` exists**, STOP and output:
+
+```
+⚠️  Database container detected — BDD generation will be skipped
+
+Containers with SQL schema files and no entry points:
+  - <ContainerName(s)>
+
+No domain-glossary.md exists yet. Continuing with --scope <AppContainer> will:
+  ✅ Produce UC-DRAFTs and structural artifacts
+  ⛔ Skip BDD generation (Phase 5c) — no schema in scope, no glossary from a previous DB run
+
+Options:
+  1. Cancel  — run `--scope <DBContainerName>` first to build domain-glossary.md,
+               then return to `--scope <AppContainer>` to get BDD alongside UC-DRAFTs
+  2. Continue — get UC-DRAFTs now; re-run `--scope <AppContainer>` after the DB
+               container run to generate BDD from the glossary
+
+Reply "continue" or "cancel".
+```
+
+Wait for user reply before proceeding.
+- **"cancel"**: STOP. Do not write checkpoint. Do not proceed further.
+- **"continue"**: proceed to Step 5 normally.
+
+**Step 4 — Skip condition**
+
+If `domain-glossary.md` already exists → skip this warning entirely (Phase 5c Case B will fire — BDD will be generated from the existing glossary). Proceed directly to Step 5.
+
+---
+
 ## Step 5 — Write initial checkpoint
 
 After the idempotency check passes and before Phase 1 runs, write `migration/checkpoint-<date>.json`:
