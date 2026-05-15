@@ -1,6 +1,6 @@
 ---
 name: iconix-upgrade
-description: Use to migrate an existing iconix-kit installation from an older version to the current one. Auto-applies safe additive changes (folders, config sections with conservative defaults, reference templates, CI files); produces a detect-and-report for project artifacts. Read-only on UCs, RBs, SDs, source code, tests, and bug reports.
+description: Migrate an existing iconix-kit installation to the current kit version. Auto-applies safe additive changes (folders, conservative config defaults, reference templates, CI files); detect-and-report for project artifacts (UCs, RBs, SDs, source code, tests, and bug reports are never modified).
 model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---

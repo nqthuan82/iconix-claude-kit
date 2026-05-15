@@ -5,6 +5,40 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.61] — 2026-05-15
+
+**Frontmatter polish + iconix-docs structure normalization.**
+
+Closes the remaining "quality" items from the v1.0.58 audit. No methodology or
+behavior changes — purely frontmatter trimming and section-header consistency.
+
+**Description rewrites** (frontmatter `description:` is a routing signal; shorter +
+evergreen helps Claude pick the right agent faster):
+- `iconix-migration`: 700 → 336 chars. Was 5 sentences mixing role, capabilities,
+  Graphify caveat, and implementation detail. Now 3 short sentences focused on
+  routing identity + dispatch targets.
+- `iconix-upgrade`: 340 → 291 chars. Folded the read-only artifact list into a
+  parenthetical inside the detect-and-report sentence; dropped the redundant
+  "Use to" opener.
+- `iconix-metrics`: dropped the trailing `v0.9.7+.` version tag. Frontmatter
+  descriptions should be evergreen — agent versioning lives in CHANGELOG, not in
+  the routing description that Claude reads on every dispatch.
+
+**`iconix-docs.md` section normalization:**
+- Renamed `# Translation rules` → `# Rules` to match the standard header used by
+  6 other agents (git, metrics, migration-{infra,semantic,structural}, upgrade).
+  Content unchanged — translation IS this agent's rule set, so the original name
+  was just a less-discoverable synonym.
+- Added `# Plan mode` block (8 lines, copy of the standard incantation used by
+  analyst, architect, developer, tester, product-owner, and the migration
+  sub-agents). The docs agent writes to `docs/user-guide/`, `docs/dev-guide/`,
+  etc. — it needed the standard plan-mode fallback so a blocked Write surfaces
+  inline content instead of an error.
+
+Section order for `iconix-docs.md` is now: Role → Inputs → Documentation types →
+Rules → Workflow → Plan mode → What you never do → Quality checks — matches the
+canonical pattern across the kit.
+
 ## [1.0.60] — 2026-05-15
 
 **Guardrails: CI token-budget check + in-session sync-reminder hook.**
