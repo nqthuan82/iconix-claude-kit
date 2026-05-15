@@ -5,6 +5,44 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.58] — 2026-05-15
+
+**Agent prompt audit fixes — runtime bug, frontmatter completeness, dedupe, doc drift.**
+
+Four targeted fixes surfaced by an audit of all 16 agent prompts:
+
+1. **`iconix-reviewer` — added `Write` to tools (runtime bug).** The agent body
+   instructs it to produce `reviews/REVIEW-<date>-<scope>.md` at four places
+   (lines 75, 141, 161, 234), but the tools list omitted `Write`. Any review
+   invocation would have failed at the first write attempt. `Write` now added.
+
+2. **`iconix-docs` and `iconix-upgrade` — added `model:` field.** v1.0.53
+   established 3-tier model assignment across all agent frontmatter; these two
+   were missed. Both assigned to `claude-sonnet-4-6` (balanced tier: docs does
+   prose transformation, upgrade does detection + diff computation — neither
+   needs Opus reasoning, neither is purely mechanical).
+
+3. **Deduped `# Honest limitations` section.** The block existed in both
+   `iconix-migration.md` (router) and `iconix-migration-infra.md` (Phase 0
+   sub-agent), violating the "Grep before writing" rule in CLAUDE.md
+   `## Agent prompt discipline`. Router is the user's first contact with the
+   migration pipeline, so the canonical copy stays there; infra now carries a
+   single-line pointer back to the router. The router-side copy also picked up
+   the bullet about traceability recovery that previously only lived in infra,
+   so no information is lost.
+
+4. **CLAUDE.md doc drift — counts and token budget table refreshed.**
+   - `## What This Repo Is`: agent count 10 → 16, command count 7 → 14
+     (actual counts from `agents/*.md` and `commands/*.md`).
+   - `## Agent token budget`: numbers re-measured (chars/4). Highest-risk flag
+     moved from `migration-semantic` (now ~10,650 tokens after v1.0.52's BDD
+     table extract) to `migration-structural` (now ~9,750 tokens, grown 37%
+     from its registered ~7,100 baseline and approaching the 10K soft ceiling).
+
+No methodology surface changes; no template, command, or pipeline-order changes.
+README.md agent/command counts were already correct (line 165 says "16 agent
+definitions") — only CLAUDE.md was stale.
+
 ## [1.0.57] — 2026-05-15
 
 **CI: Windows smoke test for PowerShell installer (`iconix-init.ps1`).**

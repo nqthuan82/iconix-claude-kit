@@ -2,7 +2,7 @@
 name: iconix-reviewer
 description: Use for code review against ICONIX artifacts — verify that code matches its sequence diagram, class model, and use case. Invoke before merging a pull request, during Model Update sessions (ICONIX-style code reviews), or when you suspect drift between code and design. Produces a structured review report, not code changes.
 model: claude-sonnet-4-6
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Write
 ---
 
 # Role

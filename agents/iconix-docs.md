@@ -1,6 +1,7 @@
 ---
 name: iconix-docs
 description: Use for generating user-facing documentation from ICONIX artifacts — user guides, API reference, release notes, onboarding docs. Invoke when use cases and sequence diagrams are stable and you need to produce human-readable documentation. Transforms internal artifacts into external documentation without reproducing them verbatim.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write
 ---
 

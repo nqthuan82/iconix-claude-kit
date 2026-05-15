@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Is
 
-**iconix-kit** is a portable Claude Code agent kit that applies the ICONIX software-development methodology (requirements → use cases → robustness → architecture → design → testing) to any software project. It ships 10 sub-agent definitions (`agents/`), 7 slash commands (`commands/`), installer scripts, and templates. There is no compiled code — agents and commands are Markdown files with YAML frontmatter consumed by Claude Code.
+**iconix-kit** is a portable Claude Code agent kit that applies the ICONIX software-development methodology (requirements → use cases → robustness → architecture → design → testing) to any software project. It ships 16 sub-agent definitions (`agents/`), 14 slash commands (`commands/`), installer scripts, and templates. There is no compiled code — agents and commands are Markdown files with YAML frontmatter consumed by Claude Code.
 
 ## Validation & Testing
 
@@ -94,6 +94,30 @@ description: <one-line summary>
 ```
 
 Missing or malformed frontmatter will fail CI. Agent names must be globally unique across all files in `agents/`.
+
+## Agent token budget
+
+**Priority instruction:** Token size is a first-class concern when modifying agent files. Check impact before and after every non-trivial change.
+
+Current budget status (chars/4 estimate, refresh when files change materially):
+
+| Agent | Approximate tokens | Status |
+|---|---|---|
+| `iconix-migration-semantic.md` | ~10,650 | ✅ (reduced from ~15,400 after BDD-table extract in v1.0.52) |
+| `iconix-migration-structural.md` | ~9,750 | 🟡 highest risk — grew from ~7,100; nearing 10K ceiling |
+| `iconix-migration-infra.md` | ~7,870 | ✅ |
+| `iconix-migration.md` (router) | ~1,150 | ✅ |
+| All other agents | < 6,000 each | ✅ |
+
+Before adding content to any agent that is near or over budget:
+
+1. **Extract lookup tables to a reference file** — move static reference material (language detection tables, cross-stack lookup grids, enum lists) to `docs/iconix/templates/` and replace with a single `Read <file> before Step X` instruction. This is how Phase 5c BDD tables were moved to `migration-schema-detection-reference.md`, reducing semantic by ~6K tokens.
+
+2. **Grep before writing** — if the same instruction already exists in another agent, do not duplicate it; reference or cross-link instead.
+
+3. **Prefer XML gate tags over markdown headers** for mandatory STOP points — they are shorter and more reliably parsed at long context: `<gate id="x" mandatory="true">...</gate>`.
+
+4. **`iconix-migration-structural.md` is now highest risk** — at ~9,750 tokens it has grown 37% from its baseline and is approaching the 10K soft ceiling. Any addition to this file must first identify something that can be extracted or removed to compensate (consider extracting the Phase 3 call-path enumeration tables to `docs/iconix/templates/`).
 
 ## Agent prompt discipline
 
