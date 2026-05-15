@@ -1,6 +1,7 @@
 ---
 name: iconix-migration-infra
 description: First sub-agent in the ICONIX migration pipeline. Invoke after iconix-migration routes here. Runs pre-flight checks (idempotency, dependency recon, cross-container boundary correlation) and writes migration/checkpoint-<date>.json before handing off to iconix-migration-structural. Do not invoke directly — use iconix-migration as the entry point.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write, Bash
 ---
 

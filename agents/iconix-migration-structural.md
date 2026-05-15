@@ -1,6 +1,7 @@
 ---
 name: iconix-migration-structural
 description: Second sub-agent in the ICONIX migration pipeline. Invoked by iconix-migration after iconix-migration-infra completes. Runs Phases 0–4b (graph readiness, code survey, cross-container correlation, class model, sequence diagrams, robustness diagrams, domain model) and writes migration/survey-phase1-<date>.md. Do not invoke directly — use iconix-migration as the entry point.
+model: claude-opus-4-7
 tools: Read, Grep, Glob, Write, Bash
 ---
 

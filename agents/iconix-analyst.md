@@ -1,6 +1,7 @@
 ---
 name: iconix-analyst
 description: Use for robustness analysis, domain model updates, use case disambiguation, and Preliminary Design Review (PDR) prep. Invoke after use cases exist and before sequence diagramming. Also invoke when use case text is ambiguous or when the domain model needs updating.
+model: claude-opus-4-7
 tools: Read, Grep, Glob, Write
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: iconix-tester
 description: Use for deriving test cases from use cases and robustness diagrams, generating Gherkin scenarios, producing boundary/edge cases, and maintaining the regression traceability matrix. Invoke whenever a new use case or robustness diagram is finalized. Also invoke before each release to verify coverage.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 

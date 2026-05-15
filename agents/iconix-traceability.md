@@ -1,6 +1,7 @@
 ---
 name: iconix-traceability
 description: Use for allocating new IDs, validating upstream/downstream links between artifacts, detecting orphans, analyzing change impact, and producing milestone gate reports. Invoke after any batch of artifacts is produced, before every milestone review, and whenever a requirement changes.
+model: claude-haiku-4-5-20251001
 tools: Read, Grep, Glob, Write
 ---
 

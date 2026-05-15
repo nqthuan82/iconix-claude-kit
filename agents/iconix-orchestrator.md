@@ -1,6 +1,7 @@
 ---
 name: iconix-orchestrator
 description: Use as the entry point for any ICONIX workflow. Invoke to plan which agent(s) to run for a given input, enforce ICONIX phase order (Requirements → Analysis → PDR → Detailed Design → CDR → Code/Test), and prevent analysis paralysis. Route work by reading iconix.config.yaml and current artifact state.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write
 ---
 

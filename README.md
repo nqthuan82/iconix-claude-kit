@@ -880,12 +880,28 @@ Use plan mode **before** committing to a pipeline step:
 Avoid plan mode when you need artifacts written (robustness diagrams, sequence diagrams,
 use cases, test cases). Exit plan mode first, then invoke the agent.
 
-### Current limitation
+### Plan-mode aware agents (v1.0.50+)
 
-ICONIX agents have no built-in plan mode awareness — they will simply stall at the first
-`Write` call rather than gracefully switching to inline output. If you regularly use plan
-mode for design review, consider adding a `# Plan mode` section to the relevant agent
-files instructing them to emit artifact content inline when `Write` is unavailable.
+The following agents emit artifact content inline as fenced code blocks when `Write` is blocked, then continue producing all remaining artifacts in the same response:
+
+| Agent | Plan mode behaviour |
+|---|---|
+| **Product Owner, Analyst, Architect, Developer, Tester** | Full — emits `.md` / `.puml` artifacts inline; completes all steps without stopping |
+| **Migration-structural, Migration-semantic** | Full — emits DRAFT artifacts inline |
+
+**Remaining limitation:** `iconix-reviewer`, `iconix-docs`, and `iconix-migration-infra` are not yet plan-mode aware. Infra also loses `Bash` (cannot write the checkpoint file). Exit plan mode before invoking these agents.
+
+## Model assignments (v1.0.53+)
+
+Each agent is pinned to the optimal Claude model via the `model:` field in its frontmatter. The kit produces correct-quality output regardless of which model is selected in the user's session.
+
+| Model | Agents | Rationale |
+|---|---|---|
+| **Opus** (`claude-opus-4-7`) | `iconix-analyst`, `iconix-architect`, `iconix-migration-structural`, `iconix-migration-semantic` | Heavy reasoning: domain model, ADR design decisions, graph path analysis, UC drafting from code |
+| **Sonnet** (`claude-sonnet-4-6`) | `iconix-orchestrator`, `iconix-developer`, `iconix-tester`, `iconix-product-owner`, `iconix-reviewer`, `iconix-migration`, `iconix-migration-infra` | Structured rules + judgment; Sonnet is sufficient and substantially cheaper than Opus |
+| **Haiku** (`claude-haiku-4-5-20251001`) | `iconix-traceability`, `iconix-git`, `iconix-metrics` | Pattern matching, ID validation, counting — no open-ended reasoning required |
+
+The four Opus agents are the kit's most expensive invocations. They cover design-quality-critical work where model capability has a direct impact on artifact correctness.
 
 ## Updating the kit
 

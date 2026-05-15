@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.53] — 2026-05-15
+
+**Feature: `model:` field in all agent frontmatter — 3-tier model assignment.**
+
+Pins each agent to the optimal Claude model so kit quality and cost are consistent regardless of the user's session model. Three tiers:
+
+- **Opus (`claude-opus-4-7`)** — heavy reasoning / artifact generation from code: `iconix-analyst`, `iconix-architect`, `iconix-migration-structural`, `iconix-migration-semantic`
+- **Sonnet (`claude-sonnet-4-6`)** — structured rules + good judgment: `iconix-orchestrator`, `iconix-developer`, `iconix-tester`, `iconix-product-owner`, `iconix-reviewer`, `iconix-migration`, `iconix-migration-infra`
+- **Haiku (`claude-haiku-4-5-20251001`)** — pattern matching / counting / validation: `iconix-traceability`, `iconix-git`, `iconix-metrics`
+
+Before this change, all agents ran on the user's session model — a user on a Haiku session for cost reasons would unknowingly run Analyst and Architect on Haiku, producing lower-quality design artifacts. Now the kit "just works" regardless of session model.
+
 ## [1.0.52] — 2026-05-15
 
 **Fix: Phase 5c BDD generation with dedicated database containers and incremental scoped runs.**

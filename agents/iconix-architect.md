@@ -1,6 +1,7 @@
 ---
 name: iconix-architect
 description: Use for package decomposition, mapping use cases to existing architecture components, NFR annotation, and drafting ADRs. Invoke after use cases and robustness diagrams exist and before detailed design. Also invoke when a new use case might violate existing architectural boundaries.
+model: claude-opus-4-7
 tools: Read, Grep, Glob, Write
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: iconix-migration
 description: Use to reverse-engineer ICONIX artifacts from existing codebases that were built without ICONIX. Invoke when you want to retrofit use cases, robustness diagrams, class models, domain model, use case package overviews, and traceability onto legacy code. When Graphify is enabled in iconix.config.yaml, uses the Graphify knowledge graph as the primary source of structural truth. Produces draft artifacts for human review, not final deliverables. This agent is a thin router — it reads the checkpoint file and dispatches to the correct sub-agent for the current phase.
+model: claude-sonnet-4-6
 tools: Read, Write
 ---
 

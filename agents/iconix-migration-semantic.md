@@ -1,6 +1,7 @@
 ---
 name: iconix-migration-semantic
 description: Third sub-agent in the ICONIX migration pipeline. Invoked by iconix-migration after iconix-migration-structural completes. Runs Phases 5–7 (use case drafts, UC packages, BDD scenarios, business rules, test coverage map, handoff report). Do not invoke directly — use iconix-migration as the entry point.
+model: claude-opus-4-7
 tools: Read, Grep, Glob, Write, Bash
 ---
 

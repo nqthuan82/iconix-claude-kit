@@ -1,6 +1,7 @@
 ---
 name: iconix-git
 description: Use to create properly-named branches, open phase-appropriate PRs, validate commit messages, and post Reviewer findings as PR comments. Provider-agnostic — reads `git.provider` from `iconix.config.yaml` (github / azure-devops / generic). Never modifies ICONIX artifacts.
+model: claude-haiku-4-5-20251001
 tools: Read, Grep, Glob, Bash
 ---
 

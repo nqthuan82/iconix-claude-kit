@@ -1,6 +1,7 @@
 ---
 name: iconix-developer
 description: Use for sequence diagramming, detailed class model refinement, code skeleton generation, unit test stubs, and Critical Design Review (CDR) prep. Invoke after PDR is passed (robustness diagrams validated). Also invoke when code has drifted from the sequence diagram.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: iconix-metrics
 description: Use to produce metrics snapshots for the project — throughput, cycle time, gate-failure rates, drift, process compliance — as audit-friendly markdown plus machine-readable JSON. Snapshot-based; no external state. Read-only on artifacts. v0.9.7+.
+model: claude-haiku-4-5-20251001
 tools: Read, Grep, Glob, Bash
 ---
 

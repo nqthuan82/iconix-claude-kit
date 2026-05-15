@@ -1,6 +1,7 @@
 ---
 name: iconix-product-owner
 description: Use for requirements gathering, use case drafting, glossary maintenance, and Milestone 1 (Requirements Review) checks. Invoke when the user has raw stakeholder input (transcripts, emails, BRDs, feature requests) and needs ICONIX-compliant use cases. Also invoke to audit use cases for abstract/essential style violations.
+model: claude-sonnet-4-6
 tools: Read, Grep, Glob, Write
 ---
 
