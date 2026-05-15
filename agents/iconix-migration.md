@@ -41,7 +41,8 @@ Step 2 of 3: Run iconix-migration-structural
   It will: survey entry points, extract class model, produce sequence and robustness
   diagrams, and generate the domain model.
   Reads: migration/checkpoint-<date>.json, migration/dependency-registry-<date>.md
-  Writes: migration/survey-phase1-<date>.md, class-model/, sequence/, robustness/, domain-model/
+  Writes: migration/survey-phase1-<date>.md (full survey), migration/survey-phase3-<date>.md
+          (compact hand-off), class-model/, sequence/, robustness/, domain-model/
 ```
 STOP.
 
@@ -53,7 +54,7 @@ Structural phase complete. Continuing migration.
 Step 3 of 3: Run iconix-migration-semantic
   It will: draft use cases, produce BDD scenarios, extract business rules, map test
   coverage, and generate the handoff report.
-  Reads: migration/checkpoint-<date>.json, migration/survey-phase1-<date>.md, robustness/RB-DRAFT-*.puml
+  Reads: migration/checkpoint-<date>.json, migration/survey-phase3-<date>.md, robustness/RB-DRAFT-*.puml
   Writes: use-cases/, features/, docs/business-rules.md, migration/handoff-<date>.md
 ```
 STOP.

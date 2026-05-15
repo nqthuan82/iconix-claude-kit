@@ -405,12 +405,50 @@ Same as graph-assisted Phase 4b. Without the graph, walk the class model from Ph
 
 ---
 
+## Phase 4c — Produce structural hand-off file (both modes)
+
+After Phase 4b completes in either mode, produce `migration/survey-phase3-<date>.md`. This is the compact file that `iconix-migration-semantic` reads — it extracts only the two sections semantic needs from the full Phase 1 survey, preventing context window pressure on large systems (Phase 1 survey grows to 50,000+ words at 20 containers × 50 entry points).
+
+Structure of `migration/survey-phase3-<date>.md`:
+
+```markdown
+# Migration Survey — Structural Hand-off (<date>)
+> Compact hand-off for iconix-migration-semantic.
+> Full Phase 1 survey (entry points, graph stats, per-container overrides):
+>   migration/survey-phase1-<date>.md
+
+## Run metadata
+- Mode: <graph-assisted | code-walking>
+- Containers surveyed: <N>
+- Entry points total: <M> (from checkpoint)
+- SD-DRAFTs produced: <K> (in sequence/)
+- RB-DRAFTs produced: <L> (in robustness/)
+
+## Cross-container boundary correlation
+<copy the full ## Cross-container boundary correlation section from survey-phase1-<date>.md.
+ Single-repo mode: write "Single-repo mode — cross-container correlation not applicable.">
+
+## Amendment proposals (incremental run)
+<copy the ### Amendment proposals (incremental run) subsection from survey-phase1-<date>.md.
+ First run or no amendments: write "None — first run.">
+
+## Sequence diagram index
+| SD-DRAFT file | Entry point | Entry-point type |
+|---|---|---|
+| <filename.puml> | <entry point class.method or route> | <HTTP / gRPC / Queue / CLI / Job / ...> |
+```
+
+Do not repeat raw entry-point inventory, graph stats, or per-container override YAML in this file — those stay in `survey-phase1-<date>.md`.
+
+---
+
 # Output structure (structural phase)
 ```
 docs/architecture/system-architecture.md     # Phase 1   (DRAFT — skipped if file exists)
 docs/architecture/package-map.md             # Phase 4b  (DRAFT — skipped if file exists)
 migration/
-└── survey-phase1-<date>.md                  # Phase 1 + Phase 1b (cross-container appended)
+├── survey-phase1-<date>.md                  # Phase 1 + Phase 1b (full survey, cross-container appended)
+└── survey-phase3-<date>.md                  # Phase 4c (compact hand-off for semantic agent)
 class-model/class-model.puml                 # Phase 2  (DRAFT)
 sequence/SD-DRAFT-*.puml                     # Phase 3
 robustness/RB-DRAFT-*.puml                   # Phase 4
@@ -438,10 +476,11 @@ domain-model/domain-model-DRAFT.puml         # Phase 4b
 Before stopping, verify:
   1. migration/checkpoint-<date>.json updated with phases_completed: ["infra", "structural"] and next_phase: "semantic"
   2. migration/survey-phase1-<date>.md exists with Containers surveyed section
-  3. class-model/class-model.puml exists with DRAFT stamp
-  4. At least one SD-DRAFT-*.puml exists in sequence/
-  5. At least one RB-DRAFT-*.puml exists in robustness/
-  6. domain-model/domain-model-DRAFT.puml exists
+  3. migration/survey-phase3-<date>.md exists with Cross-container boundary correlation section
+  4. class-model/class-model.puml exists with DRAFT stamp
+  5. At least one SD-DRAFT-*.puml exists in sequence/
+  6. At least one RB-DRAFT-*.puml exists in robustness/
+  7. domain-model/domain-model-DRAFT.puml exists
 
 If any verification fails: report which artifact is missing before stopping.
 STOP. Do not proceed to semantic phases (Phase 5+).

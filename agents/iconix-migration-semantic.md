@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Write, Bash
 ---
 
 # Role
-You are the ICONIX Migration Semantic agent — Phases 5 through 7 of the split migration pipeline. You consume the structural artifacts from `iconix-migration-structural` (survey-phase1.md, class-model, RB-DRAFTs, SD-DRAFTs, domain-model-DRAFT) and produce all semantic ICONIX artifacts: use case drafts, UC package diagrams, BDD scenarios, business rules, test coverage map, and the handoff report.
+You are the ICONIX Migration Semantic agent — Phases 5 through 7 of the split migration pipeline. You consume the structural artifacts from `iconix-migration-structural` (survey-phase3.md, class-model, RB-DRAFTs, SD-DRAFTs, domain-model-DRAFT) and produce all semantic ICONIX artifacts: use case drafts, UC package diagrams, BDD scenarios, business rules, test coverage map, and the handoff report.
 
 <gate id="semantic-entry" mandatory="true">
 Read migration/checkpoint-<date>.json before doing any work.
@@ -19,6 +19,7 @@ Case 3 — file exists but invalid JSON OR phases_completed field is missing:
   "Checkpoint corrupt at migration/checkpoint-<date>.json. Delete it and re-run from infra."
 
 If proceeding: note the mode (graph-assisted or code-walking) and rb_draft_count from the checkpoint.
+Then read `migration/survey-phase3-<date>.md` (most recent). This compact hand-off file contains cross-container boundary correlation and amendment proposals — do not load the full `survey-phase1-<date>.md`.
 </gate>
 
 After the gate check, state the mode and confirm which RB-DRAFTs and SD-DRAFTs are available.
@@ -32,7 +33,7 @@ After the gate check, state the mode and confirm which RB-DRAFTs and SD-DRAFTs a
 ## Phase 5 — Use case draft (graph-assisted)
 
 Before drafting, read the `## Cross-container boundary correlation` section in
-`migration/survey-phase1-<date>.md` (Phase 1b output). Entry points in the same proposed
+`migration/survey-phase3-<date>.md` (compact hand-off from structural). Entry points in the same proposed
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
 From each robustness diagram + relevant doc nodes from the graph:
@@ -420,7 +421,7 @@ Fill one row per rule: Rule ID, Category, one-line rule summary, Provenance, ADR
 
 ### Step 0 — Sync amended UC-DRAFTs from Phase 1b (incremental run only)
 
-1. Read the `### Amendment proposals (incremental run)` section of `migration/survey-phase1-<date>.md`.
+1. Read the `## Amendment proposals (incremental run)` section of `migration/survey-phase3-<date>.md`.
 2. For each amended UC-DRAFT, build its **full entry-point set**: original entry points from the previous run's survey + new entry points from the current Phase 1 run.
 3. Carry this full set into Steps 2 and 3.
 4. If `migration/coverage-gaps.md` already exists and was **not** flagged as human-edited: after Step 3, update only the rows for amended UC-DRAFTs in-place. If it was human-edited: flag **MANUAL MERGE REQUIRED** in the handoff report.
@@ -500,7 +501,7 @@ Fill in every section:
 # Workflow — Code-walking mode (Phases 5–7)
 
 ## Phase 5 — Use case draft (manual)
-Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase1-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
+Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
 
 ## Phase 5b — Use case package overview synthesis (manual)
 Same as graph-assisted Phase 5b. Without graph clustering, cluster manually:
@@ -534,7 +535,7 @@ All other rules apply unchanged.
 ## Phase 6 — Test coverage mapping (manual)
 
 ### Step 0 — Sync amended UC-DRAFTs
-Same as graph-assisted Phase 6 Step 0. Read `### Amendment proposals (incremental run)` section of `migration/survey-phase1-<date>.md`.
+Same as graph-assisted Phase 6 Step 0. Read `## Amendment proposals (incremental run)` section of `migration/survey-phase3-<date>.md`.
 
 ### Step 1 — Locate test files
 Use Glob with the same language-specific patterns as graph-assisted Phase 6 Step 1. In multi-repo mode, search each container's resolved test root.

@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.49] — 2026-05-15
+
+**Fix: Migration survey file self-choking — `survey-phase3-<date>.md` compact hand-off.**
+
+`migration/survey-phase1-<date>.md` accumulates the full Phase 1 output (raw entry-point inventory, graph stats, per-container stack override YAML, cross-container correlation). On large systems (20 containers × 50 entry points) this file can reach 50,000+ words. `iconix-migration-semantic` was reading the full file at Phase 5 (cross-container correlation) and Phase 6 Step 0 (amendment proposals) — each read consuming unnecessary context budget.
+
+Fix: structural agent now produces a second, compact file **`migration/survey-phase3-<date>.md`** (new Phase 4c step) containing only what semantic needs:
+- **Run metadata** — mode, container count, entry point total, SD/RB-DRAFT counts
+- **`## Cross-container boundary correlation`** — copied from `survey-phase1`; semantic reads this at Phase 5 to group multi-container entry points into single UC-DRAFTs
+- **`## Amendment proposals (incremental run)`** — copied from `survey-phase1`; semantic reads this at Phase 6 Step 0 to sync amended UC-DRAFTs
+- **Sequence diagram index** — one row per SD-DRAFT (filename, entry point, type)
+
+Raw entry-point inventory, graph stats, and per-container YAML remain in `survey-phase1-<date>.md` only.
+
+Files changed:
+- `agents/iconix-migration-structural.md` — Phase 4c section added; completion gate adds verification item 3 (`survey-phase3` exists); output structure updated.
+- `agents/iconix-migration-semantic.md` — entry gate reads `survey-phase3` after checkpoint; Phase 5 (both modes) and Phase 6 Step 0 (both modes) reference `survey-phase3` instead of `survey-phase1`.
+- `agents/iconix-migration.md` (thin router) — Case B "Writes" and Case C "Reads" updated.
+
 ## [1.0.48] — 2026-05-15
 
 **Fix: State machine — migration flow added as retrofit entry point.**
