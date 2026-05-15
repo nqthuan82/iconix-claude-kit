@@ -228,3 +228,93 @@ jobs:
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }
           echo "OK — installation validated"
+
+  smoke-test-installer-windows:
+    # Verifies iconix-init.ps1 on Windows PowerShell 5.1 — the actual shell
+    # Windows users run. PowerShell Core (pwsh) differs in behaviour and is
+    # not a valid proxy for this test.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install into a scratch project
+        shell: powershell
+        run: |
+          $target = "$env:RUNNER_TEMP\iconix-test"
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Set-Location $target
+          & "$env:GITHUB_WORKSPACE\iconix-init.ps1" -Source $env:GITHUB_WORKSPACE -Prefix CI -Language python
+
+      - name: Verify installation
+        shell: powershell
+        run: |
+          Set-Location "$env:RUNNER_TEMP\iconix-test"
+
+          function Assert-Dir($p)  { if (-not (Test-Path $p -PathType Container)) { Write-Error "$p missing"; exit 1 } }
+          function Assert-File($p) { if (-not (Test-Path $p -PathType Leaf))      { Write-Error "$p missing"; exit 1 } }
+          function Assert-Content($f, $pat, $msg) {
+            if (-not (Select-String -Path $f -Pattern $pat -Quiet)) { Write-Error $msg; exit 1 }
+          }
+
+          Assert-Dir  ".claude\agents"
+          Assert-Dir  ".claude\commands"
+          Assert-File "iconix.config.yaml"
+          Assert-Content "iconix.config.yaml" 'prefix: "CI"'       "prefix not patched"
+          Assert-Content "iconix.config.yaml" 'language: "python"' "language not patched"
+
+          $agentCount = (Get-ChildItem ".claude\agents" -Filter "*.md").Count
+          if ($agentCount -lt 10) { Write-Error "Expected at least 10 agents, found $agentCount"; exit 1 }
+
+          Assert-Content "iconix.config.yaml" "knowledge_graph:"  "knowledge_graph section missing"
+          Assert-Content "iconix.config.yaml" "enabled: false"    "knowledge_graph should default to enabled: false"
+          Assert-File ".claude\commands\iconix-graphify.md"
+          Assert-File "docs\iconix\templates\graphify-setup.md"
+          Assert-Content ".claude\agents\iconix-migration.md" "graphify" "migration agent missing graphify integration"
+
+          Assert-File "docs\iconix\templates\intake-transcript-template.md"
+          Assert-File "docs\iconix\templates\intake-brd-template.md"
+          Assert-File "docs\iconix\templates\intake-email-template.md"
+          Assert-File "docs\iconix\templates\intake-feature-request-template.md"
+          Assert-File "docs\iconix\templates\bug-report-template.md"
+
+          # v1.0.47: migration sub-agents + schema detection reference file
+          Assert-File ".claude\agents\iconix-migration-infra.md"
+          Assert-File ".claude\agents\iconix-migration-structural.md"
+          Assert-File ".claude\agents\iconix-migration-semantic.md"
+          Assert-File "docs\iconix\templates\migration-schema-detection-reference.md"
+
+          Assert-File "docs\iconix\templates\git-integration\branch-conventions.md"
+          Assert-File "docs\iconix\templates\git-integration\commit-conventions.md"
+          Assert-File ".ci\validate-traceability.sh"
+
+          Assert-Content "iconix.config.yaml" "concurrent_check:" "concurrent_check section missing"
+
+          Assert-File "docs\iconix\templates\metrics-snapshot-template.md"
+          Assert-File "docs\iconix\templates\metrics-schema.json"
+          Assert-File "docs\iconix\metrics-glossary.md"
+          Assert-Dir  "metrics"
+          Assert-Content "iconix.config.yaml" "metrics:" "metrics section missing"
+
+          Assert-File "docs\iconix\templates\phase9-cycle-template.md"
+          Assert-Dir  "phase9-cycles"
+          Assert-Content "iconix.config.yaml" "phase9:" "phase9 section missing"
+
+          Assert-Content "iconix.config.yaml" "kit_version:" "kit_version field missing"
+          Assert-File "docs\iconix\templates\upgrade-report-template.md"
+          Assert-Dir  "upgrades"
+
+          Assert-File "docs\iconix\templates\domain-model-initial-template.puml"
+          Assert-File "docs\iconix\templates\container-mapping-template.md"
+          Assert-File "docs\iconix\templates\nfr-annotations-template.md"
+          Assert-File "docs\iconix\templates\nfr-catalog-template.md"
+          Assert-File "docs\iconix\templates\architecture-package-map-template.md"
+          Assert-File "docs\iconix\templates\integration-surface-template.md"
+          Assert-File "docs\iconix\templates\milestone-report-template.md"
+          Assert-File "docs\iconix\templates\class-model-template.puml"
+          Assert-File "docs\iconix\templates\cdr-report-template.md"
+          Assert-File "docs\iconix\templates\edge-case-report-template.md"
+          Assert-File "docs\iconix\templates\test-matrix-template.md"
+          Assert-Dir  "use-case-packages"
+          Assert-File "docs\iconix\templates\use-case-diagram-template.puml"
+
+          Write-Host "OK - installation validated"

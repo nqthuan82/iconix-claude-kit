@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.57] — 2026-05-15
+
+**CI: Windows smoke test for PowerShell installer (`iconix-init.ps1`).**
+
+Added `smoke-test-installer-windows` job to `.github/workflows/validate.yml` running on
+`windows-latest` with `shell: powershell` (Windows PowerShell 5.1 — the shell Windows
+users actually run, not PowerShell Core 7).
+
+The job mirrors every check in the existing Linux `smoke-test-installer` job:
+agent count (≥10), config patching (prefix + language), knowledge_graph defaults,
+graphify integration, intake templates, migration sub-agents (v1.0.47+), schema detection
+reference file, git integration files, concurrent_check/metrics/phase9/kit_version config
+sections, all architect/developer/tester templates, use-case-packages folder.
+
+Previously, a regression in `iconix-init.ps1` (e.g. missing a new agent in the copy list)
+would pass CI silently and only surface when a Windows user reported the issue.
+
 ## [1.0.56] — 2026-05-15
 
 **Feature: `[VERIFY]` severity tiers (HIGH / MEDIUM / LOW) in migration artifacts and handoff report.**
