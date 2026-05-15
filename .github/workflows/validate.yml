@@ -58,6 +58,40 @@ jobs:
             exit 1
           fi
 
+      - name: Agent token budget
+        # Per CLAUDE.md `## Agent token budget`: every agent should stay under the
+        # 10K soft ceiling. Use chars/4 as a portable rough estimate (no Python /
+        # tiktoken dependency in CI). Hard-fails at the 12K ceiling (20% headroom
+        # over soft); warns between 10K and 12K. Drift past the soft ceiling
+        # historically went unnoticed (structural grew from 7.1K to 9.75K silently
+        # between v1.0.40 and v1.0.58) — this step makes it visible on every PR.
+        run: |
+          set -e
+          soft=10000
+          hard=12000
+          fail=0
+          printf '%-45s %10s %s\n' "Agent" "Tokens" "Status"
+          printf '%-45s %10s %s\n' "---------------------------------------------" "----------" "----------"
+          for f in agents/*.md; do
+            chars=$(wc -c < "$f")
+            tokens=$((chars / 4))
+            name=$(basename "$f")
+            if [ "$tokens" -gt "$hard" ]; then
+              printf '%-45s %10d %s\n' "$name" "$tokens" "FAIL (> ${hard})"
+              fail=1
+            elif [ "$tokens" -gt "$soft" ]; then
+              printf '%-45s %10d %s\n' "$name" "$tokens" "WARN (> ${soft})"
+            else
+              printf '%-45s %10d %s\n' "$name" "$tokens" "ok"
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "ERROR: one or more agents exceed the hard token ceiling (${hard})."
+            echo "Refer to CLAUDE.md '## Agent token budget' for extraction technique."
+            exit 1
+          fi
+
   validate-plantuml:
     # Catches PlantUML rendering bugs that previously slipped past prompt review
     # and only surfaced when a human opened the file in a previewer:

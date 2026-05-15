@@ -113,6 +113,11 @@ Reference files extracted (loaded on-demand by the cited agent):
 - `docs/iconix/templates/migration-schema-detection-reference.md` — semantic Phase 5c
 - `docs/iconix/templates/migration-stack-patterns-reference.md` — structural Phases 1, 1b, 3, 4
 
+**CI enforcement (v1.0.60+):** `.github/workflows/validate.yml` step **Agent token budget**
+measures chars/4 for every `agents/*.md`, warns past 10,000 tokens, hard-fails past 12,000.
+Drift past the soft ceiling used to be invisible (structural silently grew from 7.1K to
+9.75K between v1.0.40 and v1.0.58); the check now surfaces it on every PR.
+
 Before adding content to any agent that is near or over budget:
 
 1. **Extract lookup tables to a reference file** — move static reference material (language detection tables, cross-stack lookup grids, enum lists) to `docs/iconix/templates/` and replace with a single `Read <file> before Step X` instruction. This is how Phase 5c BDD tables were moved to `migration-schema-detection-reference.md` (~6K tokens saved in semantic) and how Phase 1/1b/3/4 cross-stack patterns were moved to `migration-stack-patterns-reference.md` (~1.7K tokens saved in structural).
@@ -204,7 +209,7 @@ Whenever a change in this conversation touches the kit's user-facing surface —
 
 If a mismatch is found, fix it in the same change rather than deferring. Mention in the response which files were updated and why.
 
-This is a CLAUDE.md instruction, so it applies while Claude is actively making or reviewing changes; it does not fire for edits made outside Claude Code. For harness-enforced automation on every file save, a PostToolUse hook in `.claude/settings.json` would be needed.
+This is a CLAUDE.md instruction, so it applies while Claude is actively making or reviewing changes; it does not fire for edits made outside Claude Code. A PostToolUse hook at `.claude/settings.json` (calling `.claude/hooks/check-iconix-surface.sh`, added in v1.0.60) provides a complementary stderr reminder whenever an in-session Edit/Write touches the user-facing surface — but the hook is non-blocking and only fires after Claude Code has loaded the settings file, so the in-prompt rule above remains primary.
 
 ## Commit workflow
 

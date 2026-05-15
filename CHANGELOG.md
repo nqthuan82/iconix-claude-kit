@@ -5,6 +5,42 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.60] — 2026-05-15
+
+**Guardrails: CI token-budget check + in-session sync-reminder hook.**
+
+Two complementary guardrails that close gaps surfaced by the v1.0.58 audit. Both are
+self-policing — neither requires a maintainer to remember a rule.
+
+**CI — Agent token budget step (`.github/workflows/validate.yml`):**
+- Loops every `agents/*.md`, measures chars/4 as a portable token estimate.
+- **Soft warn:** > 10,000 tokens — prints `WARN` next to the row but does not fail the
+  build. Matches the CLAUDE.md soft ceiling.
+- **Hard fail:** > 12,000 tokens — fails the job with a pointer to CLAUDE.md
+  `## Agent token budget` for the extraction technique.
+- Prints a full size table on every PR so reviewers see at a glance which agents are
+  approaching the budget. Drift past the soft ceiling used to be invisible
+  (`migration-structural` silently grew from 7.1K to 9.75K between v1.0.40 and v1.0.58);
+  now any PR that bumps an agent past 10K shows the WARN inline.
+
+**In-session — PostToolUse sync reminder (`.claude/settings.json` + `.claude/hooks/check-iconix-surface.sh`):**
+- Project-scoped Claude Code hook (checked in; team-wide). Fires after every Write/Edit.
+- Inspects `tool_input.file_path`; if the path touches the kit's user-facing surface
+  (`agents/*.md`, `commands/*.md`, `templates/`, `iconix-init`, `iconix-init.ps1`,
+  `iconix-state-machine.puml`), prints a stderr reminder pointing at the CLAUDE.md
+  "Keeping README and state machine in sync" checklist.
+- Handles both POSIX and Windows-backslash paths (normalises `\` → `/` before pattern
+  matching).
+- Always exits 0 — non-blocking. CI is the gate; the hook is a per-edit reminder.
+- Uses bash (`shell: bash` in settings.json). On Windows the hook needs Git Bash on
+  PATH; without it the hook silently no-ops, which is fine for a reminder.
+
+**CLAUDE.md updated:**
+- `## Agent token budget` section adds a note about the new CI enforcement.
+- `## Keeping README and state machine in sync` section removes the "would be needed"
+  language about a hook — the hook now exists and is described alongside the
+  in-prompt rule.
+
 ## [1.0.59] — 2026-05-15
 
 **Token budget: extract cross-stack patterns out of `iconix-migration-structural` (~1.7K tokens saved).**
