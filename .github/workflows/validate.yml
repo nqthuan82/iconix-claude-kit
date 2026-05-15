@@ -184,6 +184,7 @@ jobs:
           test -f .claude/agents/iconix-migration-structural.md || { echo "iconix-migration-structural.md missing"; exit 1; }
           test -f .claude/agents/iconix-migration-semantic.md || { echo "iconix-migration-semantic.md missing"; exit 1; }
           test -f docs/iconix/templates/migration-schema-detection-reference.md || { echo "migration-schema-detection-reference.md missing"; exit 1; }
+          test -f docs/iconix/templates/migration-stack-patterns-reference.md || { echo "migration-stack-patterns-reference.md missing"; exit 1; }
           # v0.9.5: git integration — branch + commit conventions and the generic validator script
           test -f docs/iconix/templates/git-integration/branch-conventions.md || { echo "branch-conventions.md missing"; exit 1; }
           test -f docs/iconix/templates/git-integration/commit-conventions.md || { echo "commit-conventions.md missing"; exit 1; }
@@ -282,6 +283,7 @@ jobs:
           Assert-File ".claude\agents\iconix-migration-structural.md"
           Assert-File ".claude\agents\iconix-migration-semantic.md"
           Assert-File "docs\iconix\templates\migration-schema-detection-reference.md"
+          Assert-File "docs\iconix\templates\migration-stack-patterns-reference.md"
 
           Assert-File "docs\iconix\templates\git-integration\branch-conventions.md"
           Assert-File "docs\iconix\templates\git-integration\commit-conventions.md"

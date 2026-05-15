@@ -104,20 +104,24 @@ Current budget status (chars/4 estimate, refresh when files change materially):
 | Agent | Approximate tokens | Status |
 |---|---|---|
 | `iconix-migration-semantic.md` | ~10,650 | ✅ (reduced from ~15,400 after BDD-table extract in v1.0.52) |
-| `iconix-migration-structural.md` | ~9,750 | 🟡 highest risk — grew from ~7,100; nearing 10K ceiling |
+| `iconix-migration-structural.md` | ~8,030 | ✅ (reduced from ~9,750 after stack-pattern extract in v1.0.59) |
 | `iconix-migration-infra.md` | ~7,870 | ✅ |
 | `iconix-migration.md` (router) | ~1,150 | ✅ |
 | All other agents | < 6,000 each | ✅ |
 
+Reference files extracted (loaded on-demand by the cited agent):
+- `docs/iconix/templates/migration-schema-detection-reference.md` — semantic Phase 5c
+- `docs/iconix/templates/migration-stack-patterns-reference.md` — structural Phases 1, 1b, 3, 4
+
 Before adding content to any agent that is near or over budget:
 
-1. **Extract lookup tables to a reference file** — move static reference material (language detection tables, cross-stack lookup grids, enum lists) to `docs/iconix/templates/` and replace with a single `Read <file> before Step X` instruction. This is how Phase 5c BDD tables were moved to `migration-schema-detection-reference.md`, reducing semantic by ~6K tokens.
+1. **Extract lookup tables to a reference file** — move static reference material (language detection tables, cross-stack lookup grids, enum lists) to `docs/iconix/templates/` and replace with a single `Read <file> before Step X` instruction. This is how Phase 5c BDD tables were moved to `migration-schema-detection-reference.md` (~6K tokens saved in semantic) and how Phase 1/1b/3/4 cross-stack patterns were moved to `migration-stack-patterns-reference.md` (~1.7K tokens saved in structural).
 
 2. **Grep before writing** — if the same instruction already exists in another agent, do not duplicate it; reference or cross-link instead.
 
 3. **Prefer XML gate tags over markdown headers** for mandatory STOP points — they are shorter and more reliably parsed at long context: `<gate id="x" mandatory="true">...</gate>`.
 
-4. **`iconix-migration-structural.md` is now highest risk** — at ~9,750 tokens it has grown 37% from its baseline and is approaching the 10K soft ceiling. Any addition to this file must first identify something that can be extracted or removed to compensate (consider extracting the Phase 3 call-path enumeration tables to `docs/iconix/templates/`).
+4. **Watch the migration sub-agents.** Both `iconix-migration-structural.md` and `iconix-migration-semantic.md` have grown materially since their last extract round. If either crosses ~9,500 tokens again, the next extract target is the Phase 4b domain-model filter rules (structural) or the Phase 5b UC packaging tables (semantic).
 
 ## Agent prompt discipline
 

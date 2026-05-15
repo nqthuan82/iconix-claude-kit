@@ -5,6 +5,62 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.59] — 2026-05-15
+
+**Token budget: extract cross-stack patterns out of `iconix-migration-structural` (~1.7K tokens saved).**
+
+Background: the audit in v1.0.58 surfaced that `iconix-migration-structural.md` had
+grown from ~7,100 tokens (registered in CLAUDE.md) to ~9,750 tokens (37% drift),
+approaching the 10K soft ceiling. This release applies the same extraction technique
+v1.0.52 used on the semantic agent.
+
+**New reference file `docs/iconix/templates/migration-stack-patterns-reference.md`:**
+- **Block A** — Entry-point taxonomy (Phase 1, both modes): cross-stack pattern matrix
+  for inbound HTTP / async / CLI across C# / Java / Python / Node.js / Go / Ruby; graph
+  node-type strings; actor identification rules.
+- **Block B** — Cross-container boundary correlation (Phase 1b): inbound boundary table
+  per protocol (B.1), outbound call collection (B.2), match conditions and confidence
+  tiers (B.3).
+- **Block C** — Source-construct → PlantUML mapping (Phase 3 Step 3): the if/else,
+  try/catch, loops, `Task.WhenAll`, fire-and-forget, polymorphic-dispatch mapping rows.
+- **Block D** — Outbound boundary cross-stack patterns (Phase 4): universal signals,
+  cross-stack illustration (Outbound HTTP / DB / message publisher / vendor SDK / file-blob
+  across 6 stacks), Entity/Controller companion classifications, disambiguation rule
+  (trust imports over class names).
+
+**Changes to `iconix-migration-structural.md`:**
+- Phase 1 (graph-assisted): inline cross-stack table → `Read Block A` pointer.
+- Phase 1 (code-walking): inline framework-marker bullet list → `Read Block A` pointer
+  (eliminates the duplicate-vs-graph-assisted maintenance burden).
+- Phase 1b Steps 1–3: three inline tables → `Read Block B` pointer (Step 4 onward unchanged).
+- Phase 3 Step 3: inline PlantUML mapping table → `Read Block C` pointer.
+- Phase 4 Step 1: inline cross-stack illustration + Entity/Controller stack examples +
+  disambiguation rule → `Read Block D` pointer. Three classification signals
+  (inbound dispatch / outbound infra imports / pure data) and the [VERIFY] discipline
+  remain inline — these are ICONIX methodology, not stack-specific detection.
+
+**Methodology surface unchanged.** The extraction is pure relocation of stack-specific
+detection aids. ICONIX rules (boundary/entity/controller stereotypes, noun-verb-noun,
+mixed-responsibility check, alternate course discipline, traceability) all remain in
+the agent body. Per CLAUDE.md `## Methodology-in-Config Split`: stack-specific patterns
+were never supposed to live in the agent prompt anyway.
+
+**File size:** `iconix-migration-structural.md` 39,048 → 32,107 chars (~9,750 → ~8,030 tokens).
+Back under the 10K soft ceiling and below the v1.0.58 highest-risk flag.
+
+**Installer + CI:**
+- `iconix-init` and `iconix-init.ps1` now copy the new reference file to the project's
+  `docs/iconix/templates/` (same pattern as the v1.0.47 schema-detection reference).
+- `.github/workflows/validate.yml` Linux + Windows smoke tests now assert the new
+  reference file is present after install.
+
+**README + CLAUDE.md updates:**
+- `README.md` `## Project layout` section adds the new reference file in both the
+  installed-layout and templates-tree blocks.
+- `CLAUDE.md` `## Agent token budget` table reflects new sizes; "Reference files
+  extracted" section now lists both reference files and their consumers; the
+  highest-risk flag drops away (no agent currently above 10K).
+
 ## [1.0.58] — 2026-05-15
 
 **Agent prompt audit fixes — runtime bug, frontmatter completeness, dedupe, doc drift.**

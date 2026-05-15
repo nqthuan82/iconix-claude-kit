@@ -61,19 +61,7 @@ After the gate check, state the mode and entry_point_count from the checkpoint.
 
 Instead of walking the repo manually:
 
-1. Query the graph for entry points. Detect by **responsibility shape**, not class-name patterns. Two universal signals — a candidate is an entry point if **either** holds:
-   - **Inbound dispatch.** The class implements a framework's request-handler / consumer / hub / scheduled-job / CLI-command interface, or is decorated with a routing annotation.
-   - **No inbound graph edges.** Node has no inbound `imports_from` or `calls` edges from other code, but does have outbound edges into the system.
-
-   Read `iconix.config.yaml` `stack.language` to weight the most likely patterns first.
-
-   | Pattern | C# / .NET | Java | Python | Node.js / TS | Go | Ruby |
-   |---|---|---|---|---|---|---|
-   | Inbound HTTP | MVC `Controller`, `[ApiController]`, Razor Page, SignalR Hub, gRPC service | `@RestController`, `@Controller`, gRPC service | FastAPI / Flask routes, Django views, DRF `APIView` | Express/Koa/Fastify route, Nest `@Controller` | `http.Handler`, gin handler, gRPC service | `ApplicationController` subclass, Grape API |
-   | Inbound async / scheduled | `BackgroundService`, `IHostedService`, `IConsumer<T>`, Azure Function, Lambda | `@Scheduled`, `@KafkaListener`, `@JmsListener`, Spring Cloud Function | Celery task, FastStream consumer, APScheduler job | BullMQ worker, Lambda handler, KafkaJS consumer | goroutine workers, Sarama consumer | Sidekiq worker, ActiveJob |
-   | CLI / one-shot | `IHostApplicationLifetime` console app, `System.CommandLine` command | Spring `CommandLineRunner`, picocli command | Click / Typer command, `argparse` `main` | `commander` action, `yargs` handler | `cobra.Command`, `urfave/cli` | Thor command, Rake task |
-
-   Node-type strings from the graph: `controller`, `handler`, `route`, `endpoint`, `view`, `page`, `hub`, `cli`, `screen`, `background_service`, `hosted_service`, `consumer`, `function_handler`, `worker`, `listener`, `subscriber`, `job`. Treat any `*_service` / `*Service` node with no inbound code calls as a candidate entry point for `[VERIFY]` review.
+1. Read `docs/iconix/templates/migration-stack-patterns-reference.md` **Block A** for entry-point detection patterns (cross-stack matrix, graph node-type strings, actor identification). Apply the two universal signals (inbound dispatch / no inbound code calls) from Block A, weighting the column matching `iconix.config.yaml` `stack.language`.
 
 2. Query the graph for layering:
    - Cluster nodes by directory and by file-naming patterns
@@ -130,39 +118,18 @@ This phase answers: *are two entry points in different containers actually two e
 
 If no previous surveys exist OR every container is in the current run → skip this step.
 
-### Step 1 — Collect inbound boundaries per container
+### Steps 1–3 — Collect and match boundaries
 
-| Protocol | What to collect |
-|---|---|
-| HTTP | URL route pattern + HTTP method (normalize path params: `/orders/{id}` and `/orders/{orderId}` → `/orders/{param}`) |
-| gRPC | Service name + method name |
-| Message bus (consume) | Topic / queue / exchange name + consumer class |
-| CLI | Command name |
+Read `docs/iconix/templates/migration-stack-patterns-reference.md` **Block B** for the
+three boundary-correlation tables:
+- **B.1** — inbound boundaries per container (what to collect per protocol).
+- **B.2** — outbound cross-container calls per container (graph-assisted vs code-walking
+  collection method).
+- **B.3** — match conditions and confidence tiers (HIGH / MEDIUM); unmatched-inbound /
+  unmatched-outbound bookkeeping.
 
-### Step 2 — Collect outbound cross-container calls per container
-
-| Protocol | What to collect |
-|---|---|
-| HTTP | Target URL pattern + HTTP method (from HTTP client usage) |
-| gRPC | Stub service + method called |
-| Message bus (publish) | Topic / queue published to |
-
-**Graph-assisted mode:** query for outbound boundary nodes; filter to calls whose target URL/topic is also an inbound boundary of another surveyed container.
-**Code-walking mode:** grep for HTTP client usage patterns (`HttpClient`, `axios`, `requests.post`, `fetch`, etc.) and extract literal or templated URLs; grep for message publisher calls and extract topic names.
-
-### Step 3 — Match inbound ↔ outbound pairs
-
-| Protocol | Match condition | Confidence |
-|---|---|---|
-| HTTP | Exact normalized URL + method | HIGH |
-| HTTP | Normalized URL match, method differs | MEDIUM |
-| HTTP | URL prefix match (≥ 2 non-trivial path segments) | MEDIUM |
-| gRPC | Exact service + method | HIGH |
-| Message bus | Exact topic/queue name | HIGH |
-| Message bus | Topic pattern (prefix/wildcard) | MEDIUM |
-
-Unmatched outbound calls (no inbound in any surveyed container) → record as **unmatched outbound**.
-Unmatched inbound boundaries (no outbound caller found) → record as **unmatched inbound**.
+Apply B.1, then B.2, then B.3 in order. Carry the unmatched-inbound and
+unmatched-outbound lists into Step 5's correlation report.
 
 ### Step 4 — Propose UC groupings
 
@@ -235,16 +202,10 @@ For each method node on each enumerated path, read the source at `file_path:line
 
 ### Step 3 — Map source constructs to PlantUML
 
-| Source construct | PlantUML construct |
-|---|---|
-| `if (cond) { A } else { B }` | `alt cond` / `else` block |
-| `try { A } catch (Ex) { B }` | `alt happy path` / `else <Ex>` block; shade catch as alternate course |
-| `foreach`, `while`, `do { … } while` | `loop` block |
-| `Task.WhenAll(a, b)` | `par` block with `and` separator |
-| `Task.WhenAny(a, b)` | `alt first-completes` block |
-| `await a; await b;` (serial) | two sequential messages, no group |
-| Fire-and-forget (`_ = task;`, not awaited) | message annotated `<<async / fire-and-forget>>`; flag `[VERIFY]` |
-| Polymorphic dispatch on an interface | one message per known implementation each marked `[VERIFY]`, or a single message `<<polymorphic>>` if implementation set is open |
+Read `docs/iconix/templates/migration-stack-patterns-reference.md` **Block C** for the
+source-construct → PlantUML construct mapping (if/else, try/catch, loops,
+`Task.WhenAll`/`WhenAny`, fire-and-forget, polymorphic dispatch). Apply the mapping
+verbatim — every group on the SD must correspond to a row in Block C.
 
 ### Step 4 — Produce the draft
 
@@ -276,50 +237,25 @@ From each draft sequence diagram:
 
 1. **Map nodes to ICONIX stereotypes by responsibility shape, not by class name.** Three universal signals — apply in order before falling back to naming hints:
 
-   - **Inbound dispatch?** Framework instantiates and calls it; no inbound code calls. → **Inbound Boundary**.
-   - **Outbound infrastructure imports?** Class imports an HTTP client library, database driver, vendor SDK, message-bus client, blob storage, file system, or email/SMS sender; minimal conditional logic over domain values. → **Outbound Boundary**.
-   - **Pure data + persistence metadata, no I/O?** → **Entity**. Otherwise → **Controller** (domain decisions only).
+   - **Inbound dispatch?** Framework instantiates and calls it; no inbound code calls. → **Inbound Boundary**. (For non-HTTP entry points name the actor *Time*, *Clock*, *MessageBus*, *FileSystem*, or *another System* — never silently default to "User".)
+   - **Outbound infrastructure imports?** Class imports an HTTP client library, database driver, vendor SDK, message-bus client, blob storage, file system, or email/SMS sender; minimal conditional logic over domain values. → **Outbound Boundary**. Render stereotyped `<<outbound>>` on the RB; place on the right side of their controller on the SD.
+   - **Pure data + persistence metadata, no I/O?** → **Entity**. Otherwise → **Controller** (domain decisions only, no infrastructure imports).
 
-   ### Inbound Boundary — surface where an actor enters the system
-   - **Graph signals:** node type matches the entry-point taxonomy from Phase 1 (`controller`, `handler`, `route`, `endpoint`, `view`, `page`, `hub`, `cli`, `screen`, `background_service`, `hosted_service`, `consumer`, `function_handler`, `worker`, `listener`, `subscriber`, `job`).
-   - **Actor identification:** for non-HTTP entry points the actor is typically *Time*, *Clock*, *MessageBus*, *FileSystem*, or *another System* — name it explicitly in the UC.
+   Read `docs/iconix/templates/migration-stack-patterns-reference.md` **Block D** for:
+   - Universal signals and cross-stack illustration for Outbound Boundary (HTTP / Database / message publisher / vendor SDK / file-blob columns across 6 stacks).
+   - Entity stack examples (persistence-metadata signals per stack).
+   - Controller stack examples (`*Service` / `*Handler` / etc. naming with no infra imports).
+   - The disambiguation rule **trust imports over class names** — re-apply after every initial guess.
 
-   ### Outbound Boundary — surface where the system reaches an external system
-   - **Universal signals:**
-     - Imports an infrastructure namespace (HTTP client, DB driver, vendor SDK, message-bus client, blob storage, OS file system, email/SMS sender).
-     - Class name suffix is an adapter pattern (`*Client`, `*Gateway`, `*Repository`, `*Dao`, `*Adapter`, `*Publisher`, `*Sender`, `*Driver`, `*Connector`, `*Provider`).
-     - Minimal conditional logic over domain values; mostly forwards / translates / serialises.
-   - **Cross-stack illustration** (read `iconix.config.yaml` `stack.language` to weight the relevant column):
-
-     | Pattern | C# / .NET | Java | Python | Node.js / TS | Go | Ruby |
-     |---|---|---|---|---|---|---|
-     | Outbound HTTP | typed `HttpClient`, Refit, RestSharp | `RestTemplate`, `WebClient`, Feign | `requests`, `httpx`, `aiohttp` | `axios`, `fetch`, `got` | `net/http.Client`, `resty` | `Net::HTTP`, Faraday, HTTParty |
-     | Database | `DbContext`, EF Core, Dapper, `IMongoCollection` | JPA `Repository`, `JdbcTemplate`, MyBatis | SQLAlchemy `Session`, Django ORM | Prisma, TypeORM, Mongoose, Sequelize | GORM, `database/sql`, sqlx | ActiveRecord, Sequel |
-     | Message publisher | `IBus` (MassTransit), `ServiceBusSender` | `KafkaTemplate`, `JmsTemplate` | `kafka-python`, `pika`, Celery `.delay()` | `kafkajs`, `amqplib` | Sarama producer, NATS client | `Bunny`, ruby-kafka |
-     | Vendor SDK | `StripeClient`, `BlobContainerClient`, `IAmazonS3` | AWS SDK, Twilio, Stripe | `boto3`, `stripe`, `sendgrid` | `aws-sdk` v3, `stripe` | AWS SDK Go, GCP client libs | AWS SDK Ruby, Stripe |
-     | File / blob | `File.WriteAllText`, `Stream`, `BlobClient` | `Files.write`, `S3Client` | `open(...)`, `boto3.S3.Client` | `fs.writeFile`, S3 SDK | `os.OpenFile`, AWS S3 SDK | `File.write`, AWS SDK |
-
-   - **Render outbound boundaries explicitly** on the diagram: stereotype them `<<outbound>>` on the RB; place on the right side of their controller on the SD.
-
-   ### Entity — the domain object itself
-   - **Universal signals:** persistence metadata native to the stack (annotations, attributes, decorators, struct tags, schema-derived models); methods (if any) operate only on the object's own state; no imports from infrastructure namespaces.
-   - **Stack examples:** C# `[Table]` / `[Key]` / EF POCO; Java `@Entity` / `@Table` / `@Document`; Python dataclass / Pydantic model / Django Model / SQLAlchemy declarative; TS TypeORM `@Entity` / Prisma model / Mongoose schema; Go struct with persistence tags; Ruby ActiveRecord model.
-
-   ### Controller — logical software function
-   - **Universal signals:** takes domain inputs, decides domain outcomes, only imports domain types — **no infrastructure imports**.
-   - **Stack examples:** `*Service` / `*Handler` / `*Validator` / command handlers / use-case classes / interactors / service objects.
-
-2. **Disambiguation rule — trust imports over class names.** When a node's name suggests one stereotype but its imports suggest another, trust the imports. A class named `OrderService` that imports `Stripe` and `DbContext` is two outbound boundaries' worth of work, not a controller.
-
-3. Use the graph's call edges to draw connections.
-4. Validate against ICONIX noun-verb-noun rules.
-5. List rule violations — these reveal where existing architecture diverges from ICONIX patterns.
-6. **Mixed-responsibility check.** When any node classified as a Boundary also has conditional logic over domain values:
+2. Use the graph's call edges to draw connections.
+3. Validate against ICONIX noun-verb-noun rules.
+4. List rule violations — these reveal where existing architecture diverges from ICONIX patterns.
+5. **Mixed-responsibility check.** When any node classified as a Boundary also has conditional logic over domain values:
    - **Inbound boundary** node has direct outbound edges to entity/DB/external-IO nodes AND source body contains domain conditionals — i.e., the boundary is doing the work instead of delegating to a controller.
    - **Outbound boundary** node has source-body conditionals branching on domain attributes — the adapter is making business decisions.
 
    Flag the class `[VERIFY]` and recommend extracting a controller so the boundary stays thin. Record the recommendation in the handoff report.
-7. Produce `robustness/RB-DRAFT-XXX.puml`
+6. Produce `robustness/RB-DRAFT-XXX.puml`
 
 ## Phase 4b — Domain model synthesis (graph-assisted)
 A filtered projection of the class model — entities only, attributes only, real-world relationships only. Reverse-engineered after robustness diagrams because RBs reveal which classes are entities versus boundaries or services.
@@ -356,17 +292,7 @@ A filtered projection of the class model — entities only, attributes only, rea
 
 **Multi-repo pre-step:** Resolve container source roots using the multi-repo source resolution from `iconix-migration-infra`. In multi-repo mode, run the entry-point walk independently for each resolved source root. After the survey, add a **Containers surveyed** section to `migration/survey-phase1-<date>.md` (same format as graph-assisted Phase 1).
 
-1. Walk the repository; identify entry points by **responsibility shape**, not class-name patterns. Two universal signals:
-   - **Inbound dispatch.** The class is instantiated and invoked by a framework (web framework router, hosted-service runner, background-job runner, message-bus dispatcher, CLI parser) — not by user code.
-   - **No inbound calls from user code.** Other classes in the system don't import or call this one; the framework reaches it through routing/configuration/DI.
-
-   Read `iconix.config.yaml` `stack.language` first; grep for framework markers:
-   - **C# / .NET**: `[ApiController]`, MVC `Controller` / `Razor Page`, SignalR `Hub`, gRPC service, `BackgroundService` / `IHostedService`, `IConsumer<T>`, Azure Function, AWS Lambda.
-   - **Java**: `@RestController` / `@Controller`, gRPC, `@Scheduled`, `@KafkaListener`, `@JmsListener`, Spring Cloud Function, picocli.
-   - **Python**: FastAPI / Flask / Django routes, DRF `APIView`, Celery tasks, FastStream consumers, Click / Typer commands.
-   - **Node.js / TypeScript**: Express / Koa / Fastify routes, Nest `@Controller`, BullMQ workers, Lambda handlers, KafkaJS consumers, `commander` actions.
-   - **Go**: `http.Handler`, gin handlers, gRPC service, goroutine workers, Sarama consumers, `cobra.Command`.
-   - **Ruby**: `ApplicationController` subclasses, Grape APIs, Sidekiq workers, ActiveJob, Thor commands.
+1. Walk the repository; identify entry points by **responsibility shape**, not class-name patterns. Read `docs/iconix/templates/migration-stack-patterns-reference.md` **Block A** for the two universal signals and the cross-stack matrix; grep for the markers in the column matching `iconix.config.yaml` `stack.language`. Since the graph is unavailable here, the "no inbound graph edges" signal becomes "no inbound calls from user code" — confirm by greping for imports of the candidate class.
 
 2. Identify the tech stack and frameworks; load relevant conventions.
 3. Produce `migration/survey-phase1-<date>.md` with mode: code-walking.

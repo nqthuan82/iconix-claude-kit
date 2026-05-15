@@ -80,6 +80,7 @@ iconix-kit/
     ├── handoff-report-template.md      # migration handoff report format (v0.9.44+)
     ├── business-rules-template.md      # business rules catalog scaffold (greenfield + migration) (v1.0.44+)
     ├── migration-schema-detection-reference.md  # Track B1-B5 / Track C lookup tables loaded on-demand by migration-semantic (v1.0.47+)
+    ├── migration-stack-patterns-reference.md    # Block A-D cross-stack detection patterns loaded on-demand by migration-structural (v1.0.59+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -230,6 +231,7 @@ docs/iconix/
     ├── handoff-report-template.md
     ├── business-rules-template.md
     ├── migration-schema-detection-reference.md
+    ├── migration-stack-patterns-reference.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md
     ├── intake-brd-template.md
