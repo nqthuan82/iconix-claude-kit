@@ -137,6 +137,7 @@ try {
         Copy-Item (Join-Path $WorkDir "templates\system-architecture-template.md")       "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\metrics-schema.json")                 "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-schema-detection-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
 
         # Seed canonical architecture doc if not present
         $archDoc = "docs\architecture\system-architecture.md"

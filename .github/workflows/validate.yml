@@ -179,6 +179,11 @@ jobs:
           test -f docs/iconix/templates/intake-feature-request-template.md || { echo "intake-feature-request-template.md missing"; exit 1; }
           # v0.9.4: bug report template (optional structured input for /iconix-bug)
           test -f docs/iconix/templates/bug-report-template.md || { echo "bug-report-template.md missing"; exit 1; }
+          # v1.0.47: migration agent split — 3 sub-agents + schema detection reference file
+          test -f .claude/agents/iconix-migration-infra.md || { echo "iconix-migration-infra.md missing"; exit 1; }
+          test -f .claude/agents/iconix-migration-structural.md || { echo "iconix-migration-structural.md missing"; exit 1; }
+          test -f .claude/agents/iconix-migration-semantic.md || { echo "iconix-migration-semantic.md missing"; exit 1; }
+          test -f docs/iconix/templates/migration-schema-detection-reference.md || { echo "migration-schema-detection-reference.md missing"; exit 1; }
           # v0.9.5: git integration — branch + commit conventions and the generic validator script
           test -f docs/iconix/templates/git-integration/branch-conventions.md || { echo "branch-conventions.md missing"; exit 1; }
           test -f docs/iconix/templates/git-integration/commit-conventions.md || { echo "commit-conventions.md missing"; exit 1; }

@@ -5,6 +5,29 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.47] — 2026-05-15
+
+**Feature: Migration agent split into 3 phase-based sub-agents with checkpoint protocol and prompt optimization.**
+
+The monolithic `iconix-migration.md` (32,515 tokens) has been split into three phase-based sub-agents to solve context window exhaustion on large systems (50+ entry points, 20+ containers):
+
+- **`agents/iconix-migration-infra.md`** (~10K tokens) — pre-flight checks: mode detection, per-container graph resolution, multi-repo source resolution, pre-run idempotency check, dependency source reconnaissance (Step 0b), cross-container boundary correlation (Phase 1b). Writes `migration/checkpoint-<date>.json` and `migration/dependency-registry-<date>.md`.
+- **`agents/iconix-migration-structural.md`** (~7K tokens) — structural phases: code survey (Phase 0/1), class model (Phase 2), sequence diagrams (Phase 3), robustness diagrams (Phase 4), domain model (Phase 4b). Both graph-assisted and code-walking modes. Writes `migration/survey-phase1-<date>.md`.
+- **`agents/iconix-migration-semantic.md`** (~8K tokens) — semantic phases: use case drafts (Phase 5), UC packages (Phase 5b), BDD scenarios (Phase 5c), business rules (Phase 5d), test coverage map (Phase 6), handoff report (Phase 7). Both modes.
+- **`agents/iconix-migration.md`** — reduced to a thin router (~300 tokens): reads checkpoint and tells the user which sub-agent to invoke next.
+- **`docs/iconix/templates/migration-schema-detection-reference.md`** — Phase 5c B1–B5 language-detection tables and Track C signals extracted from the semantic agent to an on-demand reference file. Reduces semantic agent token cost by ~6K tokens; loaded by semantic agent at Phase 5c Step 1 only.
+
+Prompt optimizations implemented simultaneously:
+- **Technique 1** (reference file): Phase 5c lookup tables → `migration-schema-detection-reference.md`
+- **Technique 2** (XML gates): all pre-phase and completion gates wrapped in `<gate id="..." mandatory="true">` blocks for reliable instruction following across long contexts
+- **Techniques 3+4** (prompt caching + extended thinking): documented as `# Future optimization` notes in each sub-agent's frontmatter — implement when Claude Code exposes `cache_control` and `thinking:` frontmatter
+
+Checkpoint protocol: `migration/checkpoint-<date>.json` tracks `phases_completed` with 3-case fallback (valid → proceed, missing → re-run infra, corrupt → report path). Sub-agents verify the checkpoint before doing any work.
+
+**Scalability gate** added to structural Phase 3: caps paths per entry point at 20 when `entry_point_count > 50` to prevent `all_simple_paths` timeout on large systems.
+
+Installer (`iconix-init`, `iconix-init.ps1`) updated to copy the reference file. CI smoke test updated to assert all 4 new/changed files exist. README updated: agent count 13→16.
+
 ## [1.0.46] — 2026-05-14
 
 **Feature: CI validator — BR-NNN citation integrity (Traceability check #17).**

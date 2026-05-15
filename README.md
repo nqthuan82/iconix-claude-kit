@@ -23,7 +23,10 @@ iconix-kit/
 │   ├── iconix-metrics.md      # project metrics + audit-friendly snapshots (v0.9.7+)
 │   ├── iconix-upgrade.md      # kit-version migration; never modifies project artifacts (v0.9.9+)
 │   ├── iconix-docs.md         # user / dev / API doc generation
-│   └── iconix-migration.md    # retrofit ICONIX onto legacy code (Graphify-aware in v0.3.0+)
+│   ├── iconix-migration.md    # retrofit ICONIX onto legacy code — router (Graphify-aware in v0.3.0+)
+│   ├── iconix-migration-infra.md      # migration Phase 0: pre-flight, graph resolution, dep recon (v1.0.47+)
+│   ├── iconix-migration-structural.md # migration Phases 0–4b: survey, class model, SDs, RBs (v1.0.47+)
+│   └── iconix-migration-semantic.md   # migration Phases 5–7: UCs, BDD, rules, handoff (v1.0.47+)
 ├── commands/                # Claude Code slash commands
 │   ├── iconix-next.md
 │   ├── iconix-status.md
@@ -76,6 +79,7 @@ iconix-kit/
     ├── upgrade-report-template.md      # kit-version upgrade report format (v0.9.9+)
     ├── handoff-report-template.md      # migration handoff report format (v0.9.44+)
     ├── business-rules-template.md      # business rules catalog scaffold (greenfield + migration) (v1.0.44+)
+    ├── migration-schema-detection-reference.md  # Track B1-B5 / Track C lookup tables loaded on-demand by migration-semantic (v1.0.47+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -158,7 +162,7 @@ After `iconix-init` the project gains two layers: **kit machinery** (agents, com
 
 ```
 .claude/
-├── agents/                          ← 13 agent definitions
+├── agents/                          ← 16 agent definitions
 │   ├── iconix-orchestrator.md
 │   ├── iconix-product-owner.md
 │   ├── iconix-analyst.md
@@ -171,7 +175,10 @@ After `iconix-init` the project gains two layers: **kit machinery** (agents, com
 │   ├── iconix-metrics.md
 │   ├── iconix-upgrade.md
 │   ├── iconix-docs.md
-│   └── iconix-migration.md
+│   ├── iconix-migration.md          ← thin router
+│   ├── iconix-migration-infra.md    ← pre-flight + dep recon (v1.0.47+)
+│   ├── iconix-migration-structural.md ← survey + class model + SDs + RBs (v1.0.47+)
+│   └── iconix-migration-semantic.md   ← UCs + BDD + rules + handoff (v1.0.47+)
 └── commands/                        ← 13 slash commands
     ├── iconix-next.md               /iconix-next
     ├── iconix-status.md             /iconix-status
@@ -222,6 +229,7 @@ docs/iconix/
     ├── upgrade-report-template.md
     ├── handoff-report-template.md
     ├── business-rules-template.md
+    ├── migration-schema-detection-reference.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md
     ├── intake-brd-template.md

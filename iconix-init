@@ -160,6 +160,7 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/templates/system-architecture-template.md"          "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/metrics-schema.json"                      "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/templates/migration-schema-detection-reference.md" "docs/iconix/templates/" 2>/dev/null || true
 
   # Seed canonical architecture doc if not present
   if [[ ! -f "docs/architecture/system-architecture.md" ]]; then
