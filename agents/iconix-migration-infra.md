@@ -35,6 +35,7 @@ If not specified, both values remain `null` (no filtering applied).
 - `--scope` does **not** filter Phase 1b cross-container correlation — Phase 1b always loads all previous survey files to detect cross-container UC groupings spanning this and earlier runs.
 - In single-repo mode, `--scope` matches the `name:` field in `architecture.containers`. In multi-repo mode same rule.
 - Incremental use: run again with a different `--scope` after the first scope's pipeline completes. The idempotency check and Phase 1b Step 0 will skip already-promoted UCs and detect cross-container pairs automatically.
+- **Database containers** (schema files, no application entry points): if SQL schema lives in a dedicated container (e.g. `Migrations`, `Database`, `Schema`, `pg-schema`), include it in an early run — e.g. `--scope Migrations` — to build `migration/domain-glossary.md` before scoping to application containers. Subsequent application-container runs detect the existing glossary and use it for BDD generation without re-scanning schema. The container name does not matter — the kit identifies database containers by functional signals (schema files present, zero entry points).
 
 **Max-uc behavior:**
 - `--max-uc N` caps the UC-DRAFTs the semantic agent produces at N, ordered by entry-point confidence (EXTRACTED first, then INFERRED, then AMBIGUOUS).

@@ -5,6 +5,30 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.52] — 2026-05-15
+
+**Fix: Phase 5c BDD generation with dedicated database containers and incremental scoped runs.**
+
+Three targeted fixes for the case where SQL schema lives in a dedicated container (e.g. `Migrations`, `Database`) separate from application containers:
+
+**1. Two-tier skip condition (semantic agent Phase 5c):**
+The original single skip condition bypassed both Steps 1–3 (schema detection) AND Steps 4–6 (BDD generation) whenever the current scope had no schema sources — even when `domain-glossary.md` already existed from a previous run. Split into two independent tiers:
+- Case A (no schema AND no existing glossary): skip Steps 1–3 and Steps 4–6; move to Phase 6.
+- Case B (no schema BUT existing glossary): skip Steps 1–3 only; proceed to Step 4 gate so BDD-DRAFTs are generated from existing glossary + current run's UC-DRAFTs.
+
+**2. domain-glossary.md append/merge mode (semantic agent Phase 5c Step 3):**
+When `migration/domain-glossary.md` already exists (from a previous `--scope` run), merge new entities rather than overwrite. Existing entity content is preserved; new entities are appended; new attributes on existing entities are annotated `[VERIFY — updated by run <date>]`.
+
+**3. Database container workflow guidance (infra agent `# Scope and run parameters`):**
+Added explicit note: if SQL schema lives in a dedicated container, include it in an early `--scope` run to build the glossary first. Clarifies that the container name is irrelevant — detection is functional (schema files present, zero entry points).
+
+This enables the correct incremental workflow:
+```
+Run 1: --scope Migrations   → domain-glossary.md produced; no UC-DRAFTs
+Run 2: --scope OrderService → UC-DRAFTs produced; Phase 5c Case B fires;
+                              BDD-DRAFTs generated from existing glossary
+```
+
 ## [1.0.51] — 2026-05-15
 
 **Feature: Migration scoped execution — `--scope` and `--max-uc` parameters.**

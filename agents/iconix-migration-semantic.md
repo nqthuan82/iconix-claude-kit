@@ -103,7 +103,13 @@ Enum state machines: <list: EntityName.field — N values (framework | B5-enum |
 Active merge mode: <C1 | B+A | C2+A | A only | ...>
 ```
 
-**Skip condition for Steps 1–3:** if Track A, B, and C all yield zero entity definitions: log `Phase 5c skipped — no SQL, ORM, or migration DSL source detected` and move to Phase 6.
+**Skip conditions — two-tier (Steps 1–3 and Steps 4–6 evaluated independently):**
+
+*Steps 1–3 (schema detection):*
+- **Case A — no schema AND no existing glossary:** Track A, B, and C all yield zero entity definitions AND `migration/domain-glossary.md` does not exist → log `Phase 5c Steps 1–3 skipped — no schema sources detected and no existing glossary` then skip Steps 4–6 entirely; move to Phase 6.
+- **Case B — no schema BUT existing glossary:** Track A, B, and C all yield zero entity definitions AND `migration/domain-glossary.md` already exists (produced by an earlier run, e.g. a `--scope Database` run) → log `Phase 5c Steps 1–3 skipped — no schema in current scope; using existing domain-glossary.md from previous run` then proceed directly to Step 4.
+
+*Steps 4–6 (BDD generation):* always evaluated via the gate below — independently of whether Steps 1–3 ran or were skipped.
 
 ### Step 2 — Build entity glossary
 
@@ -117,6 +123,11 @@ Apply the Step 2A (SQL), Step 2B (ORM), and Step 2C (merge) rules from `migratio
 **Value objects:** owned/embedded types are nested under the owning entity, not listed as standalone entities. Flag stacks with no direct value object support as `[VERIFY — confirm if value object or separate entity]`.
 
 ### Step 3 — Produce `migration/domain-glossary.md`
+
+**Check for existing glossary first.** If `migration/domain-glossary.md` already exists (from a previous run), **merge** rather than overwrite:
+- Existing entities: preserve all content unchanged.
+- New entities (name not already in file): append under the appropriate section heading.
+- Same entity, more attributes found this run: add new attributes with `[VERIFY — updated by run <date>]`.
 
 One file for the whole migration run (all containers merged; in multi-repo mode annotate each entity with its source container):
 
