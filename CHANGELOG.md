@@ -5,6 +5,20 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.48] — 2026-05-15
+
+**Fix: State machine — migration flow added as retrofit entry point.**
+
+`iconix-state-machine.puml` updated to show migration as a first-class entry path alongside the greenfield flow, bug flow, and REQ change flow:
+
+- New `<<migration>>` stereotype (lavender `#D7BDE2`) distinguishes migration from agent (blue), gate (yellow), bug (red), and change (green) states.
+- `Idle → MigrationFlow` transition: "existing codebase (retrofit migration)".
+- `MigrationFlow` state shows the 3-sub-agent sequence (`infra → structural → semantic`) and lists produced artifacts (UC-DRAFTs, class model, RB-DRAFTs, sequence diagrams, domain model, business-rules.md, handoff report).
+- `MigrationFlow → M1Gate` transition: "DRAFTs promoted — handoff reviewed; REQs seeded (re-enters pipeline at M1)".
+- Note block documents both entry commands (`/iconix-migration` thin router and individual sub-agents).
+
+Migration was absent from the diagram despite being added in v1.0.0. The split in v1.0.47 (3 sub-agents) made this gap visible: the diagram had Bug flow and REQ Change flow as retrofit entry points but no equivalent for the migration path.
+
 ## [1.0.47] — 2026-05-15
 
 **Feature: Migration agent split into 3 phase-based sub-agents with checkpoint protocol and prompt optimization.**

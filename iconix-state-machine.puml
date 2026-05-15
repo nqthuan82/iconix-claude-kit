@@ -1,12 +1,13 @@
 @startuml ICONIX-Kit-State-Machine
 
 skinparam state {
-  BackgroundColor<<gate>>    #FFD580
-  BackgroundColor<<agent>>   #AED6F1
-  BackgroundColor<<bug>>     #F1948A
-  BackgroundColor<<change>>  #A9DFBF
-  BorderColor                #2C3E50
-  FontSize                   12
+  BackgroundColor<<gate>>      #FFD580
+  BackgroundColor<<agent>>     #AED6F1
+  BackgroundColor<<bug>>       #F1948A
+  BackgroundColor<<change>>    #A9DFBF
+  BackgroundColor<<migration>> #D7BDE2
+  BorderColor                  #2C3E50
+  FontSize                     12
 }
 skinparam ArrowColor #2C3E50
 
@@ -14,7 +15,8 @@ skinparam ArrowColor #2C3E50
 [*] --> Idle
 
 state "Idle" as Idle
-Idle --> BranchCreate : raw input\n(BRD / transcript / feature request)
+Idle --> BranchCreate    : raw input\n(BRD / transcript / feature request)
+Idle --> MigrationFlow   : existing codebase\n(retrofit migration)
 
 ' ── Phase 0 : Branch creation (Git Agent) ──────────────────────────────
 state "Branch creation\n(Git Agent — user confirms)" as BranchCreate <<agent>>
@@ -134,5 +136,25 @@ note right of REQChange
 end note
 
 REQChange --> Requirements : scoped pipeline\n(only affected artifacts updated)
+
+
+' ── Migration Flow ──────────────────────────────────────────────────────
+' Migration re-enters the pipeline at M1Gate after DRAFT artifacts are
+' promoted. It replaces the greenfield PO → M1 path for existing codebases.
+state "Migration\n(infra → structural → semantic)" as MigrationFlow <<migration>>
+
+note left of MigrationFlow
+  Entry: existing codebase
+  • /iconix-migration (thin router,
+    reads checkpoint state)
+  • /iconix-migration-infra → then
+    structural → then semantic
+  Produces: UC-DRAFTs, class model,
+  RB-DRAFTs, sequence diagrams,
+  domain model, business-rules.md,
+  handoff report
+end note
+
+MigrationFlow --> M1Gate : DRAFTs promoted — handoff\nreviewed; REQs seeded\n(re-enters pipeline at M1)
 
 @enduml
