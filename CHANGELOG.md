@@ -5,6 +5,32 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.62] — 2026-05-16
+
+**Fix: `iconix-metrics` missing `Write` tool (runtime bug).**
+
+Same class of bug as the `iconix-reviewer` Write tool gap fixed in v1.0.58.
+
+`agents/iconix-metrics.md` line 5 declared `tools: Read, Grep, Glob, Bash` —
+no `Write`. But the body requires the agent to produce three files on every
+invocation:
+
+- line 22: `metrics/snapshot-<YYYY-MM-DD>.md` (markdown snapshot)
+- line 23: `metrics/snapshot-<YYYY-MM-DD>.json` (machine-readable snapshot)
+- line 24: `metrics/trend-<YYYY-MM-DD>.md` (trend mode only)
+
+And line 120 says explicitly: "Write the markdown to `metrics/snapshot-<today>.md`...
+and the JSON to `metrics/snapshot-<today>.json`."
+
+Without `Write` in the tools list, every `/iconix-metrics` invocation would
+fail the first time the agent tried to produce a snapshot file. Fix: add
+`Write` to the tools declaration. One-line change.
+
+This is an isolated bug-fix commit (no other agent / config / methodology
+changes) so it can be reverted cleanly if anything downstream depends on
+the old declaration. The Plan-mode and orchestrator-wording consistency
+items surfaced in the same re-audit will ship in a separate commit.
+
 ## [1.0.61] — 2026-05-15
 
 **Frontmatter polish + iconix-docs structure normalization.**
