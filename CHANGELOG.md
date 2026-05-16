@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.69] — 2026-05-16
+
+**Fix: CI step `Agent tool consistency check` aborting under `set -e`.**
+
+The v1.0.68 implementation passed local testing but failed on the first CI run
+([run 25959417113](https://github.com/nqthuan82/iconix-claude-kit/actions/runs/25959417113)).
+Root cause: `grep -c` returns **exit code 1** when the match count is zero. Under
+`set -e`, the very first agent with zero matches (alphabetically: `iconix-git.md`,
+which legitimately has zero file-write signals) aborts the loop before any check
+can run.
+
+Local Git Bash testing during development used the loop *without* `set -e`, so
+the divergence wasn't visible until the workflow ran on Ubuntu CI.
+
+**Fix:** append `|| true` to every `grep -c` and `grep -oE | head -1` invocation
+in the new step. `grep -c` still prints "0" to stdout when there are zero matches,
+so the captured variable is correct; only the non-zero exit code is swallowed.
+
+Re-tested locally with `set -e` enabled — all 16 agents pass with the same signal
+counts as before. No semantic change; pure CI compatibility fix.
+
 ## [1.0.68] — 2026-05-16
 
 **CI: per-agent dry-run consistency check (Tier 1, static analysis).**

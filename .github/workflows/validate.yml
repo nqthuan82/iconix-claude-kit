@@ -120,11 +120,14 @@ jobs:
             name=$(basename "$f")
             tools=$(grep -m1 '^tools:' "$f" | sed 's/tools://;s/,/ /g')
 
-            verb_writes=$(grep -cE '^[0-9.]*\.? *[-*]? *(\*\*)?(Produce|Save|Create|Write|Refine|Append|Update|Aggregate|Emit) [a-zA-Z, `]*`[a-z][^`]+\.(md|puml|json|yaml|yml|sh)`' "$f")
-            has_output_section=$(grep -cE '^# (Artifacts you produce|What you produce|What you write|Artifacts produced)' "$f")
+            # `grep -c` exits 1 when match count is 0, which would abort the loop
+            # under `set -e`. The `|| true` swallows that exit code; grep -c still
+            # prints "0" to stdout, so the variable captures the count correctly.
+            verb_writes=$(grep -cE '^[0-9.]*\.? *[-*]? *(\*\*)?(Produce|Save|Create|Write|Refine|Append|Update|Aggregate|Emit) [a-zA-Z, `]*`[a-z][^`]+\.(md|puml|json|yaml|yml|sh)`' "$f" || true)
+            has_output_section=$(grep -cE '^# (Artifacts you produce|What you produce|What you write|Artifacts produced)' "$f" || true)
             signal=$((verb_writes + has_output_section))
 
-            has_we=$(echo " $tools " | grep -cE ' Write | Edit ')
+            has_we=$(echo " $tools " | grep -cE ' Write | Edit ' || true)
 
             status="ok"
             if [ "$signal" -gt 0 ] && [ "$has_we" -eq 0 ]; then
@@ -139,7 +142,7 @@ jobs:
           for f in agents/*.md; do
             desc=$(grep -m1 '^description:' "$f")
             if echo "$desc" | grep -qE 'v[0-9]+\.[0-9]+(\.[0-9]+)?\+'; then
-              tag=$(echo "$desc" | grep -oE 'v[0-9.]+\+' | head -1)
+              tag=$(echo "$desc" | grep -oE 'v[0-9.]+\+' | head -1 || true)
               echo "WARN: $(basename $f) — description contains version tag '$tag' (should be evergreen)"
               warn=1
             fi
