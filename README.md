@@ -10,6 +10,7 @@ iconix-kit/
 ├── iconix-init              # installer CLI (bash)
 ├── iconix-init.ps1          # installer CLI (PowerShell)
 ├── iconix-state-machine.puml  # PlantUML state machine of the full kit workflow
+├── BACKLOG.md               # proposed enhancements not yet scheduled (status, design, trade-offs per entry)
 ├── agents/                  # Claude Code sub-agent definitions
 │   ├── iconix-orchestrator.md
 │   ├── iconix-product-owner.md

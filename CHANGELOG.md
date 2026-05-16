@@ -5,6 +5,33 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.67] — 2026-05-16
+
+**Add `BACKLOG.md` — living doc for proposed enhancements; first entry: Lightweight mode.**
+
+New top-level file `BACKLOG.md` captures enhancement proposals that have a design
+sketch but aren't scheduled for implementation. Each entry carries enough context
+(problem statement, design, trade-offs, mitigation, roadmap, open questions, rejected
+alternatives) that a future session can pick it up without re-deriving the problem.
+
+Status legend: Proposed / In design / In progress / Done / Rejected. Entries that
+ship migrate from the backlog into a versioned CHANGELOG entry; rejected proposals
+stay in BACKLOG.md with the rationale so they aren't re-proposed.
+
+**First entry — Lightweight mode** (Proposed):
+A parallel pipeline path for sub-day features (filter additions, copy changes, single
+endpoints) where the full PO → Analyst → Architect → Developer → Tester chain has a
+6:1 overhead ratio. Lightweight UCs skip diagram production but preserve traceability
+data inline (`Class-touch:`, `NFRs:`, `Containers:`, `TCs:`) so impact/risk analysis
+still works. Two CI sanity checks (Traceability validates declared class names exist;
+Reviewer compares declared vs actually-modified classes at Phase 9.2) mitigate the
+class-touch honesty risk that comes from declaring data rather than deriving it from
+RB diagrams.
+
+`README.md` Project layout updated to list BACKLOG.md at the top level.
+
+No agent / template / methodology / CI changes — this commit only adds documentation.
+
 ## [1.0.66] — 2026-05-16
 
 **Orchestrator: pre-flight check for unpromoted migration DRAFTs.**
