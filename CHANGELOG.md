@@ -5,6 +5,59 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.66] — 2026-05-16
+
+**Orchestrator: pre-flight check for unpromoted migration DRAFTs.**
+
+Closes D4 from the cross-agent logic audit. After `iconix-migration-semantic`
+finishes, users had to remember to run `/iconix-promote` before invoking
+`/iconix-next` to convert DRAFT slugs (e.g., `UC-DRAFT-001`) into permanent
+ICONIX IDs (e.g., `UC-017`). If they forgot and ran `/iconix-next` directly,
+the orchestrator would route work as if DRAFTs were first-class artifacts —
+but the Traceability chain expects permanent IDs and DRAFTs cannot pass
+M1/M2/M3 gates properly. Result: silent confusion and gate-failure spam.
+
+The previous nudge was a single text line in the `iconix-migration` router's
+Case D output ("When DRAFTs are ready: run /iconix-promote"). Easy to miss.
+
+**New: Orchestrator `# Pre-flight checks` section (before `# Phase order`)**
+
+Runs before any routing decision. The first check (`Check 1 — Unpromoted
+migration DRAFTs`) greps for DRAFT artifacts across all migration output
+paths:
+- `use-cases/UC-DRAFT-*.md`
+- `robustness/RB-DRAFT-*.puml`
+- `sequence/SD-DRAFT-*.puml`
+- `domain-model/domain-model-DRAFT.puml`
+- `class-model/class-model-DRAFT.puml` (greenfield-coexistence mode from v1.0.64)
+  OR `class-model/class-model.puml` with a DRAFT stamp in its header (standard mode)
+- `use-case-packages/*-DRAFT.puml`
+
+If any are found, the orchestrator reads `migration/checkpoint-*.json` to
+classify the situation:
+
+- **Case A — migration complete, DRAFTs awaiting promotion**
+  (`phases_completed` includes `"semantic"`): stop and tell the user to
+  run `/iconix-promote all` or `/iconix-promote UC-DRAFT-<slug>`, then
+  re-run `/iconix-next`.
+- **Case B — migration mid-pipeline** (checkpoint missing or
+  `phases_completed` does not include `"semantic"`): stop and tell the
+  user to continue migration first via `iconix-migration` router.
+- **Case C — no DRAFTs found**: proceed to normal Phase-order routing.
+
+**No methodology surface changes.** ICONIX phase order, gate criteria,
+and traceability chain unchanged. The fix is a guard on the orchestrator's
+entry point — it can't route through invalid state, and the user gets a
+specific command to run instead of a vague gate failure later.
+
+**No changes to `iconix-migration` router or `iconix-promote` command** —
+the Case D message in the router and the promotion command itself are
+correct as-is. The orchestrator is the new safety net on the receiving
+end of `/iconix-next`.
+
+**Token impact:** orchestrator ~4,333 → ~4,860 tokens (still 51% under
+the 10K soft ceiling). No other agent touched.
+
 ## [1.0.65] — 2026-05-16
 
 **Orchestrator: docs-sync nudges in Phase 9.4 exit and REQ change flow.**
