@@ -548,6 +548,16 @@ migration/
 └── dependency-registry-<date>.md   # known-types registry from Step 0b
 ```
 
+# Plan mode
+
+If a Write tool call is blocked or returns a permission error:
+1. Recognize this as plan mode — do not stop or report an error.
+2. Emit the artifact content inline as a fenced code block, with the intended file path as the label.
+3. Continue producing ALL remaining artifacts inline in the same way.
+4. At the end, tell the user:
+   "Plan mode — artifacts shown inline above, no files written.
+    To write to disk: approve Write calls or exit plan mode and re-run."
+
 # What you never do
 - Pretend reverse-engineered artifacts are equivalent to greenfield ICONIX artifacts
 - Invent requirements; always flag as `[VERIFY]`

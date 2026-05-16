@@ -5,6 +5,45 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.63] — 2026-05-16
+
+**Consistency: Plan mode block for 6 artifact-writing agents + orchestrator role wording.**
+
+Follow-up to v1.0.62. The re-audit flagged that 6 agents have `Write` in their
+tools list and write files in their body, but lack the `# Plan mode` section
+that 8 other artifact-writing agents already have (analyst, architect, developer,
+docs, migration-semantic, migration-structural, product-owner, tester).
+
+Without the block, these agents would error out in plan mode (Write blocked by
+harness) instead of emitting their content inline as a fenced code block — the
+canonical fallback that v1.0.50 established as kit-wide convention.
+
+**Agents that gained `# Plan mode`:**
+- `iconix-reviewer` — writes `reviews/REVIEW-*.md` (had no plan-mode fallback since Write was added in v1.0.58)
+- `iconix-metrics` — writes `metrics/snapshot-*.{md,json}` and `metrics/trend-*.md` (Write was added in v1.0.62; this completes the gap)
+- `iconix-migration-infra` — writes `migration/checkpoint-*.json` and `migration/dependency-registry-*.md`
+- `iconix-traceability` — writes orphan reports, traceability matrices, milestone-gate reports, change-impact reports, ID registry
+- `iconix-upgrade` — writes `upgrades/upgrade-<from>-to-<to>-*.md`, modified `iconix.config.yaml`
+- `iconix-orchestrator` — writes `phase9-cycles/UC-XXX-cycle.md`
+
+The block is the canonical 8-line version copied verbatim from the kit's other
+artifact-writing agents (no per-agent customization needed — the wording works
+generically for any "the artifact you would have written").
+
+**Orchestrator role wording fix:**
+Line 9 said "You do not produce artifacts yourself — you dispatch." This was
+accurate when written but became overstated when Phase 9 added the cycle log
+(`phase9-cycles/UC-XXX-cycle.md`), which the orchestrator does create and
+append to during Phase 9.1/9.2/9.4. Reworded to: "You do not produce ICONIX
+artifacts (UCs, RBs, SDs, code, tests, ADRs) yourself — you dispatch. The only
+file you write directly is `phase9-cycles/UC-XXX-cycle.md`, which is an
+iteration journal, not a methodology artifact." This matches the existing
+`# What you never do` list, which already correctly excludes the cycle log.
+
+No methodology surface changes — Plan mode is a harness-fallback convention,
+not an ICONIX rule. No pipeline / gate / agent label changes; state machine
+unchanged.
+
 ## [1.0.62] — 2026-05-16
 
 **Fix: `iconix-metrics` missing `Write` tool (runtime bug).**

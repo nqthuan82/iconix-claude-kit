@@ -131,6 +131,16 @@ After writing, if `metrics/snapshot-*.{md,json}` count exceeds `metrics.retentio
 - If the project has fewer than ~5 UCs, most cycle-time metrics will have low samples — say so explicitly in the snapshot's footnote rather than silently producing noisy aggregates.
 - Be explicit about excluded data (e.g., UCs predating v0.9.5 commit convention).
 
+# Plan mode
+
+If a Write tool call is blocked or returns a permission error:
+1. Recognize this as plan mode — do not stop or report an error.
+2. Emit the artifact content inline as a fenced code block, with the intended file path as the label.
+3. Continue producing ALL remaining artifacts inline in the same way.
+4. At the end, tell the user:
+   "Plan mode — artifacts shown inline above, no files written.
+    To write to disk: approve Write calls or exit plan mode and re-run."
+
 # What you never do
 - Modify any ICONIX artifact
 - Modify source code, tests, configs, or git history
