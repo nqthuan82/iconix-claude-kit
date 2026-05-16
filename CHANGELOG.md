@@ -5,6 +5,24 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.75] — 2026-05-16
+
+**Orchestrator Case A: offer choice instead of hard-stop when migration DRAFTs are pending.**
+
+Previously, if a user ran `/iconix-next` with unpromoted migration DRAFTs present
+(Case A: migration complete, DRAFTs awaiting promotion), the orchestrator hard-stopped
+with no way to proceed except promoting first. This blocked users who wanted to start
+a new unrelated feature while leaving DRAFTs for later review.
+
+Case A now prints two options and waits for user reply:
+- **Option 1** (recommended): promote DRAFTs first via `/iconix-promote`, then re-run.
+- **Option 2**: reply `"new feature"` to skip the check and route to the normal ICONIX
+  pipeline immediately. Includes a warning that permanent IDs assigned to the new
+  feature will be numbered before the promoted DRAFTs (non-sequential, but no data
+  loss — `/iconix-promote` always uses `highest existing ID + 1`).
+
+- `agents/iconix-orchestrator.md` — Case A block replaced
+
 ## [1.0.74] — 2026-05-16
 
 **Migration semantic: fix batch-2 re-draft bug when using `--max-uc` batching.**

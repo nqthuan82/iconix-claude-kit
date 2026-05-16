@@ -25,21 +25,30 @@ Grep for DRAFT artifacts produced by migration:
 If any DRAFT files exist, the migration outputs haven't been promoted to permanent IDs. The normal ICONIX pipeline requires permanent IDs (e.g., `UC-017`) — DRAFT slugs cannot pass M1/M2/M3 gates. Read `migration/checkpoint-*.json` (most recent) and route:
 
 **Case A — checkpoint shows `phases_completed: ["infra", "structural", "semantic"]`:**
-Migration is complete; DRAFTs are awaiting promotion. STOP. Print:
+Migration is complete; DRAFTs are awaiting promotion. Print the message below and **wait for the user's reply before routing**:
 
 ```
-## Unpromoted migration DRAFTs detected — promote before continuing
+## Unpromoted migration DRAFTs detected
 
 <list each DRAFT file found, one per line>
 
-These need human review and ID promotion before the normal ICONIX pipeline
-can run. The Traceability chain expects permanent IDs, not DRAFT slugs.
+Migration is complete. These DRAFTs need human review and ID promotion.
+Choose how to proceed:
 
-  /iconix-promote all                 — promote everything with zero unresolved [VERIFY]
-  /iconix-promote UC-DRAFT-<slug>     — promote one specific DRAFT
+  Option 1 — Promote DRAFTs first (recommended)
+    /iconix-promote all                 — promote everything with zero unresolved [VERIFY]
+    /iconix-promote UC-DRAFT-<slug>     — promote one specific DRAFT
+    Then re-run /iconix-next.
 
-Then re-run /iconix-next to continue.
+  Option 2 — Start a new feature now, promote DRAFTs later
+    Reply "new feature" to skip this check and continue to the ICONIX pipeline.
+    ⚠ Warning: permanent IDs assigned to the new feature (REQ-001, UC-001, ...)
+    will be numbered before the promoted DRAFTs. When you promote later, DRAFTs
+    receive higher IDs (non-sequential). No data loss — IDs remain unique.
 ```
+
+If the user replies **"new feature"**: proceed to `# Phase order` routing below (ignore the remaining DRAFTs for this session).
+If the user replies with anything else or does not reply: do not route; wait.
 
 **Case B — checkpoint missing OR `phases_completed` does not include "semantic":**
 Migration is mid-pipeline; DRAFTs found are intermediate output. STOP. Print:
