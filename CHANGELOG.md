@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.76] — 2026-05-16
+
+**README: fix incorrect paths for migration reference files in project layout.**
+
+`migration-schema-detection-reference.md` and `migration-stack-patterns-reference.md`
+were listed under `templates/` in the source kit layout section, but they actually
+live under `docs/iconix/templates/`. Removed the two entries from `templates/` and
+added a `docs/iconix/templates/` section with the correct paths and descriptions.
+The installed-files layout section was already correct — no change needed there.
+
+- `README.md` — source kit layout section fixed
+
 ## [1.0.75] — 2026-05-16
 
 **Orchestrator Case A: offer choice instead of hard-stop when migration DRAFTs are pending.**

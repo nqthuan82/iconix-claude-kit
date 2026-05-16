@@ -80,8 +80,6 @@ iconix-kit/
     ├── upgrade-report-template.md      # kit-version upgrade report format (v0.9.9+)
     ├── handoff-report-template.md      # migration handoff report format (v0.9.44+)
     ├── business-rules-template.md      # business rules catalog scaffold (greenfield + migration) (v1.0.44+)
-    ├── migration-schema-detection-reference.md  # Track B1-B5 / Track C lookup tables loaded on-demand by migration-semantic (v1.0.47+)
-    ├── migration-stack-patterns-reference.md    # Block A-D cross-stack detection patterns loaded on-demand by migration-structural (v1.0.59+)
     └── git-integration/                # v0.9.5+ — provider-agnostic + provider-specific
         ├── README.md
         ├── branch-conventions.md       # branch naming reference (any provider)
@@ -90,6 +88,11 @@ iconix-kit/
         │   └── validate-traceability.sh   # core merge-gate validator
         ├── github/                     # workflows + PR templates (per phase)
         └── azure-devops/               # pipeline + PR templates (per phase)
+docs/
+└── iconix/
+    └── templates/                      # reference files loaded on-demand by migration agents (not user-facing)
+        ├── migration-schema-detection-reference.md  # Track B1-B5 / Track C lookup tables → migration-semantic Phase 5c (v1.0.47+)
+        └── migration-stack-patterns-reference.md    # Block A-D cross-stack patterns → migration-structural Phases 1/1b/3/4 (v1.0.59+)
 ```
 
 ## Install into a project
