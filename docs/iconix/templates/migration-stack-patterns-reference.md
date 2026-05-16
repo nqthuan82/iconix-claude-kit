@@ -122,7 +122,7 @@ relevant column.
 - Imports an infrastructure namespace (HTTP client, DB driver, vendor SDK, message-bus
   client, blob storage, OS file system, email/SMS sender).
 - Class name suffix matches an adapter pattern (`*Client`, `*Gateway`, `*Repository`,
-  `*Dao`, `*Adapter`, `*Publisher`, `*Sender`, `*Driver`, `*Connector`, `*Provider`).
+  `*Store`, `*Dao`, `*Adapter`, `*Publisher`, `*Sender`, `*Driver`, `*Connector`, `*Provider`).
 - Minimal conditional logic over domain values; mostly forwards / translates / serialises.
 
 ### Cross-stack illustration

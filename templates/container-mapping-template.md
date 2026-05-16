@@ -18,23 +18,33 @@
 > what this container *does* in this UC's flow (boundary, processor,
 > persistence, external integration, etc.).
 >
+> **Derive container rows from the robustness diagram** using the classification
+> table in `iconix-architect.md` `# Controller-to-container classification`.
+> Fill "Source RB nodes" with the RB element names (Controller / Boundary / Entity)
+> that drove each row — this is the traceability link from RB to container mapping.
+>
 > **Effective stack** — resolve per container:
 > container-level `stack.language` / `stack.test_framework` from `iconix.config.yaml`
 > if present; otherwise the top-level `stack.*` values. The Developer and Tester agents
 > read this column — fill it in so they don't have to re-derive it.
 
-| Container | Effective stack | Role in this UC | What this UC does here | Testability seam |
-|---|---|---|---|---|
-| `<Container1>` | csharp / xunit | Boundary | Receives HTTP request; binds form data; redirects on validation failure | **System seam:** HTTP POST endpoint usable in WebApplicationFactory tests |
-| `<Container2>` | csharp / xunit | Domain entity + validation | Constructs and validates the entity per its DataAnnotations + IValidatableObject | **Unit seam:** entity class instance + Validator.TryValidateObject |
-| `<Container3>` | csharp / xunit | Persistence | Saves entity to repository; enqueues for downstream | **Integration seam:** repository interface mockable in service-layer tests |
-| `<Container4 — pure I/O downstream>` | csharp / xunit | Persistence (read) | Database lookup via repository | **(out of scope — covered via `<Container3>`'s integration seam)** |
+| Container | Effective stack | Role in this UC | What this UC does here | Source RB nodes | Testability seam |
+|---|---|---|---|---|---|
+| `<Container1>` | csharp / xunit | Boundary | Receives HTTP request; binds form data; redirects on validation failure | `Submit Review Form` (Inbound Boundary) | **System seam:** HTTP POST endpoint usable in WebApplicationFactory tests |
+| `<Container2>` | csharp / xunit | Application Service | Validates input; orchestrates entity creation and persistence | `Validate Review`, `Save Review` (Controllers) | **Unit seam:** service class with repository interface injected; no I/O in unit tests |
+| `<Container3>` | csharp / xunit | Domain | Constructs and validates the entity per business invariants | `Review` (Entity) | **Unit seam:** entity class instance + domain validation logic |
+| `<Container4>` | csharp / xunit | Persistence | Saves entity to repository; enqueues for downstream | `ReviewRepository` (Outbound Boundary) | **Integration seam:** repository interface mockable in service-layer tests |
 
 > **Testability seam values** — pick one per row:
 > - **System seam** — HTTP/CLI/queue surface exercisable end-to-end
 > - **Integration seam** — interface boundary that test doubles can replace
 > - **Unit seam** — class with no I/O, exercisable in pure unit tests
 > - **(out of scope — covered via `<upstream-container>`'s seam)** — for containers without business logic that another container abstracts (e.g., a database accessed only through a repository). Don't invent a fake seam; don't leave the column blank.
+>
+> **Source RB nodes** — list the names of the RB elements (Boundary / Controller / Entity)
+> whose classification (per `iconix-architect.md` `# Controller-to-container classification`)
+> drove this container row. Two Controllers that map to the same container share one row;
+> list both names separated by a comma.
 
 ## NFRs applicable
 

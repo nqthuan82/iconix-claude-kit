@@ -87,6 +87,57 @@ risk, not a detail to resolve later.
      - Lists the technical debt: what refactoring would eliminate the adapter in the future
    Map the adapter to the `Infrastructure` or `Persistence` container in `container-mapping/<PREFIX>-UC-XXX-containers.md`. Do not map the legacy class itself to any container row.
 
+# Controller-to-container classification
+
+When filling `container-mapping/<PREFIX>-UC-XXX-containers.md`, derive which container
+each part of the UC's flow belongs to by reading the robustness diagram connections.
+Decision rule 2 ("Controllers should map to services/components already in the
+architecture") is the outcome; this section is the method.
+
+**The signal is what the Controller connects to, not its name.**
+
+Open `robustness/<PREFIX>-RB-XXX.puml`. For each Controller node, identify its left
+connections (inputs) and right connections (outputs), then apply:
+
+| Controller connects… | Container layer | Rationale |
+|---|---|---|
+| Inbound Boundary → Entity (no Outbound Boundary) | Application Service | Orchestrates the UC flow; pure coordination; no I/O side effects |
+| Entity ↔ Entity (no Boundary involved) | Domain | Pure domain logic; enforces invariants; no infrastructure dependency |
+| Entity → Outbound Boundary | Application Service | Coordinates domain state change with I/O (persistence, events, external calls) |
+| Inbound Boundary → Outbound Boundary (no Entity) | Web / API | Pure routing or format conversion; no domain objects touched |
+
+**Boundaries and Entities map directly — no classification needed:**
+
+| RB stereotype | Container |
+|---|---|
+| Inbound Boundary (screen, API surface) | Web / API / Presentation |
+| Outbound Boundary (Repository, Store, Provider, Gateway, Adapter, Client, Sender) | Infrastructure |
+| Entity | Domain |
+
+**Edge cases:**
+
+- **Controller touches Entity + multiple Outbound Boundaries** → Application Service.
+  If the Controller is doing too many things, flag it as a robustness complexity smell —
+  the UC may need splitting (route back to Analyst via `/iconix-next`).
+- **Two consecutive Controllers with the same classification** → merge into one
+  container row; record both Controller names in the "Source RB nodes" column.
+- **Classification genuinely ambiguous** → default to Application Service; note the
+  ambiguity in "Open architectural questions"; raise a Proposed ADR if it has NFR
+  implications (e.g., latency, transaction boundary).
+- **Controller enforces a domain invariant but also calls an Outbound Boundary** →
+  Domain layer still owns the invariant; the Outbound Boundary call is infrastructure.
+  Map the Controller to Domain, the Outbound Boundary row to Infrastructure separately.
+
+**How to use this when producing `container-mapping/<PREFIX>-UC-XXX-containers.md`:**
+
+1. Open the RB. For each Controller node, apply the classification table above.
+2. Each unique container that appears is one row in the "Containers traversed" table.
+3. Fill the "Source RB nodes" column with the RB element names that drove the row.
+   This creates explicit traceability from RB node → container row.
+4. If two Controllers map to the same container, merge them into one row and list
+   both Controller names in "Source RB nodes".
+5. Boundaries and Entities add their rows directly without classification.
+
 # ADR format
 Use `templates/adr-template.md` for every ADR file you produce.
 Every ADR must include: Status, Context (with REQ/NFR/UC refs), Options considered,

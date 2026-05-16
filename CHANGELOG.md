@@ -5,6 +5,33 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.73] — 2026-05-16
+
+**Controller-to-container classification heuristic added to Architect agent.**
+
+Closes the gap in Decision rule 2 ("Controllers should map to services/components
+already in the architecture") which stated the outcome but not the method. Changes:
+
+- `agents/iconix-architect.md` — new `# Controller-to-container classification`
+  section (inserted before `# ADR format`) with a four-row classification table
+  keyed on what each RB Controller connects to (Inbound Boundary / Entity /
+  Outbound Boundary combinations → Application Service / Domain / Web/API), direct
+  mappings for Boundary and Entity stereotypes, four edge-case rules, and a
+  step-by-step procedure for producing container-mapping rows from an RB.
+- `templates/container-mapping-template.md` — new "Source RB nodes" column in the
+  "Containers traversed" table; updated header note to reference the classification
+  heuristic; updated example rows with realistic RB node names.
+- `agents/iconix-analyst.md` — `Store` and `Provider` added to Outbound Boundary
+  valid suffix list.
+- `agents/iconix-architect.md` — same two suffixes added to the classification
+  table's Outbound Boundary example list.
+- `docs/iconix/templates/migration-stack-patterns-reference.md` — `*Store` added
+  to the adapter-pattern suffix list (`*Provider` was already present there).
+
+Token budget: `iconix-architect.md` ~5,686 tokens (under 10,000 soft ceiling).
+Methodology audit: no ICONIX rule overridden — heuristic is additive guidance not
+present in Rosenberg & Stephens; no process reference matrix update required.
+
 ## [1.0.72] — 2026-05-16
 
 **DDD Strategic Design guidance added to Architect agent and package-map template.**
