@@ -92,6 +92,70 @@ jobs:
             exit 1
           fi
 
+      - name: Agent tool consistency check
+        # Tier 1 of "per-agent dry-run tests" — static analysis of agent prompt body
+        # vs declared tools. Catches the class of bug where the body instructs file
+        # writes (Produce / Save / Create / Write `path.md`) but the tools list omits
+        # Write or Edit. Past examples: v1.0.58 (Reviewer Write missing despite body
+        # producing reviews/REVIEW-*.md) and v1.0.62 (Metrics Write missing despite
+        # body writing metrics/snapshot-*.md). Both caught by audit, not CI; this step
+        # closes the gap so a future regression fails the PR.
+        #
+        # Heuristic: scan each agent for file-action verbs paired with backticked paths
+        # ending in .md / .puml / .json / .yaml / .sh, plus the canonical
+        # "# Artifacts you produce" section header. If any signal fires and the tools
+        # list lacks both Write and Edit, fail. Over-declared tools (signal=0 but
+        # Write declared) are not flagged — that's acceptable noise.
+        #
+        # Advisory checks (warn, do not fail): description fields with embedded
+        # version tags like "v0.9.7+" age badly — frontmatter descriptions should be
+        # evergreen.
+        run: |
+          set -e
+          fail=0
+          warn=0
+          printf '%-45s %8s %12s %s\n' "Agent" "Signal" "Write/Edit" "Status"
+          printf '%-45s %8s %12s %s\n' "---------------------------------------------" "--------" "------------" "----------"
+          for f in agents/*.md; do
+            name=$(basename "$f")
+            tools=$(grep -m1 '^tools:' "$f" | sed 's/tools://;s/,/ /g')
+
+            verb_writes=$(grep -cE '^[0-9.]*\.? *[-*]? *(\*\*)?(Produce|Save|Create|Write|Refine|Append|Update|Aggregate|Emit) [a-zA-Z, `]*`[a-z][^`]+\.(md|puml|json|yaml|yml|sh)`' "$f")
+            has_output_section=$(grep -cE '^# (Artifacts you produce|What you produce|What you write|Artifacts produced)' "$f")
+            signal=$((verb_writes + has_output_section))
+
+            has_we=$(echo " $tools " | grep -cE ' Write | Edit ')
+
+            status="ok"
+            if [ "$signal" -gt 0 ] && [ "$has_we" -eq 0 ]; then
+              status="FAIL — body implies writes but Write/Edit not declared"
+              fail=1
+            fi
+
+            printf '%-45s %8d %12d %s\n' "$name" "$signal" "$has_we" "$status"
+          done
+
+          echo ""
+          for f in agents/*.md; do
+            desc=$(grep -m1 '^description:' "$f")
+            if echo "$desc" | grep -qE 'v[0-9]+\.[0-9]+(\.[0-9]+)?\+'; then
+              tag=$(echo "$desc" | grep -oE 'v[0-9.]+\+' | head -1)
+              echo "WARN: $(basename $f) — description contains version tag '$tag' (should be evergreen)"
+              warn=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "ERROR: one or more agents have tool-list vs body inconsistencies."
+            echo "Refer to CHANGELOG v1.0.58 (Reviewer) and v1.0.62 (Metrics) for past examples."
+            exit 1
+          fi
+          if [ "$warn" -ne 0 ]; then
+            echo ""
+            echo "(advisory only — version tags don't fail the build)"
+          fi
+
   validate-plantuml:
     # Catches PlantUML rendering bugs that previously slipped past prompt review
     # and only surfaced when a human opened the file in a previewer:

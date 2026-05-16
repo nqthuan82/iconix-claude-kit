@@ -5,6 +5,63 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.68] — 2026-05-16
+
+**CI: per-agent dry-run consistency check (Tier 1, static analysis).**
+
+Tier 1 of the "per-agent dry-run tests" idea floated during the design discussion
+that produced BACKLOG.md (v1.0.67). Static-analysis tier — no LLM invocation, no
+API cost, runs in ~1 second alongside the existing frontmatter / token-budget /
+uniqueness checks.
+
+**Bug class targeted:** tool-list vs body inconsistency. Two real bugs from
+earlier this session both fell in this class:
+- v1.0.58 — `iconix-reviewer` body said "Produce `reviews/REVIEW-*.md`" but
+  the `tools:` field declared only `Read, Grep, Glob, Bash`. Every invocation
+  would have failed at the first Write attempt. Caught by audit, not CI.
+- v1.0.62 — same pattern in `iconix-metrics`: body wrote
+  `metrics/snapshot-<today>.md` but `tools:` omitted `Write`. Also caught by
+  audit, not CI.
+
+This step would have failed both PRs at CI time before they merged.
+
+**New step `Agent tool consistency check`** in
+`.github/workflows/validate.yml` `validate-agents` job. For each `agents/*.md`:
+
+1. Count file-writing action verbs paired with backticked paths ending in
+   `.md` / `.puml` / `.json` / `.yaml` / `.sh`. Verbs covered: `Produce`,
+   `Save`, `Create`, `Write`, `Refine`, `Append`, `Update`, `Aggregate`, `Emit`.
+   Allows leading bullet markers (`-`, `*`) and bold (`**Create ...**`) for
+   the orchestrator's phase9-cycle write pattern.
+
+2. Detect the `# Artifacts you produce` / `# What you produce` / `# What you write`
+   / `# Artifacts produced` section header.
+
+3. Sum the two signals. If signal > 0 AND `tools:` field lacks BOTH `Write`
+   AND `Edit`, the build fails with a pointer to past examples in CHANGELOG.
+
+Tested locally against all 16 agents in current main: 0 failures. If either
+v1.0.58 or v1.0.62 were reverted, the check would fire (Reviewer signal=3,
+Metrics signal=2 — both well above the 0 threshold).
+
+**Advisory check (warn, no fail):** descriptions containing version tags like
+`v0.9.7+`. Frontmatter `description:` is a routing signal; version-tagged
+descriptions age badly. None of the 16 agents currently has this issue
+(cleaned in v1.0.61), so this is forward-only protection.
+
+**CLAUDE.md updated:** new "Tool-list discipline" paragraph in the
+`## Adding or Modifying Agents/Commands` section explains the gate, its
+heuristic, and the two past bugs it would have caught. Future maintainers
+adding or modifying agents will see the discipline requirement next to the
+frontmatter rules.
+
+**Token / cost impact:** zero — no LLM calls, no extra dependencies. The
+check runs grep + shell arithmetic, completes in well under a second.
+
+**Tier 2 (LLM stub invocation) remains in BACKLOG.md** territory — deferred
+unless Tier 1 proves insufficient. Tier 1 closes the specific bug class that
+has actually occurred twice.
+
 ## [1.0.67] — 2026-05-16
 
 **Add `BACKLOG.md` — living doc for proposed enhancements; first entry: Lightweight mode.**

@@ -95,6 +95,19 @@ description: <one-line summary>
 
 Missing or malformed frontmatter will fail CI. Agent names must be globally unique across all files in `agents/`.
 
+**Tool-list discipline.** The `tools:` field must list every tool the agent's body
+actually invokes. CI step `Agent tool consistency check` (v1.0.68+) scans each
+agent for file-writing action verbs (`Produce`, `Save`, `Create`, `Write`, `Refine`,
+`Append`, `Update`, `Aggregate`, `Emit`) paired with backticked paths ending in
+`.md` / `.puml` / `.json` / `.yaml` / `.sh`, plus the `# Artifacts you produce`
+section header. If either signal fires and the `tools:` list lacks both `Write`
+and `Edit`, the build fails. Past bugs that motivated this gate:
+- v1.0.58 — `iconix-reviewer` body produced `reviews/REVIEW-*.md` but tools omitted `Write`
+- v1.0.62 — `iconix-metrics` body wrote `metrics/snapshot-*.md` but tools omitted `Write`
+
+The check also warns (does not fail) on descriptions containing version tags like
+`v0.9.7+` — descriptions should be evergreen; version notes belong in CHANGELOG.
+
 ## Agent token budget
 
 **Priority instruction:** Token size is a first-class concern when modifying agent files. Check impact before and after every non-trivial change.
