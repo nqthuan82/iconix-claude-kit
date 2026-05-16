@@ -262,364 +262,167 @@ radar. The gap is a *methodology fit* problem, not a kit correctness problem. Ru
 both methodologies end-to-end on the same project is not documented anywhere in either
 book; this backlog entry is proposing new intellectual territory, not a bug fix.
 
-### Proposed solution
+### Why full automation is impractical
 
-Add a DDD mode activated by `ddd.enabled: true` in `iconix.config.yaml`. The normal
-ICONIX pipeline runs unchanged when `ddd.enabled: false` (the default). When enabled,
-two new phases are inserted and three existing agents gain DDD-awareness.
+Before describing the proposed solution, three reasons the originally designed 8-commit
+full-integration plan (two new agents + three modified agents + extended traceability
+chain) is unlikely to deliver value proportional to its cost:
 
-The pipeline becomes:
+**1. DDD value lives in conversations, not artifacts**
 
-```
-REQ → Domain Model (glossary) → UCs → [M1]
-  → DDD Strategic Design (BC identification + Context Map)   ← NEW Phase 2.5
-  → Analysis / RBs
-  → DDD Tactical Design (Aggregate design + Domain Events)   ← NEW Phase 3.5
-  → Architecture fit (BC → container mapping)
-  → [M2] → SDs → Code/Tests → [M3]
-```
+Bounded Context identification and Aggregate design emerge from intensive, iterative
+workshops (Event Storming, domain modeling sessions) with domain experts. The raw
+material those workshops produce — which terms mean different things to different teams,
+which invariants are non-negotiable, which state transitions are the core of the domain —
+is not present in REQs and UCs. An agent deriving Aggregate Roots from robustness
+diagram Entity nodes will produce artifacts that are syntactically correct DDD but
+semantically shallow. A team reading `AGG-001: Order` with auto-derived invariants may
+trust the artifact and skip the workshop that would have revealed the real complexity.
+This is worse than having no DDD artifact at all.
 
-The traceability chain is extended:
+Concrete example: REQs and UCs say "Customer places order". An agent assigns `Order`
+as Aggregate Root. But in the real domain, `Cart` is the Aggregate Root that enforces
+pricing invariants, and `Order` is just a point-in-time snapshot after checkout. The
+agent cannot know this from the written artifacts — only domain expert discussion reveals
+it.
 
-```
-Before DDD mode:  REQ → UC → RB → SD → CLS → TC
-After DDD mode:   REQ → BC → UC → RB → AGG → SD → CLS → TC
-```
+**2. ICONIX pipeline gates conflict with DDD's iterative discovery**
 
----
+The pipeline enforces: "every UC must be assigned to ≥1 BC before Analyst starts."
+But BC boundaries often only become clear *during* robustness analysis — when you draw
+the RB for UC-003 and discover that `Account` (owned by Billing) and `Customer` (owned
+by Ordering) are actually the same object, and that resolving the ambiguity forces a BC
+boundary decision. Making BC assignment a gate *before* RBs means the gate fires at
+the worst moment: before the information needed to answer it exists. Forcing an answer
+early produces premature, brittle BC boundaries that need to be revisited after M2.
 
-#### Layer 1 — Config (no methodology surface change)
+**3. The complexity-to-target-audience mismatch**
 
-Add to `templates/iconix.config.yaml`:
+Teams that truly need DDD typically already have DDD practitioners who would not trust
+auto-derived Aggregates. Teams without DDD experience would be handed a new layer of
+concepts (Aggregate Root, Value Object, Domain Event, Context Map) on top of an already
+novel methodology (ICONIX). The cognitive load doubles while the guidance on *how to do
+DDD correctly* is absent — the agent produces artifacts but cannot teach the team why
+Aggregate boundaries matter.
 
-```yaml
-ddd:
-  enabled: false                        # opt-in; false = ICONIX unchanged
-  bounded_context_policy: strict        # strict = 1 BC = 1 service; relaxed = 1 BC = 1 module
-  aggregate_root_ownership: per_context # each BC owns its own Aggregate Roots
-  event_sourcing: false                 # enable Domain Event capture in AGG artifacts
-```
+### Revised proposed solution
 
-Add to `iconix-init.ps1` / `iconix-init` installer: new folders when `ddd.enabled`
-is set during install:
-- `bounded-contexts/` — BC-XXX definition files
-- `context-map/` — Context Map diagram
-- `aggregates/` — AGG-XXX design files
-- `domain-events/` — DE-XXX event definitions
+The real gap in the current kit is narrower and more tractable: **`iconix-architect.md`
+maps UCs to containers but gives no guidance on where container boundaries should be.**
+Teams using the kit can produce technically correct container mappings that cut across
+natural domain boundaries — splitting what should be one service, or merging what should
+be two. A team walking away from Phase 4 without thinking about linguistic boundaries
+has missed the most important architectural decision.
 
----
+The fix is a **guided strategic design checklist embedded in `iconix-architect.md`**,
+not a new agent. When the Architect is about to draw `docs/architecture/package-map.md`,
+surface three DDD-derived questions:
 
-#### Layer 2 — New agent: `iconix-ddd-strategic`
+> **Before assigning UCs to containers, answer these questions for each candidate
+> service boundary:**
+>
+> 1. **Linguistic test** — Does any domain term in this container mean something
+>    different to a different actor or team? If yes, that difference signals a boundary.
+>    (e.g., "Customer" = Prospect in Sales, Account in Billing → boundary exists)
+>
+> 2. **Autonomy test** — Could this group of UCs be deployed or changed independently
+>    without coordinating with the team that owns adjacent UCs? If yes → strong
+>    candidate for a separate container.
+>
+> 3. **Invariant ownership test** — Which container is the authoritative enforcer of
+>    the most critical business rules? That container is your core domain service.
+>    Other containers that call into it are downstream — model their relationship
+>    explicitly (ACL, Open Host, Shared Kernel) rather than letting it be implicit.
+>
+> Record the answers in the "Bounded Context reasoning" field of
+> `docs/architecture/package-map.md`. An empty field is a signal that the boundary
+> was not consciously chosen.
 
-**Purpose:** Identify Bounded Contexts from REQs + UC list; produce Context Map.
+This approach:
+- Adds zero new agents and zero new artifact types
+- Does not touch the traceability chain
+- Does not require a Ch2 #2 override (no change to domain model philosophy)
+- Surfaces the right DDD questions at the right moment (when container boundaries
+  are being decided, not before RBs exist)
+- Teams with DDD practitioners can go deeper using the vocabulary the checklist
+  introduces; teams without them get the minimum they need to avoid the worst mistakes
 
-**Invoked:** After M1, before Analyst (Phase 2.5). Only when `ddd.enabled: true`.
+#### What changes
 
-**Inputs:**
-- `requirements/REQ-*.md`
-- `use-cases/UC-*.md` (preliminary, may be incomplete)
-- `domain-model/domain-model.puml` (initial PO draft)
+**`iconix-architect.md`** — add a `# Bounded Context reasoning` section before
+`# Decision rules`. The section contains the three-question checklist above and
+mandates a "Bounded Context reasoning" column in `docs/architecture/package-map.md`.
 
-**Process:**
-1. **Linguistic scan** — Group domain objects by the team or actor that "owns" the
-   language. Objects that mean different things to different actors are a bounded-context
-   boundary signal (e.g., "Customer" means `Prospect` in Sales and `Account` in Billing).
-2. **Autonomy test** — For each candidate boundary: could this group evolve independently
-   without breaking other groups? If yes → separate BC.
-3. **Relationship classification** — For each BC-to-BC link: is the upstream BC the
-   authority (Open Host), does the downstream adapt (ACL), or do both share a model
-   (Shared Kernel)? Record as Context Map relationship.
-4. **Ubiquitous Language per context** — Write the canonical term list for each BC.
-   Any UC that uses a term from another BC's language is flagged as a cross-context UC
-   (may need to be split or routed through an ACL).
+**`templates/architecture-package-map-template.md`** — add the new column.
 
-**Artifacts produced:**
-- `bounded-contexts/BC-XXX-<slug>.md` — one per context:
-  ```markdown
-  ## BC-001: Ordering
-  **Core domain:** yes / no / supporting
-  **Actors:** Customer, Order Manager
-  **Ubiquitous Language:** Order, LineItem, Cart, Checkout
-  **REQs in scope:** REQ-001, REQ-003, REQ-007
-  **UCs in scope:** UC-001, UC-003
-  ## Traceability
-  Parent REQs: REQ-001, REQ-003
-  ```
-- `context-map/context-map.puml` — PlantUML diagram of all BCs and relationships
-  (ACL, Shared Kernel, Open Host, Conformist, Partnership)
+**`docs/architecture/package-map.md` PDR readiness checklist** — add one entry:
+`[ ] Every internal package row has a non-empty "Bounded Context reasoning" field
+    (per Architect # Bounded Context reasoning)`.
 
-**Gate rule:** Analyst cannot start until every UC is assigned to ≥1 BC. An
-unassigned UC is a strategic design gap — STOP and resolve.
-
----
-
-#### Layer 3 — New agent: `iconix-ddd-tactical`
-
-**Purpose:** Derive Aggregate design, Domain Events, and Repository/Factory interfaces
-from robustness diagrams and BC definitions.
-
-**Invoked:** After Analyst (RBs complete), before Architect (Phase 3.5). Only when
-`ddd.enabled: true`.
-
-**Inputs:**
-- `robustness/RB-*.puml` — Entity / Controller / Boundary nodes
-- `bounded-contexts/BC-XXX-*.md` — language and scope per context
-- `domain-model/domain-model.puml` — current state after Analyst refinement
-
-**Process:**
-1. **Entity classification** — For each Entity node across all RBs, classify:
-   - Is it referenced from multiple Controllers as the *primary consistency unit*? → Aggregate Root candidate
-   - Does it have identity but is never the root of operations? → Entity inside an Aggregate
-   - Is it immutable and equality-by-value? → Value Object
-   - Does it perform domain logic but doesn't map to a real-world thing? → Domain Service
-2. **Invariant extraction** — For each Aggregate Root: list the invariants that must
-   hold on save (derived from business rules in `docs/business-rules.md` if present,
-   or from UC alternate courses that mention validation / rejection).
-3. **Domain Event identification** — For each Controller that changes state on an
-   Entity: identify the resulting Domain Event (e.g., "Validate Order" → `OrderPlaced`).
-   Events are named in past tense.
-4. **Boundary-to-Repository mapping** — Each Outbound Boundary on an RB that accesses
-   persistent state maps to a Repository interface for its Aggregate Root.
-5. **Factory identification** — Aggregate Roots with complex creation logic (≥3
-   constructor parameters, or creation requires other Aggregates) → Factory candidate.
-
-**Artifacts produced:**
-- `aggregates/AGG-XXX-<slug>.md` — one per Aggregate Root:
-  ```markdown
-  ## AGG-001: Order
-  **Aggregate Root:** Order
-  **Bounded Context:** BC-001 (Ordering)
-  **Entities inside:** OrderLineItem
-  **Value Objects inside:** Money, Address
-  **Invariants:**
-  - Order.TotalAmount ≥ 0
-  - Order cannot be Confirmed if any LineItem.Quantity = 0
-  **Domain Events emitted:** OrderPlaced, OrderCancelled
-  **Repository interface:** IOrderRepository (CRUD + FindByCustomer)
-  **Factory:** OrderFactory (when creation requires PricingService)
-  ## Traceability
-  Source RBs: RB-001, RB-003
-  Parent BC: BC-001
-  Related UCs: UC-001, UC-003
-  ```
-- `domain-events/DE-XXX-<slug>.md` — one per event:
-  ```markdown
-  ## DE-001: OrderPlaced
-  **Emitted by:** AGG-001 (Order)
-  **Trigger:** "Confirm Order" Controller on RB-001
-  **Payload:** OrderId, CustomerId, TotalAmount, PlacedAt
-  **Consumers:** BC-002 (Inventory) via ACL, BC-003 (Notification)
-  ## Traceability
-  Source UC: UC-001
-  Source RB: RB-001 (Controller: Confirm Order)
-  ```
-
-**Gate rule:** Every Aggregate Root must have ≥1 invariant. An Aggregate Root with
-no invariants is just a data container — flag for Analyst review (may be a Value Object
-or a misclassified Entity).
-
----
-
-#### Layer 4 — Modified existing agents
-
-**`iconix-analyst.md` — DDD annotation mode**
-
-When `ddd.enabled: true`, the Analyst adds DDD stereotypes to Entity nodes on
-robustness diagrams:
-- `[AR]` — Aggregate Root candidate
-- `[VO]` — Value Object candidate
-- `[DS]` — Domain Service candidate
-
-This does NOT change the robustness diagram rules (the four allowed connection pairs
-still apply). It adds metadata for `iconix-ddd-tactical` to consume in Phase 3.5.
-
-Critical note: This is a **conscious override of Ch2 #2** ("don't expect domain model
-to match final class diagrams"). In DDD mode, the Analyst is explicitly building
-toward a model that WILL match the Aggregate structure in code. The process reference
-matrix must document this as an intentional deviation.
-
-**`iconix-architect.md` — Bounded Context → container mapping**
-
-When `ddd.enabled: true`, the Architect gains three new responsibilities:
-
-1. **BC-to-container assignment** — Each Bounded Context maps to ≥1 container. When
-   `bounded_context_policy: strict`, one BC = one service (microservice or deployable
-   module). When `relaxed`, one BC = one module inside a monolith or shared service.
-   Record in `docs/architecture/package-map.md` with a new "Bounded Context" column.
-
-2. **Cross-BC communication ADR** — Every Context Map relationship that crosses a
-   container boundary requires an ADR:
-   - ACL → ADR: "Anti-corruption Layer between BC-001 and BC-002; Adapter class in
-     Infrastructure container; maps BC-002's `Account` to BC-001's `Customer`"
-   - Shared Kernel → ADR: "Shared Kernel between BC-001 and BC-003; shared types in
-     `SharedKernel` package; changes require both teams to agree"
-   - Open Host → ADR: "BC-002 exposes Open Host (REST API); downstream BCs must not
-     reference BC-002's internal model directly"
-
-3. **Domain Event routing** — If `event_sourcing: true`, raise an ADR for the event
-   bus strategy (in-process domain events vs. message broker).
-
-**`iconix-orchestrator.md` — DDD phase routing**
-
-Add to `# Phase order you enforce`:
-
-```
-2.5. DDD Strategic Design (iconix-ddd-strategic) — runs after M1, before Analyst.
-     SKIP when ddd.enabled: false.
-     GATE: every UC assigned to ≥1 BC before Analyst can start.
-
-3.5. DDD Tactical Design (iconix-ddd-tactical) — runs after Analyst RBs, before Architect.
-     SKIP when ddd.enabled: false.
-     GATE: every RB Entity node has DDD annotation; every AGG-XXX has ≥1 invariant.
-```
-
-Add to routing heuristics:
-- `bounded-contexts/` empty + `ddd.enabled: true` → `iconix-ddd-strategic`
-- RBs exist + `aggregates/` empty + `ddd.enabled: true` → `iconix-ddd-tactical`
-
-**`iconix-traceability.md` — Extended chain validation**
-
-When `ddd.enabled: true`, the traceability chain becomes:
-```
-REQ → BC → UC → RB → AGG → SD → CLS → TC
-```
-
-Additional validation rules:
-- Every UC must link to ≥1 BC (via `Parent BC:` field in UC frontmatter)
-- Every AGG-XXX must link to ≥1 RB (via `Source RBs:` in the AGG file)
-- Every DE-XXX must link to the Controller node that emits it
-- Orphan check: an Entity in any RB that has no corresponding AGG entry is a tactical
-  design gap — flag at M2 gate when `ddd.enabled: true`
-
----
-
-#### New artifact templates needed
-
-| Template file | Used by |
-|---|---|
-| `templates/bounded-context-template.md` | `iconix-ddd-strategic` |
-| `templates/context-map-template.puml` | `iconix-ddd-strategic` |
-| `templates/aggregate-template.md` | `iconix-ddd-tactical` |
-| `templates/domain-event-template.md` | `iconix-ddd-tactical` |
-
----
+No new folders, no installer changes, no config flag, no new agent names to register
+in CI.
 
 ### Roadmap to implementation
 
-Estimated ~8 commits. Order matters — each step is independently testable and
-does not break the existing ICONIX pipeline.
+Estimated ~2 commits. Both are tooling-adjacent, not methodology-surface.
 
-**Commit 1 — Config + installer (no methodology surface)**
-- Add `ddd:` block to `templates/iconix.config.yaml`
-- Add new folders (`bounded-contexts/`, `context-map/`, `aggregates/`,
-  `domain-events/`) to `iconix-init.ps1` and `iconix-init` installer
-- Update `README.md` Project layout section
-- Update `iconix-state-machine.puml` to show DDD phases as conditional branches
-- CHANGELOG bump
-
-**Commit 2 — Artifact templates (no methodology surface)**
-- Create the four templates above
-- Update `README.md` Project layout to list them
-- CHANGELOG bump
-
-**Commit 3 — `iconix-ddd-strategic` agent**
-- Write the agent from scratch (linguistic scan → autonomy test → relationship
-  classification → Ubiquitous Language output)
-- Add `name:` and `description:` frontmatter; wire tools (`Read, Grep, Glob, Write`)
-- Add to CI frontmatter lint + uniqueness check
-- CHANGELOG bump + process reference matrix: add new "DDD Strategic" row
-
-**Commit 4 — `iconix-ddd-tactical` agent**
-- Write the agent from scratch (entity classification → invariant extraction →
-  domain event identification → boundary-to-repository mapping → factory detection)
-- Add `name:` and `description:` frontmatter; wire tools
-- Add to CI frontmatter lint + uniqueness check
-- CHANGELOG bump + process reference matrix: add new "DDD Tactical" row
-
-**Commit 5 — `iconix-analyst.md` DDD annotation**
-- Add DDD annotation block (gated on `ddd.enabled: true`) to the entity
-  classification section
-- Document Ch2 #2 override explicitly in the agent and in the process reference
-  matrix (status changes from ✅ to ⚠️ with note: "overridden in DDD mode")
+**Commit 1 — `iconix-architect.md` + template**
+- Add `# Bounded Context reasoning` section to `iconix-architect.md` with the
+  three-question checklist (linguistic / autonomy / invariant ownership)
+- Add "Bounded Context reasoning" column to
+  `templates/architecture-package-map-template.md`
+- Add PDR readiness checklist item for the new column
 - Token budget check before and after
 - CHANGELOG bump
 
-**Commit 6 — `iconix-architect.md` DDD responsibilities**
-- Add BC-to-container assignment rule, cross-BC ADR trigger, Domain Event routing
-  rule (all gated on `ddd.enabled: true`)
-- Update PDR readiness checklist to include DDD checks
-- Token budget check before and after
+**Commit 2 — Process reference matrix**
+- Add row for "Bounded Context / Strategic Design guidance" in the Chapter 2 table
+  of `docs/iconix/iconix-process-reference.md`
+- Status: ⚠️ Partial — questions are surfaced but BC identification is not enforced
+  as a gate condition (deliberate; see "Why full automation is impractical" above)
 - CHANGELOG bump
-
-**Commit 7 — `iconix-orchestrator.md` DDD routing**
-- Add Phase 2.5 and Phase 3.5 with their SKIP and GATE conditions
-- Add DDD-specific routing heuristics
-- Token budget check before and after
-- CHANGELOG bump
-
-**Commit 8 — `iconix-traceability.md` extended chain**
-- Add DDD chain validation (BC → UC, AGG → RB, DE → Controller)
-- Add orphan checks for DDD mode M2 gate
-- Update M1/M2/M3 gate checklists with DDD conditions (gated on `ddd.enabled: true`)
-- Token budget check before and after
-- CHANGELOG bump + process reference matrix: update Summary Coverage Matrix counts
-
-### Process reference matrix impact
-
-Every Commit 3–8 is a methodology-surface change requiring a theory audit per the
-CLAUDE.md rule. The audits should be batched per commit:
-
-- Commit 3: no existing ICONIX rule is violated (Strategic Design is additive)
-- Commit 4: no existing ICONIX rule is violated (Tactical Design is additive)
-- Commit 5: **Ch2 #2 override** — must cite the rule, document the deviation, and
-  change status from ✅ to ⚠️ in the matrix
-- Commits 6–8: additive to existing rules; no overrides expected
 
 ### Open questions
 
-- **Is DDD mode a superset or a fork of ICONIX?** If `ddd.enabled: true` overrides
-  Ch2 #2, the kit is no longer a faithful ICONIX implementation in that mode. The
-  README must clearly state this. Decision: call it "ICONIX + DDD hybrid mode" and
-  document it as a deliberate extension, not a core feature.
+- **Should the checklist become a soft gate at M2?** The PDR readiness checklist
+  currently requires non-empty "Bounded Context reasoning" fields but does not block
+  M2 if a team consciously leaves them empty with a note. A stricter version would
+  make empty fields a hard M2 blocker. Risk: adds friction for small projects where
+  one service makes the question moot.
 
-- **Should Bounded Contexts replace or augment UC packages?** UC packages (`use-case-packages/`)
-  are PO-owned groupings by actor/goal. BCs are linguistically-bounded design units.
-  They often overlap but are not the same. Option A: keep both separately. Option B:
-  make BCs the primary grouping and deprecate UC packages in DDD mode.
+- **Should teams that already did Event Storming be able to import results?**
+  The checklist as designed is for teams that have not done Event Storming. Teams
+  that have could provide a summary of their BC decisions and the Architect would
+  simply record them. No change needed — the checklist is additive either way.
 
-- **Event Sourcing scope.** `event_sourcing: true` in config enables Domain Event
-  capture in AGG artifacts. Should the kit also generate event store schema or
-  projection skeletons? That is deep implementation territory — probably a v2 of DDD
-  support.
-
-- **CQRS alignment.** Many DDD projects use CQRS (Command Query Responsibility
-  Segregation). The robustness diagram's Boundary/Controller/Entity maps loosely to
-  CQRS Command Side, but the Read side (Query) has no representation. This is
-  likely a Phase 2 extension.
-
-- **Methodology audit depth.** The DDD canon (Evans, 2003; Vernon, 2013) is not
-  in the kit's reference set. The process reference matrix cites Rosenberg & Stephens
-  only. Adding DDD support means the kit needs a second reference column in the matrix
-  citing Evans for DDD rules. This is a documentation-only change but a notable one.
+- **Methodology audit depth.** The DDD canon (Evans, 2003; Vernon, 2013) is not in
+  the kit's reference set. The process reference matrix cites Rosenberg & Stephens
+  only. The new matrix row should note "guided by DDD Strategic Design vocabulary
+  (Evans, 2003)" without claiming full DDD compliance.
 
 ### Rejected alternatives
 
-- **Map DDD patterns onto existing ICONIX artifacts without new agents.**
-  Considered. The Analyst's robustness diagram could carry `[AR]` / `[VO]` annotations
-  without a separate Tactical Design agent. But the invariant extraction, Domain Event
-  identification, and Repository interface generation require reasoning that is distinct
-  from robustness analysis — collapsing them into the Analyst agent would violate the
-  single-responsibility rule in `CLAUDE.md` `## Agent prompt discipline`.
+- **Full 8-commit integration: two new agents (`iconix-ddd-strategic` +
+  `iconix-ddd-tactical`) + three modified agents + extended traceability chain.**
+  Considered and rejected. The tactical agent auto-derives Aggregates from robustness
+  diagram Entity nodes — a mapping that is too shallow to produce trustworthy DDD
+  artifacts (see "Why full automation is impractical" above). The strategic agent fires
+  a BC-assignment gate before RBs exist, which is the wrong moment: BC boundaries often
+  only become clear *during* robustness analysis. The complexity cost (~8 commits,
+  2 new agent files, 3 modified agents, 4 new templates, extended traceability chain)
+  is not justified when the practical benefit is a checklist-level prompt, not genuine
+  DDD enforcement. The full design is preserved in the v1.0.70 version of this entry
+  for reference if future requirements change this assessment.
 
 - **Replace ICONIX with DDD entirely.**
-  Considered. DDD's Strategic Design is superior for microservice boundary identification.
-  But ICONIX's Use Case pipeline is superior for requirements traceability and test
-  derivation. The hybrid approach gets both; a full replacement loses ICONIX's
-  traceability chain, which is the kit's primary value proposition.
+  Considered. DDD's Strategic Design is superior for microservice boundary
+  identification. But ICONIX's Use Case pipeline is superior for requirements
+  traceability and test derivation. The hybrid approach described above gets the
+  most value from each; a full replacement loses ICONIX's traceability chain, which
+  is the kit's primary value proposition.
 
 - **Use Event Storming as the primary input instead of robustness diagrams.**
-  Considered. Event Storming is a discovery workshop technique — it requires a live
-  facilitated session with domain experts. It cannot be mechanized into an agent without
-  reducing it to a checklist that misses the point. The kit can use Event Storming
-  output as input (a transcript or sticky-note dump), but it cannot replace the session
-  itself. Deferred to future work.
+  Considered. Event Storming is a discovery workshop technique requiring live
+  facilitation with domain experts. It cannot be mechanized into an agent. The kit
+  can accept Event Storming *output* as input to the Architect's BC reasoning, but
+  cannot replace the session itself.

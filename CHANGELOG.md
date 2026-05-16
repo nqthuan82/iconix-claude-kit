@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.71] — 2026-05-16
+
+**Backlog: DDD entry revised — narrow scope, reject full automation.**
+
+Revised the DDD support backlog entry (added in v1.0.70) after assessing the practical
+limits of full ICONIX+DDD integration. The original 8-commit plan (two new agents,
+three modified agents, extended traceability chain) is moved to "Rejected alternatives"
+with three documented reasons: DDD value lives in conversations not artifacts; pipeline
+gates conflict with DDD's iterative discovery; complexity-to-audience mismatch. The
+revised proposed solution is a focused 2-commit change: a Bounded Context reasoning
+checklist added to `iconix-architect.md` and a new column in the package-map template.
+No agent or code files changed.
+
 ## [1.0.70] — 2026-05-16
 
 **Backlog: DDD (Domain-Driven Design) support entry added.**
