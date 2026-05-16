@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.70] — 2026-05-16
+
+**Backlog: DDD (Domain-Driven Design) support entry added.**
+
+Added a detailed backlog entry for DDD hybrid mode to `BACKLOG.md`. The entry
+documents the three structural incompatibilities between ICONIX and DDD (domain model
+role, absence of Bounded Context / Strategic Design, no DDD tactical patterns in the
+traceability chain), proposes a four-layer solution (config flag, two new agents, three
+modified agents), and lays out an 8-commit implementation roadmap with explicit gate
+conditions, artifact templates, and process reference matrix impact. No code or agent
+files changed.
+
 ## [1.0.69] — 2026-05-16
 
 **Fix: CI step `Agent tool consistency check` aborting under `set -e`.**
