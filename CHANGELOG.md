@@ -5,6 +5,29 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.74] — 2026-05-16
+
+**Migration semantic: fix batch-2 re-draft bug when using `--max-uc` batching.**
+
+When a user ran migration with `--max-uc 10` for batch 1, promoted the DRAFTs, then
+ran migration again for batch 2 (same scope), the semantic agent had no mechanism to
+skip already-promoted entry points. Since `--max-uc` orders by confidence and takes
+the top N, batch 2 would select the same top-10 entry points as batch 1 and re-draft
+them — the user never advanced to entry points 11–20.
+
+Root cause: Phase 5 max-uc cap logic had no "skip already-promoted" step. The
+idempotency check in infra marks promoted artifacts but does not pass that information
+to semantic.
+
+Fix: added a "remove already-promoted entry points" step as the first bullet in the
+max-uc cap block. Before ordering by confidence, semantic now reads
+`robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename), extracts
+the inbound boundary node name from each (the entry point covered by that promoted UC),
+and removes matching entry points from the candidate list. Applies to both graph-assisted
+and code-walking modes (code-walking Phase 5 references "same max-uc cap logic").
+
+- `agents/iconix-migration-semantic.md` — Phase 5 max-uc cap: new first bullet
+
 ## [1.0.73] — 2026-05-16
 
 **Controller-to-container classification heuristic added to Architect agent.**

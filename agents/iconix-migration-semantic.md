@@ -76,7 +76,8 @@ Before drafting, read the `## Cross-container boundary correlation` section in
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
 **Max-uc cap:** If `max_uc` field in the checkpoint is non-null:
-- Draft UC-DRAFTs ordered by entry-point confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
+- **First, remove already-promoted entry points:** read `iconix.config.yaml` for the project prefix; scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract the inbound boundary node name from each (this is the entry point covered by that promoted UC); remove matching entry points from the candidate list. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
+- Draft remaining entry points ordered by confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
 - Stop after producing `max_uc` UC-DRAFTs.
 - After reaching the cap, log:
   ```
