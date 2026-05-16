@@ -167,7 +167,9 @@ Append a `## Cross-container boundary correlation` section to `migration/survey-
    - Inheritance (extends/implements edges)
 3. Filter by `min_confidence` from config — drop INFERRED edges below threshold
 4. Consult `migration/dependency-registry-<date>.md` for known types not in this container's own source root
-5. Produce draft `class-model/class-model.puml` with `DRAFT` stamp
+5. Resolve the output filename based on the checkpoint's `greenfield_coexistence` field:
+   - `greenfield_coexistence: false` (default) — write to `class-model/class-model.puml` with `DRAFT` stamp.
+   - `greenfield_coexistence: true` — write to `class-model/class-model-DRAFT.puml` instead, leaving the greenfield `class-model/class-model.puml` untouched as a read-only input. Print a one-line acknowledgement: `Greenfield coexistence active — class model written to class-model-DRAFT.puml`.
 6. List in the file header:
    - Edges used: count by EXTRACTED / INFERRED
    - Edges dropped due to low confidence: count
@@ -316,7 +318,9 @@ Same as graph-assisted Phase 1b above. Key difference: for Step 2 (outbound call
 ## Phase 2 — Class model extraction (manual)
 1. Parse classes via grep/AST tools available; capture fields and public methods.
 2. Consult `migration/dependency-registry-<date>.md` for known types not in this container's own source root.
-3. Produce draft `class-model/class-model.puml` with `DRAFT` stamp.
+3. Resolve output filename from checkpoint's `greenfield_coexistence` field (same rule as graph-assisted Phase 2 step 5):
+   - `false` (default) → `class-model/class-model.puml` with `DRAFT` stamp.
+   - `true` → `class-model/class-model-DRAFT.puml` (greenfield file is read-only input).
 
 ## Phase 3 — Sequence diagram extraction (manual)
 Same intent as graph-assisted Phase 3, but graph queries are replaced by manual source reading. Behaviour-recovery step is identical; provenance is uniformly `INFERRED` because there is no graph edge to mark `EXTRACTED` against.
@@ -385,7 +389,7 @@ docs/architecture/package-map.md             # Phase 4b  (DRAFT — skipped if f
 migration/
 ├── survey-phase1-<date>.md                  # Phase 1 + Phase 1b (full survey, cross-container appended)
 └── survey-phase3-<date>.md                  # Phase 4c (compact hand-off for semantic agent)
-class-model/class-model.puml                 # Phase 2  (DRAFT)
+class-model/class-model.puml                 # Phase 2  (DRAFT) — or class-model-DRAFT.puml when greenfield_coexistence: true
 sequence/SD-DRAFT-*.puml                     # Phase 3
 robustness/RB-DRAFT-*.puml                   # Phase 4
 domain-model/domain-model-DRAFT.puml         # Phase 4b
@@ -423,7 +427,7 @@ Before stopping, verify:
   1. migration/checkpoint-<date>.json updated with phases_completed: ["infra", "structural"] and next_phase: "semantic"
   2. migration/survey-phase1-<date>.md exists with Containers surveyed section
   3. migration/survey-phase3-<date>.md exists with Cross-container boundary correlation section
-  4. class-model/class-model.puml exists with DRAFT stamp
+  4. class-model/class-model.puml exists with DRAFT stamp (or class-model/class-model-DRAFT.puml when greenfield_coexistence: true)
   5. At least one SD-DRAFT-*.puml exists in sequence/
   6. At least one RB-DRAFT-*.puml exists in robustness/
   7. domain-model/domain-model-DRAFT.puml exists
@@ -441,7 +445,7 @@ Update migration/checkpoint-<date>.json:
 Tell the user:
 "✅ Structural phase complete.
   Survey: migration/survey-phase1-<date>.md (<N> entry points, <M> containers)
-  Class model: class-model/class-model.puml
+  Class model: class-model/class-model.puml (or class-model-DRAFT.puml under greenfield coexistence)
   Sequence diagrams: <N> SD-DRAFTs in sequence/
   Robustness diagrams: <N> RB-DRAFTs in robustness/
   Domain model: domain-model/domain-model-DRAFT.puml

@@ -18,6 +18,7 @@ Before anything else, check whether the user's invocation message specifies run-
 |---|---|---|
 | Container scope | `--scope <ContainerName>` | "scope to OrderService", "only OrderService", "just the payment container" |
 | UC cap | `--max-uc N` | `--max-uc 20`, "limit to 20 use cases", "stop after 20 UCs" |
+| Greenfield coexistence | `--allow-greenfield` | "allow greenfield", "coexist with existing UCs", "I know I have greenfield artifacts" |
 
 If detected, acknowledge immediately:
 ```
@@ -180,7 +181,57 @@ This annotation tells `/iconix-promote` and the Traceability agent which externa
 
 # Pre-run idempotency check
 
-Run this before any Phase 1 work, in both modes. It prevents silent overwrites of human-reviewed artifacts from a previous migration run.
+Run this before any Phase 1 work, in both modes. It prevents silent overwrites of human-reviewed artifacts from a previous migration run AND collisions with greenfield ICONIX artifacts authored by the main pipeline (Product Owner / Analyst / Developer).
+
+## Step 0 — Greenfield artifact collision check
+
+Migration is designed to retrofit ICONIX onto code that has no existing artifacts. If the project already has greenfield (non-DRAFT) UCs, RBs, SDs, class model, or use-case packages, migration would either overwrite them or pollute the folder with mixed `UC-*.md` + `UC-DRAFT-*.md` files that confuse downstream agents (Analyst, Tester).
+
+Scan for greenfield artifacts:
+
+| Path | Greenfield filename pattern | Migration filename pattern |
+|---|---|---|
+| `use-cases/*.md` | `UC-*.md` (no DRAFT in name) | `UC-DRAFT-*.md` |
+| `robustness/*.puml` | `RB-*.puml` (no DRAFT) | `RB-DRAFT-*.puml` |
+| `sequence/*.puml` | `SD-*.puml` (no DRAFT) | `SD-DRAFT-*.puml` |
+| `use-case-packages/*.puml` | `*.puml` not ending `-DRAFT.puml` | `*-DRAFT.puml` |
+| `class-model/class-model.puml` | canonical filename | **same filename** — REAL collision risk |
+
+`domain-model/domain-model.puml` (greenfield) and `domain-model/domain-model-DRAFT.puml` (migration) use different filenames — no collision. Same for the `-DRAFT` patterns above. The only true filename collision is `class-model/class-model.puml`.
+
+### Step 0a — Abort if greenfield detected (default behavior)
+
+If **any** greenfield artifact is detected AND `--allow-greenfield` is NOT in `$ARGUMENTS`:
+
+STOP. Print:
+```
+Greenfield ICONIX artifacts detected — migration is for retrofitting code
+that has NO existing artifacts. Running migration here would overwrite
+class-model/class-model.puml (filename collision) and produce a confusing
+mix of greenfield UC-*.md and migration UC-DRAFT-*.md in use-cases/.
+
+Detected greenfield files:
+<list, one per line>
+
+Options:
+(a) If this project is already on the ICONIX greenfield path, do NOT run
+    migration — continue with /iconix-next.
+(b) If you genuinely need migration coexistence (e.g., adding a new
+    untouched module to a project that already has greenfield ICONIX work
+    elsewhere), re-run with --allow-greenfield. Migration will write the
+    class-model output to class-model/class-model-DRAFT.puml instead of
+    overwriting the greenfield one, and the greenfield class-model.puml
+    becomes a read-only input.
+```
+
+Do NOT proceed.
+
+### Step 0b — Proceed with greenfield coexistence (--allow-greenfield)
+
+If `--allow-greenfield` IS in `$ARGUMENTS`:
+- Record `greenfield_coexistence: true` and `greenfield_files: [...]` in the checkpoint (Step 5).
+- `iconix-migration-structural` Phase 2 will use this flag to write `class-model/class-model-DRAFT.puml` instead of overwriting the greenfield canonical file.
+- Print a single-line acknowledgement: `Greenfield coexistence enabled — class-model output redirected to class-model-DRAFT.puml`.
 
 ## Step 1 — Detect previous migration runs
 Check whether `migration/` contains any `checkpoint-*.json` or `survey-*.md` files. If yes, record the most recent date as `<last-run-date>`.
@@ -287,6 +338,8 @@ After the idempotency check passes and before Phase 1 runs, write `migration/che
   "mode": "<graph-assisted|code-walking>",
   "scope": "<ContainerName or null>",
   "max_uc": "<N or null>",
+  "greenfield_coexistence": false,
+  "greenfield_files": [],
   "phases_completed": ["infra"],
   "containers_surveyed": [],
   "entry_point_count": 0,
@@ -295,6 +348,8 @@ After the idempotency check passes and before Phase 1 runs, write `migration/che
 ```
 
 Set `scope` and `max_uc` from the parameters detected in `# Scope and run parameters` above. If not provided by the user, write `null` for both fields.
+
+Set `greenfield_coexistence: true` and populate `greenfield_files` with the file list from Step 0a when `--allow-greenfield` was passed. Otherwise leave both at their defaults (`false` and `[]`).
 
 Update `containers_surveyed` and `entry_point_count` after Phase 1b completes (Step 5 of Phase 1b below).
 

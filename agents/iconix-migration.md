@@ -35,6 +35,11 @@ Step 1 of 3: Run iconix-migration-infra
   Optional parameters (for large systems):
     --scope <ContainerName>   Survey only this container (e.g. --scope OrderService)
     --max-uc N                Stop after N UC-DRAFTs (e.g. --max-uc 20)
+    --allow-greenfield        Required if the project already has greenfield
+                              ICONIX artifacts (UC-*.md, RB-*.puml, SD-*.puml,
+                              class-model.puml). Without it, infra aborts to
+                              prevent silent overwrites. With it, class model
+                              output is redirected to class-model-DRAFT.puml.
 
   Example: "Run iconix-migration-infra --scope OrderService --max-uc 20"
   Run again with a different --scope after each batch's pipeline completes.

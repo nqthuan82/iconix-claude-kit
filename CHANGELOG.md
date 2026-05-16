@@ -5,6 +5,64 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.64] — 2026-05-16
+
+**Migration: greenfield artifact collision guard (`--allow-greenfield` flag).**
+
+Closes the D2 risk surfaced by the cross-agent logic audit. Migration is for
+retrofitting ICONIX onto code with NO existing artifacts; without a guard, a
+user who accidentally runs `/iconix-migrate` on a project that already has
+greenfield UCs / RBs / SDs / class model would:
+
+1. **Silently overwrite `class-model/class-model.puml`** — the only true
+   filename collision between greenfield Developer output and migration
+   structural output. Both write to the same canonical path.
+2. **Pollute target folders** with a confusing mix of greenfield `UC-*.md`
+   and migration `UC-DRAFT-*.md` (different filename patterns but
+   coexistence in `use-cases/` confuses Analyst and Tester downstream).
+
+**New: `iconix-migration-infra` Step 0 — Greenfield artifact collision check**
+Runs before the existing idempotency check (Step 1). Detects any non-DRAFT
+artifact in `use-cases/`, `robustness/`, `sequence/`, `use-case-packages/`,
+plus the canonical `class-model/class-model.puml`. If found AND
+`--allow-greenfield` not in `$ARGUMENTS`, prints the detected file list
+and aborts with options for the user. Default behavior is safe-by-refuse.
+
+**New: `--allow-greenfield` flag** (declared in `iconix-migration-infra`
+and surfaced in the `iconix-migration` router's Case A guidance). When
+passed:
+- Migration proceeds despite greenfield detection.
+- Checkpoint records `greenfield_coexistence: true` and the
+  `greenfield_files` list.
+- `iconix-migration-structural` Phase 2 (both graph-assisted and
+  code-walking variants) reads the flag and writes to
+  `class-model/class-model-DRAFT.puml` instead of overwriting the
+  greenfield `class-model.puml`. The greenfield file becomes a read-only
+  input.
+- `domain-model`, `UC`, `RB`, `SD`, `use-case-packages` already use
+  `-DRAFT` filename suffixes, so no further filename routing needed —
+  they coexist with greenfield names cleanly under the flag.
+
+**Files touched:**
+- `agents/iconix-migration-infra.md` — new Step 0 section (~40 lines),
+  `--allow-greenfield` row in the scope/run-parameters table, checkpoint
+  schema gains `greenfield_coexistence` and `greenfield_files` fields.
+- `agents/iconix-migration-structural.md` — Phase 2 (graph-assisted +
+  code-walking) reads `greenfield_coexistence` and resolves the output
+  filename; final output-structure block and structural-complete gate
+  reflect both possible filenames.
+- `agents/iconix-migration.md` — router Case A surfaces the new flag
+  in the parameter list with a one-line description.
+
+**No methodology surface changes** — this is a tooling guard. ICONIX
+phase order, gate criteria, stereotype rules, and traceability chain are
+all unchanged. Reference matrix (`docs/iconix/iconix-process-reference.md`)
+doesn't need an update.
+
+**Token impact:** migration-infra ~7.9K → ~8.7K, migration-structural
+~8.0K → ~8.2K, router ~1.2K → ~1.2K. All under the 10K soft ceiling;
+semantic remains the only WARN-tier agent at 10.65K.
+
 ## [1.0.63] — 2026-05-16
 
 **Consistency: Plan mode block for 6 artifact-writing agents + orchestrator role wording.**
