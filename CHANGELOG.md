@@ -5,6 +5,19 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.77] — 2026-05-17
+
+**BACKLOG.md: add SDK-based architecture entry.**
+
+New backlog entry documenting the case for rewriting iconix-kit on the Anthropic
+Python SDK. Covers token savings (60–70% at scale from routing elimination, fresh
+context per call, selective prompt loading, and prompt caching), hard enforcement
+gains (programmatic gates vs. advisory prompts), and a lower-risk hybrid alternative
+(Python for orchestration/validation, agents for content generation). Includes
+trade-off analysis, 6-step hybrid roadmap, and rejected alternatives.
+
+- `BACKLOG.md` — new "SDK-based architecture" entry
+
 ## [1.0.76] — 2026-05-16
 
 **README: fix incorrect paths for migration reference files in project layout.**

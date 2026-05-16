@@ -197,6 +197,159 @@ explicit `--lightweight` flag at /iconix-next.
 
 ---
 
+## SDK-based architecture (Anthropic Python SDK)
+
+**Status:** Proposed (2026-05-17)
+**Origin:** Architecture discussion — comparison with BMAD Method and evaluation of
+prompt-based vs. code-based enforcement and token efficiency.
+
+### Problem
+
+The current kit is purely prompt-based: agent behavior is controlled entirely by
+natural language instructions in Markdown files. This creates two structural
+limitations:
+
+**1. Soft enforcement only**
+
+Gates (M1/M2/M3), routing, idempotency checks, ID assignment, and traceability
+validation are all instructions the model is asked to follow — not code that enforces
+them. The model can drift, misinterpret, or skip steps. There is no programmatic
+guarantee that a gate was actually evaluated before proceeding.
+
+**2. Context accumulation = token waste**
+
+In a Claude Code session, each turn adds to the context window: previous messages,
+tool results, agent responses. A full pipeline run (REQ → UC → RB → SD → Code →
+Tests) can accumulate 100,000–200,000+ tokens by the end. The orchestrator agent
+(~4,861 tokens) is loaded on every `/iconix-next` call — including for pure routing
+decisions that could be done with zero LLM tokens in Python code.
+
+### Token savings analysis
+
+Switching to Anthropic SDK + Python orchestration saves tokens from four sources:
+
+| Source | Current | SDK | Saving |
+|---|---|---|---|
+| Routing / pre-flight checks | ~5,000 tokens (orchestrator load) | 0 (Python code) | 100% |
+| Context accumulation | 100K–200K+ per full pipeline | Fresh per call, ~5K–20K each | ~60–70% |
+| Selective section loading | Full agent file always loaded | Only relevant phase section | ~60–80% per call |
+| Prompt caching (repeat calls) | Not guaranteed | Native SDK `cache_control` — ~90% savings on repeat | ~90% on cache hits |
+
+**Estimated total:** 60–70% token reduction for a full pipeline run on a large project
+(many UCs, many containers). Savings scale with project size — the larger the project,
+the larger the accumulation problem, and the larger the benefit.
+
+### Enforcement gains
+
+Python code replaces prompt instructions for all deterministic logic:
+
+```python
+# Today (prompt): "Check if phases_completed includes semantic before proceeding"
+# SDK (code):
+checkpoint = json.load(open("migration/checkpoint-*.json"))
+if "semantic" not in checkpoint["phases_completed"]:
+    raise GateError("Semantic phase not complete — run iconix-migration-semantic first")
+```
+
+- Gate checks: file existence, format validation, ID collision — all programmatic
+- ID assignment: Python reads `ids.registry.md`, assigns `highest + 1`, writes back — no model counting
+- Traceability chain: Python grep validates `REQ → UC → RB → SD → CLS → TC` — not model memory
+- Routing: Python `if/else` on checkpoint state — no orchestrator prompt needed
+
+### What does NOT change
+
+The artifact generation content (writing UC text, RB reasoning, sequence diagram
+logic, architecture decisions) still requires LLM reasoning. Python cannot draft
+a use case or decide which container an RB Controller maps to. Prompts remain for:
+- Product Owner intake and REQ generation
+- Analyst UC + robustness diagram authoring
+- Architect container mapping and ADR reasoning
+- Developer code generation
+- Tester TC derivation
+- Migration semantic phase (UC drafting from code)
+
+Code replaces prompts only for the **deterministic, mechanical** parts.
+
+### Trade-offs
+
+**Gains:**
+- Hard gate enforcement (programmatic, not advisory)
+- 60–70% token reduction at scale
+- Reliable ID management and traceability validation
+- Platform independence (runs anywhere Python runs, not just Claude Code)
+- Testable orchestration logic (unit tests for gates and routing)
+
+**Losses:**
+- Installation complexity: users need Python runtime + `pip install anthropic`
+- Separate process to run (not embedded in Claude Code session)
+- Harder to customize per project (code changes vs. editing CLAUDE.md)
+- Maintenance burden: Python code needs versioning, dependency management
+- Non-technical users excluded (current kit is Markdown-only, very accessible)
+
+### Hybrid alternative (lower risk)
+
+Instead of a full rewrite, add Python only where it helps most and keep the Claude
+Code agent architecture for content generation:
+
+| Component | Current | Hybrid |
+|---|---|---|
+| Routing / orchestration | Orchestrator agent (prompt) | Python dispatcher (code) |
+| Gate enforcement | Traceability agent (prompt) | Python validation script (code) |
+| ID management | Traceability agent (prompt) | Python registry manager (code) |
+| Artifact generation | Agents (prompt) | Agents (prompt) — unchanged |
+| Checkpoint management | Agent writes JSON (prompt) | Python writes JSON (code) |
+
+This preserves Claude Code UX and per-project config while adding hard enforcement
+and token savings for the mechanical parts. Estimated ~40–50% token savings vs. full
+SDK rewrite's 60–70% — but with a fraction of the implementation cost.
+
+### Roadmap (hybrid path)
+
+Estimated 4–6 commits. Full SDK rewrite is a separate, larger effort.
+
+1. **Python routing script** — replaces orchestrator agent for `/iconix-next` routing.
+   Reads checkpoint, detects state, invokes the right agent. Zero LLM tokens for routing.
+
+2. **Python gate validator** — replaces traceability M1/M2/M3 checks. Greps artifact
+   files, validates ID chain, reports missing links. Run as pre-invoke check.
+
+3. **Python ID manager** — replaces model-driven ID assignment. Reads/writes
+   `ids.registry.md` atomically. Eliminates ID collision risk entirely.
+
+4. **Python checkpoint manager** — atomic JSON read/write for migration checkpoints.
+   Eliminates misread/corrupt checkpoint issues.
+
+5. **Prompt caching** — add `cache_control` to system prompts for agents that are
+   invoked repeatedly (migration agents). Reduces per-call cost on repeat runs.
+
+6. **CI integration** — Python gate validator runs in CI as a merge-gate check,
+   complementing the existing `validate-traceability.sh`.
+
+### Open questions
+
+- **Full SDK rewrite vs. hybrid:** The hybrid approach delivers most of the value at
+  a fraction of the cost. Full rewrite makes sense only if platform independence
+  (running outside Claude Code) becomes a priority requirement.
+- **Anthropic SDK version pinning:** SDK updates can change behavior. The kit would
+  need a pinned dependency and an upgrade path.
+- **Claude Code compatibility:** Hybrid Python scripts need to run inside Claude Code
+  sessions via `Bash` tool. Full SDK scripts run outside Claude Code entirely —
+  different UX model.
+- **Token savings measurement:** Estimates above are based on architectural reasoning,
+  not benchmarks. A proof-of-concept on the migration pipeline (highest-token phase)
+  would validate before committing to full implementation.
+
+### Rejected alternatives
+
+- **Skills as lightweight pre-processors** — considered as a stepping stone. Skills
+  run in the main model context and don't save tokens for routing (same model, same
+  context). Useful for UX but not for token efficiency. Orthogonal to this entry.
+
+- **Reducing agent file sizes further** — already done (v1.0.47–v1.0.59 extract
+  round). Remaining agent content is behavioral, not extractable. Diminishing returns.
+
+---
+
 ## DDD (Domain-Driven Design) Support
 
 **Status:** Proposed (2026-05-16)
