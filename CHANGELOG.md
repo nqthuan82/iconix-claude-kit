@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.72] — 2026-05-16
+
+**DDD Strategic Design guidance added to Architect agent and package-map template.**
+
+Implements the revised DDD backlog proposal (v1.0.71): no new agents, no new folders,
+no config flag. Changes are confined to three files:
+
+- `agents/iconix-architect.md` — new `# Bounded Context reasoning` section (three
+  questions: linguistic test, autonomy test, invariant ownership test) inserted before
+  `# Decision rules`; new PDR readiness checklist item requiring non-empty "Bounded
+  Context reasoning" column in every internal package row.
+- `templates/architecture-package-map-template.md` — new "Bounded Context reasoning"
+  column added to the Package list table with example answers; new Quality check item.
+- `docs/iconix/iconix-process-reference.md` — new "DDD Strategic Design guidance"
+  section (additive, citing Evans 2003 not Rosenberg & Stephens) with ⚠️ coverage for
+  linguistic/autonomy/invariant-ownership signals and 🚫 for DDD tactical patterns.
+
+Token budget: `iconix-architect.md` ~4,938 tokens (well under 10,000 soft ceiling).
+
 ## [1.0.71] — 2026-05-16
 
 **Backlog: DDD entry revised — narrow scope, reject full automation.**

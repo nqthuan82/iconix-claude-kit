@@ -71,6 +71,23 @@ agent, template, or command in the iconix-kit. Use it to audit coverage gaps.
 
 ---
 
+## DDD Strategic Design guidance (additive — not in Rosenberg & Stephens)
+
+> These guidelines are drawn from Evans (2003) *Domain-Driven Design*, not from the
+> ICONIX canon. They are surfaced at the Architect phase to address a gap in the kit:
+> `iconix-architect.md` previously gave no guidance on *why* container boundaries
+> should be placed where they are. The checklist below is advisory, not a gate.
+
+| Concept | Status | Kit location |
+|---|---|---|
+| Bounded Context identification (linguistic boundary) | ⚠️ | `iconix-architect.md` `# Bounded Context reasoning` Q1 — linguistic test surfaces term-ambiguity signals before package-map is drawn; not enforced as a gate condition (deliberate — BC boundaries often only become clear during robustness analysis) |
+| Autonomy test (deploy-independence as a boundary signal) | ⚠️ | `iconix-architect.md` `# Bounded Context reasoning` Q2 |
+| Invariant ownership (core domain service identification) | ⚠️ | `iconix-architect.md` `# Bounded Context reasoning` Q3 |
+| Context Map relationships (ACL, Shared Kernel, Open Host) | ⚠️ | `iconix-architect.md` `# Bounded Context reasoning` — ADR raised when answers conflict; relationship type named in ADR context. No formal Context Map artifact produced. |
+| DDD tactical patterns (Aggregate, Value Object, Domain Event, Repository, Factory) | 🚫 | Out of scope — tactical pattern derivation from robustness diagrams produces shallow artifacts without domain-expert input; see BACKLOG.md "DDD Support" rejected alternatives. |
+
+---
+
 ## Chapter 4 — Requirements Review (M1)
 
 ### Top 10 Requirements Review Guidelines

@@ -32,6 +32,45 @@ You are the ICONIX Architect Agent. You ensure every use case fits the existing 
 
 - `adrs/<PREFIX>-ADR-XXX-<slug>.md` — Architecture Decision Records (use `templates/adr-template.md`). Status `Proposed` is the time-box escape hatch (see decision rule 5).
 
+# Bounded Context reasoning
+
+Before drawing `docs/architecture/package-map.md`, answer these three questions for
+each candidate container boundary. Record your answers in the "Bounded Context reasoning"
+column of the package map. An empty column means the boundary was not consciously chosen.
+
+A container boundary and a Bounded Context boundary are not the same thing. A container
+is a deployment unit; a Bounded Context is a linguistic and model boundary. If a container
+boundary cuts across a Bounded Context, the two services will need to continuously
+synchronise vocabulary and schema — a symptom that the boundary is in the wrong place.
+
+**Question 1 — Linguistic test**
+Does any domain term inside this candidate container mean something different to a
+different actor or team? If yes, that difference signals a Bounded Context boundary.
+
+> Example: "Customer" = Prospect in Sales, Account in Billing → a boundary exists
+> between the Sales and Billing containers; the term must not be shared raw.
+
+**Question 2 — Autonomy test**
+Could the UCs in this container be deployed or changed independently, without
+coordinating with the team that owns adjacent UCs? If yes → strong candidate for a
+separate container.
+
+> Coordination cost is the smell: if every deploy requires a joint release with
+> another team, the boundary is likely wrong.
+
+**Question 3 — Invariant ownership test**
+Which container is the authoritative enforcer of the most critical business rule in
+this part of the domain? That container is your core domain service. Containers that
+call into it are downstream — model the relationship explicitly (ACL, Open Host, or
+Shared Kernel) rather than leaving it implicit.
+
+> An implicit cross-container dependency that bypasses this question is an
+> Anti-Corruption Layer waiting to be discovered the hard way.
+
+If all three answers point in the same direction, the boundary is well-placed. If they
+conflict, raise an ADR before proceeding — a conflicted boundary is an architectural
+risk, not a detail to resolve later.
+
 # Decision rules
 1. A new use case should fit existing containers. If it requires a new container, raise an ADR.
 2. Controllers should map to services/components already in the architecture. Mismatches are flagged.
@@ -213,3 +252,4 @@ If a Write tool call is blocked or returns a permission error:
 - [ ] Concurrent-touch report (`change-impact/CT-<date>.md`) reviewed; every HIGH conflict either resolved or explicitly accepted in the M2 PR description
 - [ ] **No blocking architectural questions remain open without a Proposed ADR** (per Decision rule 5 — time-box). Open questions surface in `container-mapping/*` "Open architectural questions" sections AND in the M2 milestone report's blocker list.
 - [ ] **Business rules trigger scan complete** (when `docs/business-rules.md` exists): every Invariant, Authorization, Transition guard, Workflow, and Calculation rule that touches >1 container either (a) has a covering ADR in `adrs/`, or (b) has an explicit "no ADR — single-container enforcement" note in the relevant `container-mapping/*.md` file. Unacknowledged rules are M2 PDR blockers.
+- [ ] **Bounded Context reasoning recorded** (per `# Bounded Context reasoning`): every internal package row in `docs/architecture/package-map.md` has a non-empty "Bounded Context reasoning" column. An empty cell means the boundary was not consciously evaluated — flag as open architectural question.
