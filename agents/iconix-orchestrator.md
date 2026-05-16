@@ -242,6 +242,27 @@ After user confirms CI green + PR approved: print the merge command for the user
 **Step 5 — Exit bookkeeping**
 After the user confirms the merge is done: fill in the `## Exit` section of `phase9-cycles/UC-XXX-cycle.md` (final verdict token, implementation merge commit SHA + date, total iterations used, cap-hit flag, and any drift patterns worth copying to `reviews/review-checklist.md`). UC moves to "Done" phase (visible in `/iconix-metrics` snapshots).
 
+**Step 6 — Docs sync check (non-blocking)**
+Before exiting Phase 9.4, check whether public docs already exist for this UC. Grep `docs/user-guide/`, `docs/dev-guide/`, `docs/api/`, and `docs/ops/` for the footer pattern `Generated from UC-XXX` (the traceability footer `iconix-docs` writes). For each doc type with a match, print a non-blocking suggestion:
+
+```
+## Docs may be stale — UC-XXX was just modified
+
+Existing public docs for this UC:
+  - docs/user-guide/<slug>.md       (generated <date>)
+  - docs/dev-guide/<slug>.md        (generated <date>)
+
+To refresh, run:
+  /iconix-docs user UC-XXX
+  /iconix-docs dev UC-XXX
+
+Skip this step if the changes were docs-neutral (internal refactors, test
+adjustments, etc.). The `iconix-docs` agent will only update pages it
+finds; absent pages are not auto-created here.
+```
+
+If no pages reference this UC, skip the message silently. Do not block Phase 9 exit on docs refresh — it's a follow-up the user decides.
+
 ## Phase 9 exit
 The whole batch exits Phase 9 when every UC in the M3 cohort has reached 9.4. UCs hitting the iteration cap escalate but don't block the rest of the batch.
 
@@ -257,6 +278,7 @@ When a new or changed requirement arrives against an existing artifact set:
 6. Re-run **M2 gate** (Traceability, scoped)
 7. Dispatch **Developer** and **Tester** in parallel in change mode — pass the CI report
 8. Re-run **M3 gate** (Traceability, scoped)
+9. **Docs sync check (non-blocking).** For every UC listed in the CI report's blast radius, grep `docs/user-guide/`, `docs/dev-guide/`, `docs/api/`, and `docs/ops/` for the footer `Generated from UC-XXX`. For each match, suggest `/iconix-docs <type> UC-XXX` so the user can refresh stale public docs. Skip silently for UCs without existing public docs. Do not block — user decides.
 
 Always include the CI report path in your dispatch plan so each agent can self-scope.
 Never re-run agents on artifacts outside the blast radius listed in the CI report.

@@ -5,6 +5,47 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.65] — 2026-05-16
+
+**Orchestrator: docs-sync nudges in Phase 9.4 exit and REQ change flow.**
+
+Closes D3 risk from the cross-agent logic audit. `iconix-docs` is the only
+artifact-writing agent that the Orchestrator does not route to — public
+docs (`docs/user-guide/`, `docs/dev-guide/`, `docs/api/`, `docs/ops/`) are
+generated only when the user explicitly invokes `/iconix-docs`. The audit
+flagged that nothing in the pipeline reminds the user to refresh these
+docs after a UC text or design change, so they silently go stale.
+
+**New: Phase 9.4 Step 6 — Docs sync check (non-blocking)**
+Runs after Phase 9 Exit bookkeeping (Step 5), before the UC moves to
+"Done". The Orchestrator greps `docs/user-guide/`, `docs/dev-guide/`,
+`docs/api/`, and `docs/ops/` for the traceability footer pattern
+`Generated from UC-XXX` (the footer `iconix-docs` writes per its
+`# Rules` section). For each match, prints a non-blocking suggestion
+naming the exact `/iconix-docs <type> UC-XXX` command to refresh. If
+no pages reference the UC, the check is silent. Cannot block Phase 9 exit
+— this is a follow-up the user decides.
+
+**New: REQ change flow Step 9 — Docs sync check (non-blocking)**
+Same check after the scoped M3 gate re-run completes, applied to every
+UC in the change-impact (CI) report's blast radius. A REQ change typically
+shifts UC text and post-conditions, so any existing user-facing page for
+those UCs is likely stale. Same silent-skip semantics for UCs without
+public docs.
+
+**No `iconix-docs` agent changes** — the agent already accepts a UC-ID
+scope (`/iconix-docs user UC-017`), and its `# Rules` already emit the
+`Generated from UC-XXX` footer. The fix is purely Orchestrator-side: it
+now points users at the existing capability at the right moment.
+
+**No methodology surface changes.** Phase 9 sub-state semantics, REQ
+change flow phase order, gate criteria, and the traceability chain are
+all unchanged. ICONIX reference matrix (`docs/iconix/iconix-process-reference.md`)
+doesn't need an update.
+
+**Token impact:** orchestrator ~3,831 → ~4,333 tokens (still 60% under
+the 10K soft ceiling). No other agent touched.
+
 ## [1.0.64] — 2026-05-16
 
 **Migration: greenfield artifact collision guard (`--allow-greenfield` flag).**
