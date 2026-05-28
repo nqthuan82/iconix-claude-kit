@@ -579,3 +579,32 @@ Estimated ~2 commits. Both are tooling-adjacent, not methodology-surface.
   facilitation with domain experts. It cannot be mechanized into an agent. The kit
   can accept Event Storming *output* as input to the Architect's BC reasoning, but
   cannot replace the session itself.
+
+---
+
+## `--entry-point` — Target a specific entry point by name
+
+**Status:** Done (v1.0.78)
+**Origin:** User request — gap identified when using `--scope + --max-uc 1` batching: no way to target a specific entry point by name from `survey-phase1-<date>.md`.
+
+### Problem
+
+`--max-uc N` controls *how many* UC-DRAFTs are produced but not *which one*. The semantic agent picks by confidence order (EXTRACTED → INFERRED → AMBIGUOUS). If the entry point you want to draft is INFERRED, you must exhaust all EXTRACTED entry points first.
+
+For teams doing selective migration ("we want to ICONIX-ify the payment flow first, not whatever the agent thinks is highest confidence"), there is no way to express that intent in the current kit.
+
+### Solution implemented
+
+`--entry-point <name>` added as a semantic-only filter — consistent with how `--max-uc` works. Structural still runs fully for all entry points in scope; only Phase 5 filters to the targeted entry point.
+
+Two name formats supported (matched case-insensitively):
+- Contains a space → `<HTTP-method /path>` (e.g., `POST /orders`)
+- No space → `<class.method>` (e.g., `OrderController.PlaceOrder`)
+
+Multiple targets via comma-separation: `--entry-point "POST /orders,POST /payments"`.
+
+Takes precedence over `--max-uc`. If the named entry point is not found in the survey, STOP with valid names list. If already promoted, skip and log.
+
+### Changes
+- `agents/iconix-migration-infra.md` — parameter table, acknowledgement block, behavior description, checkpoint field `entry_point_filter`
+- `agents/iconix-migration-semantic.md` — entry-point filter block in Phase 5 (graph-assisted + code-walking)

@@ -19,13 +19,15 @@ Before anything else, check whether the user's invocation message specifies run-
 | Container scope | `--scope <ContainerName>` | "scope to OrderService", "only OrderService", "just the payment container" |
 | UC cap | `--max-uc N` | `--max-uc 20`, "limit to 20 use cases", "stop after 20 UCs" |
 | Greenfield coexistence | `--allow-greenfield` | "allow greenfield", "coexist with existing UCs", "I know I have greenfield artifacts" |
+| Entry-point filter | `--entry-point <name>` | `--entry-point "POST /orders"`, `--entry-point OrderController.PlaceOrder`, "draft UC for POST /orders", "only the PlaceOrder endpoint" |
 
 If detected, acknowledge immediately:
 ```
-Scope:   OrderService  (Phase 1 will survey this container only)
-Max UCs: 20            (semantic agent will stop after producing 20 UC-DRAFTs)
+Scope:        OrderService   (Phase 1 will survey this container only)
+Max UCs:      20             (semantic agent will stop after producing 20 UC-DRAFTs)
+Entry point:  POST /orders   (semantic agent will draft only this UC)
 ```
-If not specified, both values remain `null` (no filtering applied).
+If not specified, all values remain `null` (no filtering applied).
 
 **Scope behavior:**
 - `--scope` filters the Phase 1 entry-point survey (run by `iconix-migration-structural`) to the named container only.
@@ -38,6 +40,16 @@ If not specified, both values remain `null` (no filtering applied).
 - `--max-uc N` caps the UC-DRAFTs the semantic agent produces at N, ordered by entry-point confidence (EXTRACTED first, then INFERRED, then AMBIGUOUS).
 - Remaining entry points are listed at the end of the semantic phase with a count and re-run suggestion.
 - Combine with `--scope` for fine-grained batching: `--scope OrderService --max-uc 20` processes the top 20 highest-confidence entry points in OrderService only.
+
+**Entry-point filter behavior:**
+- `--entry-point <name>` tells the semantic agent to draft a UC only for the named entry point, regardless of confidence order.
+- `<name>` is matched case-insensitively. Two formats are supported:
+  - Contains a space → treated as `<HTTP-method /path>` (e.g., `POST /orders`). Path params are normalized before matching.
+  - No space → treated as `<class.method>` (e.g., `OrderController.PlaceOrder`).
+- Multiple targets: comma-separated (e.g., `--entry-point "POST /orders,POST /payments"`).
+- Takes precedence over `--max-uc` — if both are set, `--max-uc` is ignored.
+- If the named entry point is not found in the survey → STOP with a list of valid names from `survey-phase1-<date>.md`.
+- If the named entry point is already promoted → skip and log; do not re-draft.
 
 # Operating modes
 
@@ -338,6 +350,7 @@ After the idempotency check passes and before Phase 1 runs, write `migration/che
   "mode": "<graph-assisted|code-walking>",
   "scope": "<ContainerName or null>",
   "max_uc": "<N or null>",
+  "entry_point_filter": ["<name1>", "<name2>"],
   "greenfield_coexistence": false,
   "greenfield_files": [],
   "phases_completed": ["infra"],
@@ -348,6 +361,8 @@ After the idempotency check passes and before Phase 1 runs, write `migration/che
 ```
 
 Set `scope` and `max_uc` from the parameters detected in `# Scope and run parameters` above. If not provided by the user, write `null` for both fields.
+
+Set `entry_point_filter` to the parsed list of names from `--entry-point` (split on `,`, trim whitespace). If `--entry-point` was not provided, write `null`.
 
 Set `greenfield_coexistence: true` and populate `greenfield_files` with the file list from Step 0a when `--allow-greenfield` was passed. Otherwise leave both at their defaults (`false` and `[]`).
 

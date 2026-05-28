@@ -75,7 +75,17 @@ Before drafting, read the `## Cross-container boundary correlation` section in
 `migration/survey-phase3-<date>.md` (compact hand-off from structural). Entry points in the same proposed
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
-**Max-uc cap:** If `max_uc` field in the checkpoint is non-null:
+**Entry-point filter:** If `entry_point_filter` field in the checkpoint is non-null, apply before any other filtering:
+1. **Apply already-promoted check:** scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract inbound boundary node names. For each name in `entry_point_filter`, if a matching promoted RB exists → log `Entry point "<name>" already promoted as <UC-ID> — skipping.` and remove from target list.
+2. **Match filter values against the SD-DRAFTs index** in `migration/survey-phase3-<date>.md`:
+   - Value contains a space → treat as `<HTTP-method /path>` (e.g., `POST /orders`); match against route column (case-insensitive; normalize path params before matching).
+   - No space → treat as `<class.method>` (e.g., `OrderController.PlaceOrder`); match against entry point class/method column (case-insensitive).
+3. If any filter value has **no match** → STOP. Print: `Entry point "<value>" not found in survey. Valid entry points:` followed by the full entry point list from `migration/survey-phase1-<date>.md`. Do not proceed.
+4. Draft **only** the matched UC-DRAFTs. Skip all other entry points entirely.
+5. `--entry-point` takes precedence over `--max-uc` — ignore `max_uc` when `entry_point_filter` is set.
+6. Continue to Phase 5b, 5c, 5d, 6, 7 using only the matched UC-DRAFTs.
+
+**Max-uc cap:** If `max_uc` field in the checkpoint is non-null (and `entry_point_filter` is null):
 - **First, remove already-promoted entry points:** read `iconix.config.yaml` for the project prefix; scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract the inbound boundary node name from each (this is the entry point covered by that promoted UC); remove matching entry points from the candidate list. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
 - Draft remaining entry points ordered by confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
 - Stop after producing `max_uc` UC-DRAFTs.
@@ -568,7 +578,7 @@ Fill in every section:
 # Workflow — Code-walking mode (Phases 5–7)
 
 ## Phase 5 — Use case draft (manual)
-Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Apply the same max-uc cap logic as graph-assisted Phase 5 if `max_uc` is set in the checkpoint. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
+Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Apply the same entry-point filter logic and max-uc cap logic as graph-assisted Phase 5 (`entry_point_filter` takes precedence over `max_uc`). Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
 
 ## Phase 5b — Use case package overview synthesis (manual)
 Same as graph-assisted Phase 5b. Without graph clustering, cluster manually:

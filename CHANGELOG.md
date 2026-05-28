@@ -5,6 +5,28 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.78] — 2026-05-29
+
+**migration: add `--entry-point` parameter to target a specific entry point by name.**
+
+Teams doing selective migration had no way to specify which UC to draft — `--max-uc 1`
+always picked by confidence order (EXTRACTED first), not by user intent. The new
+`--entry-point <name>` filter lets you name an exact entry point from
+`survey-phase1-<date>.md` and draft only that UC, regardless of its confidence tier.
+
+Two name formats accepted (case-insensitive): `<class.method>` (e.g.,
+`OrderController.PlaceOrder`) and `<HTTP-method /path>` (e.g., `POST /orders`).
+Multiple targets via comma-separation. Takes precedence over `--max-uc`. Hard STOP
+with valid-names list if the name is not found in the survey; silent skip if already
+promoted.
+
+Implemented as a semantic-only filter — structural still surveys all entry points in
+scope; only Phase 5 drafting is filtered. Consistent with how `--max-uc` works.
+
+- `agents/iconix-migration-infra.md` — parameter table, acknowledgement block, behavior description, checkpoint field `entry_point_filter`
+- `agents/iconix-migration-semantic.md` — entry-point filter block in Phase 5 (graph-assisted + code-walking)
+- `BACKLOG.md` — entry marked Done (v1.0.78)
+
 ## [1.0.77] — 2026-05-17
 
 **BACKLOG.md: add SDK-based architecture entry.**
