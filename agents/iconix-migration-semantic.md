@@ -75,6 +75,8 @@ Before drafting, read the `## Cross-container boundary correlation` section in
 `migration/survey-phase3-<date>.md` (compact hand-off from structural). Entry points in the same proposed
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
+**Cross-container semantic map:** If `migration/cross-container-semantic-map-<date>.md` exists (produced by structural Phase 0b), read it before grouping. Use EXTRACTED integration points as pre-confirmed cross-container UC groupings — prefer them over URL-prefix heuristics. AMBIGUOUS items remain hypotheses; apply normal URL-prefix logic for those.
+
 **Entry-point filter:** If `entry_point_filter` field in the checkpoint is non-null, apply before any other filtering:
 1. **Apply already-promoted check:** scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract inbound boundary node names. For each name in `entry_point_filter`, if a matching promoted RB exists → log `Entry point "<name>" already promoted as <UC-ID> — skipping.` and remove from target list.
 2. **Match filter values against the SD-DRAFTs index** in `migration/survey-phase3-<date>.md`:

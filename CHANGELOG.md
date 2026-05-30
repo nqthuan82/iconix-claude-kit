@@ -5,6 +5,23 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.81] — 2026-05-30
+
+**migration: add Phase 0b — cross-container graph pre-scan for multi-repo + graph-assisted mode.**
+
+Before Phase 1 code survey, structural agent now scans `graphify-out/graph.json` across all
+containers with `path:` defined. Produces `migration/cross-container-semantic-map-<date>.md`
+containing shared entities, integration points, and shared actors with EXTRACTED/INFERRED/AMBIGUOUS
+confidence labels. Phase 1b reads the map to pre-confirm cross-container pairs instead of
+deriving them from URL patterns. Semantic Phase 5 UC grouping prefers EXTRACTED integration
+points from the map over URL-prefix heuristics.
+
+Skipped automatically when: mode is code-walking, fewer than 2 containers have `path:`, or
+fewer than 2 containers have `graphify-out/graph.json`. No new config keys required.
+
+- `agents/iconix-migration-structural.md` — add Phase 0b; Phase 1b reads semantic map
+- `agents/iconix-migration-semantic.md` — Phase 5 UC grouping reads semantic map when present
+
 ## [1.0.80] — 2026-05-30
 
 **agents: update LLM model assignments — analyst/architect downgrade to Sonnet, migration structural/semantic upgrade to Opus 4.8.**
