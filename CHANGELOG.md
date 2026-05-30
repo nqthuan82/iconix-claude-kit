@@ -5,6 +5,27 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.80] — 2026-05-30
+
+**agents: update LLM model assignments — analyst/architect downgrade to Sonnet, migration structural/semantic upgrade to Opus 4.8.**
+
+Reviewed all agents using Opus 4.7 against actual task complexity:
+- `iconix-analyst` and `iconix-architect` downgraded to `claude-sonnet-4-6` — both rely
+  on explicit classification tables and rule frameworks; Sonnet is sufficient.
+- `iconix-migration-structural` and `iconix-migration-semantic` upgraded from
+  `claude-opus-4-7` to `claude-opus-4-8` — structural requires genuine code-graph
+  traversal and cross-container correlation; semantic produces UC narratives and
+  multi-track business rule extraction where quality matters most.
+- `iconix-reviewer` confirmed to remain on `claude-sonnet-4-6` — systematic checks
+  do not benefit from Opus reasoning.
+
+Net result: 2 fewer Opus calls per pipeline run, 2 agents on newest Opus.
+
+- `agents/iconix-analyst.md` — `claude-opus-4-7` → `claude-sonnet-4-6`
+- `agents/iconix-architect.md` — `claude-opus-4-7` → `claude-sonnet-4-6`
+- `agents/iconix-migration-structural.md` — `claude-opus-4-7` → `claude-opus-4-8`
+- `agents/iconix-migration-semantic.md` — `claude-opus-4-7` → `claude-opus-4-8`
+
 ## [1.0.79] — 2026-05-29
 
 **BACKLOG.md: add SDK Hybrid Option B entry (Claude Code-compatible); fix 4 gaps.**
