@@ -5,6 +5,25 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.79] — 2026-05-29
+
+**BACKLOG.md: add SDK Hybrid Option B entry (Claude Code-compatible); fix 4 gaps.**
+
+New backlog entry for Python-scripts approach keeping full Claude Code UX while
+moving deterministic work to `.claude/scripts/`. Eight-commit roadmap: general
+pipeline (router, validate, ids, checkpoint, promote) + migration-specific
+(preflight, promoted-check, params normalizer).
+
+Entry revised to fix 4 gaps: (1) validate.py savings corrected to ~9,000 tokens
+per full pipeline run (3 gates × ~3,000), not per gate call; (2) token savings
+split into greenfield (40–50%) vs migration (higher, ~2,290 additional per run);
+(3) infra.md budget relief quantified (~1,140 tokens removed, ~8,992 → ~7,852);
+(4) migration_params.py scope clarified — NL detection stays in prompt, Python
+handles normalize + checkpoint write only. migration_promoted.py noted as shared
+utility with promote.py.
+
+- `BACKLOG.md` — new "SDK Hybrid — Python scripts for deterministic parts" entry
+
 ## [1.0.78] — 2026-05-29
 
 **migration: add `--entry-point` parameter to target a specific entry point by name.**
