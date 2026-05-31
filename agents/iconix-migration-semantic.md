@@ -77,8 +77,20 @@ group produce **one** UC-DRAFT, not separate drafts per entry point or per conta
 
 **Cross-container semantic map:** If `migration/cross-container-semantic-map-<date>.md` exists (produced by structural Phase 0b), read it before grouping. Use EXTRACTED integration points as pre-confirmed cross-container UC groupings — prefer them over URL-prefix heuristics. AMBIGUOUS items remain hypotheses; apply normal URL-prefix logic for those.
 
+**Already-promoted check (run once for both filters below):**
+
+```bash
+python3 .claude/scripts/migration_promoted.py --robustness-dir robustness \
+  --config iconix.config.yaml --entry-points "<entry_point_filter, or omit for --max-uc only>"
+# → {already_promoted:[{entry_point,uc_id,...}], ambiguous:[...], promoted_boundaries:[...]}
+```
+
+<gate id="promoted-trust" mandatory="true">
+Trust this — don't grep `robustness/`. Skip each entry point in `already_promoted` (log `… already promoted as <uc_id> — skipping`); `ambiguous` items need user confirmation, not auto-skip; for `--max-uc`-only runs, drop candidates matching `promoted_boundaries`. Fallback when `python3` is missing: scan `robustness/<PREFIX>-RB-*.puml` (non-DRAFT) for inbound boundary names by hand.
+</gate>
+
 **Entry-point filter:** If `entry_point_filter` field in the checkpoint is non-null, apply before any other filtering:
-1. **Apply already-promoted check:** scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract inbound boundary node names. For each name in `entry_point_filter`, if a matching promoted RB exists → log `Entry point "<name>" already promoted as <UC-ID> — skipping.` and remove from target list.
+1. **Apply already-promoted check:** skip every target listed in `already_promoted` from the script above (log each `Entry point "<name>" already promoted as <UC-ID> — skipping.`) and remove it from the target list.
 2. **Match filter values against the SD-DRAFTs index** in `migration/survey-phase3-<date>.md`:
    - Value contains a space → treat as `<HTTP-method /path>` (e.g., `POST /orders`); match against route column (case-insensitive; normalize path params before matching).
    - No space → treat as `<class.method>` (e.g., `OrderController.PlaceOrder`); match against entry point class/method column (case-insensitive).
@@ -88,7 +100,7 @@ group produce **one** UC-DRAFT, not separate drafts per entry point or per conta
 6. Continue to Phase 5b, 5c, 5d, 6, 7 using only the matched UC-DRAFTs.
 
 **Max-uc cap:** If `max_uc` field in the checkpoint is non-null (and `entry_point_filter` is null):
-- **First, remove already-promoted entry points:** read `iconix.config.yaml` for the project prefix; scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract the inbound boundary node name from each (this is the entry point covered by that promoted UC); remove matching entry points from the candidate list. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
+- **First, remove already-promoted entry points** using the `promoted_boundaries` list from the already-promoted script above (run it without `--entry-points`): drop any candidate whose entry point matches a promoted boundary. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
 - Draft remaining entry points ordered by confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
 - Stop after producing `max_uc` UC-DRAFTs.
 - After reaching the cap, log:
@@ -438,7 +450,7 @@ Maintain a sequential BR-ID counter (`BR-001`, `BR-002` …) across all categori
 
 ### Step 4 — Annotate UC-DRAFT preconditions
 
-**Gate:** skip this step if no `docs/use-cases/UC-DRAFT-*.md` files exist.
+**Gate:** skip this step if no `use-cases/UC-DRAFT-*.md` files exist.
 
 For each UC-DRAFT-XXX:
 

@@ -50,7 +50,8 @@ fi
 
 AGENTS_DIR="${TARGET_BASE}/agents"
 COMMANDS_DIR="${TARGET_BASE}/commands"
-mkdir -p "${AGENTS_DIR}" "${COMMANDS_DIR}"
+SCRIPTS_DIR="${TARGET_BASE}/scripts"
+mkdir -p "${AGENTS_DIR}" "${COMMANDS_DIR}" "${SCRIPTS_DIR}"
 
 # Resolve source (local path, git URL, or default)
 WORKDIR="$(mktemp -d)"
@@ -95,6 +96,30 @@ for f in "${WORKDIR}/commands/"*.md; do
     echo "  installed command: ${name}"
   fi
 done
+
+# Copy scripts (.claude/scripts/) — deterministic helpers invoked via the Bash tool
+# by agents/commands. Installed at all scopes (project + global) since they are
+# project-independent. Copied here, before the project-scope block, so `--global` gets them too.
+for f in "${WORKDIR}/scripts/"*.py; do
+  [[ -e "$f" ]] || continue
+  name="$(basename "$f")"
+  dest="${SCRIPTS_DIR}/${name}"
+  if [[ -f "${dest}" && "${FORCE}" != true ]]; then
+    echo "  skip script ${name}"
+  else
+    cp "$f" "${dest}"
+    echo "  installed script: ${name}"
+  fi
+done
+
+# Python preflight — the scripts need Python 3.9+ on PATH (invoked as `python3`).
+# WARN only: agents fall back to their in-prompt logic when python3 is absent.
+if command -v python3 >/dev/null 2>&1; then
+  echo "  python3 detected: $(python3 --version 2>&1)"
+else
+  echo "  ⚠ python3 not found on PATH — .claude/scripts/ helpers will fall back to"
+  echo "    in-prompt logic. Install Python 3.9+ to enable the deterministic scripts."
+fi
 
 # Seed project-level config (only at project scope)
 if [[ "${SCOPE}" == "project" ]]; then
@@ -162,6 +187,9 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/docs/iconix/metrics-glossary.md"                    "docs/iconix/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/templates/migration-schema-detection-reference.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/templates/migration-stack-patterns-reference.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/templates/migration-preflight-fallback-reference.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/templates/promote-fallback-reference.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/templates/ids-registry-template.md" "docs/iconix/templates/" 2>/dev/null || true
 
   # Seed canonical architecture doc if not present
   if [[ ! -f "docs/architecture/system-architecture.md" ]]; then

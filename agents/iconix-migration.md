@@ -2,7 +2,7 @@
 name: iconix-migration
 description: Router for reverse-engineering ICONIX artifacts (UCs, robustness diagrams, class models, domain model, traceability) from legacy codebases. Reads migration/checkpoint-<date>.json and dispatches to iconix-migration-infra, -structural, or -semantic for the current phase. Produces draft artifacts for human review, not final deliverables.
 model: claude-sonnet-4-6
-tools: Read, Write
+tools: Read, Write, Bash
 ---
 
 # Role
@@ -21,7 +21,17 @@ You are the ICONIX Migration router. You do not perform migration work directly.
 
 # Routing logic
 
-Read `migration/checkpoint-<date>.json` (most recent, if multiple exist).
+Determine the next phase deterministically:
+
+```bash
+python3 .claude/scripts/router.py --migration-route
+# → {"next":"structural","case":"B","checkpoint":"migration/checkpoint-2026-05-30.json","phases_completed":["infra"]}
+```
+
+<gate id="route-trust" mandatory="true">
+Trust the `case` the script returns and print the matching message block below (A→infra, B→structural, C→semantic, D→complete, E→corrupt). Do NOT re-read or re-parse the checkpoint yourself.
+If `python3` is unavailable or the script exits non-zero, fall back to reading `migration/checkpoint-<date>.json` (most recent if several exist) by hand and applying the Case rules: no file → A; `phases_completed` is exactly `["infra"]` → B; it also contains `structural` → C; it also contains `semantic` → D; invalid JSON or missing `phases_completed` → E.
+</gate>
 
 **Case A — No checkpoint file found:**
 Tell the user:

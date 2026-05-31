@@ -5,28 +5,12 @@ argument-hint: "[<DRAFT-slug>|all]   # optional: a specific DRAFT slug to promot
 
 Invoke the iconix-traceability agent in **DRAFT promotion mode** with: $ARGUMENTS
 
-The agent should follow its `# DRAFT promotion` workflow:
+The agent runs its `# DRAFT promotion` workflow, which calls the promotion script:
 
-1. Identify promotion candidates: scan `use-cases/UC-DRAFT-*.md`, `robustness/RB-DRAFT-*.puml`, `sequence/SD-DRAFT-*.puml`, `domain-model/domain-model-DRAFT.puml`, `class-model/class-model.puml` (DRAFT-stamped header), `use-case-packages/*-DRAFT.puml`.
-   - If `$ARGUMENTS` is a slug (e.g., `UC-DRAFT-001`), promote only that artifact.
-   - If `$ARGUMENTS` is `all` or empty, process all DRAFTs found.
+```bash
+python3 .claude/scripts/promote.py --args "$ARGUMENTS"   # add --dry-run to preview
+```
 
-2. For each candidate, run safety checks before promoting:
-   - Count `[VERIFY]` occurrences in the file. If > 0 → **skip** and warn: "N [VERIFY] items unresolved — resolve before promoting."
-   - Check `ids.registry.md` — if a permanent ID already exists for this slug → **skip** as already promoted.
-
-3. Assign permanent IDs from `ids.registry.md` (highest existing ID + 1 per type). Use the project prefix from `iconix.config.yaml`.
-
-4. For each eligible DRAFT:
-   - Rename the file: `use-cases/UC-DRAFT-001-checkout.md` → `use-cases/<PREFIX>-UC-001-checkout.md`
-   - Replace the ID header in the file (`**ID:** UC-DRAFT-001` → `**ID:** <PREFIX>-UC-001`)
-   - Update self-references in the `## Traceability` block
-   - Scan all other DRAFT files for references to the old DRAFT ID and update them
-   - Register the new permanent ID in `ids.registry.md`
-
-5. Print a summary:
-   - Promoted: N (list IDs assigned)
-   - Skipped — [VERIFY] pending: N (list files + unresolved count)
-   - Skipped — already promoted: N
+The script does it all deterministically: scan DRAFTs (restricted to a slug when `$ARGUMENTS` is one, otherwise all), skip any file with unresolved `[VERIFY]` markers (matched as `[VERIFY`, so `[VERIFY:HIGH]` / `[VERIFY — …]` are caught) and any slug already in `ids.registry.md`, assign permanent IDs (highest + 1 per type, project prefix from `iconix.config.yaml`), rename files, rewrite internal IDs and cross-references (preserving `Source-container:` lines), and append the registry. The agent renders the summary (promoted / skipped-[VERIFY] / skipped-already / multi-container) from the script's JSON and trusts it; it falls back to the manual steps in `docs/iconix/templates/promote-fallback-reference.md` only if `python3` is unavailable.
 
 After promotion, the artifacts are ready for the normal ICONIX pipeline. Run `/iconix-next` to proceed to M1 (or M2 if UC and RB are both promoted).

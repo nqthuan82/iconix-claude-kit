@@ -5,6 +5,83 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.82] — 2026-05-31
+
+**SDK Hybrid (Option B) — migration-first slice: move deterministic migration logic into
+`.claude/scripts/` Python helpers, invoked via the Bash tool with a trust-gate + fallback.**
+
+Eight stdlib-only Python scripts (no `pip`, no PyYAML — config parsed with regex like the
+installers) now own the mechanical, non-LLM parts of the migration pipeline. Agents call
+them via the Bash tool, **trust the returned JSON**, and fall back to in-prompt logic /
+an on-demand reference file only when `python3` is absent. Content generation (UC drafting,
+RB synthesis, ADRs) stays entirely in the agents.
+
+Scripts (`scripts/` in the kit → installed to `.claude/scripts/`):
+- `_common.py` — shared config/prefix resolver (honors `ICONIX_CONFIG_PATH`), ID regex,
+  checkpoint selector, JSON I/O, exit-code convention
+- `checkpoint.py` — migration checkpoint read/write/update/validate. **Fixes the `max_uc`
+  typing bug** (the Step 5 template wrote `"<N or null>"` as a quoted string; downstream
+  `>= max_uc` compared against a string) and makes Case-E corruption deterministic
+- `ids.py` — ID allocation (highest + 1 per type, never reuse; reads/writes
+  `ids.registry.md`)
+- `migration_params.py` — normalize `--scope/--max-uc/--entry-point` (NL detection stays
+  in the prompt; only normalize + validate moves to Python)
+- `router.py` — migration routing (checkpoint Cases A–E)
+- `migration_preflight.py` — pre-flight idempotency detection (infra Steps 0–4); human
+  decisions (greenfield STOP, DB continue/cancel) stay in the prompt
+- `migration_promoted.py` — already-promoted entry-point scan (permanent RB boundary names)
+- `promote.py` — DRAFT promotion: `[VERIFY]` gate (regex `\[VERIFY`, so `[VERIFY:HIGH]` /
+  `[VERIFY — …]` are caught), ID assignment, rename, ID/cross-reference rewrite
+  (full-token boundary so `UC-DRAFT-1` never corrupts `UC-DRAFT-10`), `Source-container:`
+  preserved verbatim, registry append
+
+**Honest token framing:** the confirmed steady-state saving is migration-side
+(router ~1,150 + preflight ~990 + params ~150 ≈ **~2,290 tokens/run**) plus
+~1,400/`/iconix-promote`. The backlog's larger headline figures (orchestrator router
+~4,861, validate ~9,000) were optimistic and are **not** part of this slice — those scripts
+(orchestrator routing, `validate.py` gates) are deferred. The primary win here is
+**determinism + correctness**, not dramatic token relief.
+
+**Fallback without bloat:** the verbose extracted logic moved to on-demand reference files
+(`migration-preflight-fallback-reference.md`, `promote-fallback-reference.md`) rather than
+being deleted or left inline, preserving both the static budget and a Windows safety net.
+`iconix-migration-infra.md` drops ~8,992 → ~8,522 tokens (the human-decision bullets stay
+inline by design); `iconix-migration-semantic.md` grows to ~11,355 (script-call block,
+net of the removed scan prose) — a CI WARN under the 12K hard ceiling; Phase 5b UC-packaging
+tables remain the documented next extract target.
+
+Adversarial pre-commit review (multi-agent) surfaced and fixed 12 confirmed defects before
+landing: greenfield detection no longer flags the migration's own promoted outputs on
+incremental runs (HIGH); `checkpoint`/`router` classify non-object JSON, invalid UTF-8, and
+BOM-prefixed files as corrupt/valid instead of crashing (BOM matters on Windows
+PowerShell); `ids` scans the ID column consistently with `read_rows`; unknown `--field`
+keys are rejected; `promote` keeps a `Source-container:` line even when the container name
+contains "DRAFT"; `migration_promoted` ignores reused-page `<<from UC-XXX>>` stereotypes.
+The same-day human-edit detection limitation is documented (the checkpoint records the run
+*start*, so a full-timestamp compare would false-flag freshly generated drafts).
+
+**Methodology audit considered and consciously skipped:** this is a tooling/execution-venue
+change only — the ID format, `[VERIFY]` gate semantics, the 17 traceability checks, and the
+REQ→UC→RB→SD→CLS→TC chain are preserved exactly (the scripts compute the same pass/fail the
+prompts described), so no `docs/iconix/iconix-process-reference.md` row changes status and
+`iconix-state-machine.puml` is unaffected (no new state/gate/transition). README, CLAUDE.md
+token-budget table, and Project-layout were synced (the required surface sync).
+
+Tests: `scripts/tests/` — 97 pytest cases, run on Linux + Windows in CI (pinned to Python
+3.9, the documented minimum). `validate.py`-style gate enforcement is intentionally NOT
+wired into CI for this slice.
+
+- new: `scripts/{_common,checkpoint,ids,migration_params,router,migration_preflight,migration_promoted,promote}.py` + `scripts/tests/`
+- new: `docs/iconix/templates/{migration-preflight-fallback,promote-fallback}-reference.md`, `templates/ids-registry-template.md`
+- `agents/iconix-migration-infra.md` — Steps 0–4 + params + checkpoint call scripts; gates trust output
+- `agents/iconix-migration.md` — routing calls `router.py` (Bash added to tools)
+- `agents/iconix-migration-semantic.md` — Phase 5 already-promoted check calls `migration_promoted.py`; Phase 5d path typo fixed (`docs/use-cases/` → `use-cases/`)
+- `agents/iconix-traceability.md` — ID allocation + promotion call `ids.py` / `promote.py` (Bash added to tools)
+- `commands/iconix-promote.md` — body delegates to `promote.py`
+- `iconix-init`, `iconix-init.ps1` — copy `.claude/scripts/` at all scopes + python preflight WARN
+- `.github/workflows/validate.yml` — `test-scripts` pytest job (Linux + Windows) + installer smoke asserts
+- `README.md`, `CLAUDE.md` — Project-layout, Python prerequisite, token-budget table + execution-venue note
+
 ## [1.0.81] — 2026-05-30
 
 **migration: add Phase 0b — cross-container graph pre-scan for multi-repo + graph-assisted mode.**
