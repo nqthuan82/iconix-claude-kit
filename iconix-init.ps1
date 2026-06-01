@@ -98,20 +98,21 @@ try {
         }
     }
 
-    # Python preflight — scripts need Python 3.9+ on PATH. WARN only: agents fall back
-    # to in-prompt logic when Python is absent.
+    # Python preflight — scripts need Python 3.9+ on PATH. WARN only; agents fall back
+    # to in-prompt logic when absent.
+    # NOTE: do NOT call python.exe here — on Windows Server 2025 the App Execution Alias
+    # for python causes unexpected PS 5.1 pipeline state that skips subsequent code.
+    # Get-Command alone (no exec) is side-effect-free.
     $py = Get-Command python -ErrorAction SilentlyContinue
     if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
     if ($py) {
-        $pyVer = & $py.Source --version 2>&1
-        Write-Host "  python detected: $pyVer"
+        Write-Host "  python found: $($py.Source)"
     } else {
         Write-Host "  [warn] Python not found on PATH — .claude/scripts/ helpers will fall back"
         Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
     }
 
     # Project-scope seeding
-    Write-Host "DEBUG: Global=$($Global) IsPresent=$($Global.IsPresent) negated=$(-not $Global) ProjectRoot=$ProjectRoot"
     if (-not $Global) {
         Set-Location $ProjectRoot  # restore CWD — python detection may have changed it
         $ConfigFile = Join-Path $ProjectRoot "iconix.config.yaml"
