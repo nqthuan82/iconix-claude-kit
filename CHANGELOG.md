@@ -5,6 +5,18 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.85] — 2026-06-01
+
+**Trim `iconix-migration-semantic.md` from ~11,355 to ~9,717 tokens — extract Phase 5d/6 lookup tables + [VERIFY] tier tables to on-demand reference files.**
+
+- Created `docs/iconix/templates/migration-verify-tiers-reference.md`: [VERIFY] HIGH/MEDIUM/LOW severity tier tables (previously inline in semantic agent, read before any Phase 5–7 `[VERIFY]` marker).
+- Created `docs/iconix/templates/migration-phase5d-reference.md`: Track V validator table, Track D guard-clause table + spec/calc grep patterns, Phase 5d Step 2 classification table + heuristics, Step 4 UC annotation match table, Phase 6 Step 1 test node patterns.
+- `agents/iconix-migration-semantic.md`: replaced extracted blocks with `Read <file>` instructions at Phase 5d entry (both graph-assisted and code-walking modes) and at the [VERIFY] section. Saves ~6,548 chars / ~1,637 tokens; file now 38,869 chars ≈ 9,717 tokens (green, under 10K soft limit).
+- `iconix-init.ps1` + `iconix-init`: added explicit `Copy-Item` / `cp` for both new reference files so they land in `docs/iconix/templates/` after install.
+- `README.md`: added both reference files to the project layout tree (lines 94-95 and lines 251-254 sections).
+- `CLAUDE.md`: updated agent token budget table (⚠️ → ✅), reference file list (+2 entries), and "next extract target" note.
+- Methodology audit: tooling-only change — no ICONIX process rule, gate, or phase step modified; `iconix-process-reference.md` unchanged.
+
 ## [1.0.84] — 2026-06-01
 
 **BACKLOG.md: mark SDK Hybrid Option B migration slice as Partially Done.**

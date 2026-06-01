@@ -31,39 +31,7 @@ After the gate check, state the mode and confirm which RB-DRAFTs and SD-DRAFTs a
 
 # [VERIFY] severity classification
 
-Every `[VERIFY]` marker must carry a severity tier: `[VERIFY:HIGH]`, `[VERIFY:MEDIUM]`, or `[VERIFY:LOW]`. Apply throughout all phases. The handoff report Phase 7 summary counts markers by tier.
-
-## HIGH — blocks promotion; resolve before `/iconix-promote`
-
-| Source | Examples |
-|---|---|
-| Cross-container UC grouping — MEDIUM confidence | URL prefix match only; method differs; "are these the same use case?" unclear |
-| AMBIGUOUS graph edge used in any artifact | Concrete implementation unknown; cannot determine correct class |
-| State machine sequence from SQL heuristic only (no ORM enum) | Transition order inferred from CHECK IN values alone — often wrong |
-| Business rule Invariant or Transition guard from Track D or T (INFERRED) | Domain guard clause or trigger RAISERROR inferred as invariant |
-| UC actor identity unknown or generic | Actor shown as "User", "System", or "Unknown" — cannot identify from code |
-| Missing alternate course — try/catch present, business intent unknown | Exception handler found but whether it is a real user journey is unclear |
-
-## MEDIUM — affects artifact quality; resolve before M1/M2 gate
-
-| Source | Examples |
-|---|---|
-| Actor role name specific but unconfirmed | `Manager`, `Operator`, `Admin` — plausible from code context, not confirmed |
-| Alternate course inferred from try/catch (intent is plausible) | Error mapped to alternate course — confirm it is a real user journey |
-| Business rule Precondition, Authorization, or Workflow from Track D or T | INFERRED but lower-stakes than invariants and transition guards |
-| State machine sequence from ORM enum (EXTRACTED order) | Declaration order reliable; business meaning of each state needs PO sign-off |
-| MEDIUM-confidence cross-container grouping | URL prefix match with matching method — grouping likely correct but not certain |
-
-## LOW — cosmetic; review last or skip under deadline pressure
-
-| Source | Examples |
-|---|---|
-| FK-derived precondition | `Customer must exist` — almost always correct from FK constraint |
-| Stored procedure verb → operation name | `sp_ApproveOrder → Approve` — reliably accurate |
-| Entity or attribute names from ORM or SQL schema (EXTRACTED) | Field names from class definitions or normalized table names |
-| Business rules from Track V (validator annotations, EXTRACTED) | `[NotNull]`, `[Range]`, `[StringLength]` — accurate, low business risk |
-| UC package cluster grouping | Namespace/directory-based grouping — structural, not semantic |
-| Cross-container grouping — HIGH confidence | Exact URL + method match; almost certainly correct |
+**Read `docs/iconix/templates/migration-verify-tiers-reference.md` now.** It defines the HIGH / MEDIUM / LOW severity tiers with signal sources and examples. Apply throughout Phases 5–7; the handoff report Phase 7 summary counts markers by tier.
 
 ---
 
@@ -333,6 +301,8 @@ Entities unmatched in any UC-DRAFT are a signal of potentially missing use cases
 
 Produces `docs/business-rules.md` from four detection tracks. Skip when `business_rules.enabled: false` in `iconix.config.yaml`. Run after Phase 5c Steps 1–3 (reads `migration/domain-glossary.md` as primary input for Track S).
 
+**Before Phase 5d Step 1:** Read `docs/iconix/templates/migration-phase5d-reference.md`. It contains the Track V validator table, Track D guard-clause and spec/calc patterns, Step 2 classification table, Step 4 UC match signals, and Phase 6 Step 1 test patterns.
+
 ### Step 1 — Detect rule sources
 
 **Track S — Schema rules (pull from glossary)**
@@ -344,42 +314,13 @@ Read `migration/domain-glossary.md`. For each entity entry, pull:
 
 No additional file scanning required — Track S reuses Phase 5c output.
 
-**Track V — Validator classes (language-aware)**
-
-| Language | File scope | Signals |
-|---|---|---|
-| C# / .NET | `**/*.cs` | `AbstractValidator<T>` (FluentValidation) → `.RuleFor().NotNull()`, `.GreaterThan()`, `.Matches()`; `[Range]`, `[StringLength]`, `[RegularExpression]`, `[EmailAddress]` DataAnnotations; `ValidationAttribute` subclasses |
-| Java | `**/*.java` | `@NotBlank`, `@NotNull`, `@Size`, `@Min`, `@Max`, `@Pattern`, `@Email` (Bean Validation); `ConstraintValidator<A,T>` implementations |
-| Python (Django) | `**/models.py`, `**/forms.py` | `clean()` / `clean_<field>()` methods; `validators=[...]` on field; `ValidationError` raised |
-| Python (SQLAlchemy) | `**/*.py` | `@validates` decorator |
-| PHP | `**/*.php` | Symfony `Constraint` subclasses; Laravel Form Request `rules()` method |
-| Ruby | `app/models/**/*.rb` | `validates :field, presence:`, `length:`, `numericality:`, `format:`; `validate :method_name` callbacks |
-| TypeScript / JS | `**/*.ts`, `**/*.js` | class-validator `@IsEmail`, `@Min`, `@Max`, `@IsNotEmpty`, `@Length`, `@Matches` |
-| Go | `**/*.go` | struct tags `validate:"required,min=0,max=100"` (go-playground/validator) |
-
-Label all validator-derived rules `EXTRACTED`.
+**Track V — Validator classes:** Use the language-aware validator signal table in `migration-phase5d-reference.md`. Label all results `EXTRACTED`.
 
 **Track D — Domain-layer logic**
 
 Restrict to domain / service / application layer paths — exclude `Controllers/`, `Repositories/`, `Adapters/`, `Infrastructure/`, `Migrations/`.
 
-*Guard clauses:*
-
-| Language | Patterns |
-|---|---|
-| C# | `throw new.*Exception` / `Guard.Against.*` inside domain entity or service methods |
-| Java | `Objects.requireNonNull`, `Preconditions.checkArgument`, `throw new IllegalArgumentException` |
-| Python | `raise ValueError` / `raise TypeError` in model or domain service methods |
-| PHP | `throw new \InvalidArgumentException` / `throw new DomainException` |
-| Ruby | `raise ArgumentError` / custom domain exceptions |
-| TypeScript | `throw new Error` / custom domain exception classes |
-| Go | early `return err` with named domain error types |
-
-*Specification / policy classes:* Grep for classes matching `(?i)(Specification|Spec|Policy|Rule|Guard|Criteria)` suffix, or implementing `ISpecification<T>` / `is_satisfied_by` / `satisfied_by?`. Extract the predicate body as a candidate **Precondition** or **Invariant**.
-
-*Calculation methods:* Grep for methods named `Calculate*`, `Compute*`, `Derive*`, `Get*Total`, `Get*Amount` in domain layer. Extract method body for formula inference; label `INFERRED [VERIFY]`.
-
-Label all Track D results `INFERRED [VERIFY]`.
+Use the guard-clause language table, specification/policy grep, and calculation method grep from `migration-phase5d-reference.md`. Label all Track D results `INFERRED [VERIFY]`.
 
 **Track T — SQL Triggers**
 
@@ -392,24 +333,7 @@ Label all trigger-derived rules `INFERRED [VERIFY — trigger bodies often mix d
 
 ### Step 2 — Classify rules
 
-| Category | When to use | Typical source |
-|---|---|---|
-| **Invariant** | Always true on entity, regardless of operation | NOT NULL, CHECK, validator annotations, guard in constructor |
-| **Precondition** | Must hold before operation proceeds | Guard clause at method entry, specification.IsSatisfiedBy |
-| **Postcondition** | Observable entity state guaranteed after operation | Trigger SET, method return contract |
-| **Transition guard** | Controls whether a state machine transition is allowed | `if (status != Pending) throw`, state-aware specification |
-| **Calculation** | Formula or derivation rule | `Calculate*` method body, trigger SET formula |
-| **Authorization** | Role or permission constraint | `[Authorize]`, `HasRole()` guard, `@PreAuthorize` |
-| **Workflow** | Sequencing constraint between operations | `if (!invoice.Exists) throw`, phase-ordering guard |
-
-Classification heuristics (priority order):
-- Track S NOT NULL / CHECK → **Invariant**; Track S CHECK IN / ORM enum → **Transition guard**
-- Track V field annotation → **Invariant**; Track V role annotation → **Authorization**
-- Track D guard `if (status !=) throw` → **Transition guard**; Track D guard at method entry (non-status) → **Precondition**
-- Track D `Calculate*` / `Compute*` → **Calculation**; Track D specification / policy → **Precondition** or **Invariant**
-- Track T RAISERROR / THROW → **Invariant** or **Precondition**; Track T SET formula → **Calculation**
-
-When a rule fits multiple categories, prefer the most specific: `Transition guard > Precondition > Invariant`.
+Use the rule classification table and heuristics (priority order) from `migration-phase5d-reference.md`. When a rule fits multiple categories, prefer the most specific: `Transition guard > Precondition > Invariant`.
 
 ### Step 3 — Produce `docs/business-rules.md`
 
@@ -456,16 +380,7 @@ For each UC-DRAFT-XXX:
 
 **a) Build entity and operation set:** read Actor, Preconditions, main course, alternate courses; read `robustness/RB-DRAFT-XXX.puml` — collect entity node names; extract action verbs from main course; resolve canonical entity names via `migration/domain-glossary.md`.
 
-**b) Match rules from `docs/business-rules.md`:**
-
-| Rule category | Match signal | Adds to UC as |
-|---|---|---|
-| **Precondition** | Rule entity in UC entity set OR operation verb matches UC main course | `## Preconditions` entry `[VERIFY]` |
-| **Transition guard** | State change mentioned in UC main/alt course | `## Preconditions` entry `[VERIFY]` |
-| **Authorization** | Role in rule matches UC Actor name or role description | `## Preconditions` entry `[VERIFY]` |
-| **Invariant** | Rule entity in UC entity set | Cross-reference table only (invariants always hold) |
-| **Calculation** | Rule entity in UC entity set | Cross-reference table only (informs Tester of derived values) |
-| **Workflow** | Operation in UC's main/alt course appears in rule | `## Preconditions` entry `[VERIFY]` |
+**b) Match rules from `docs/business-rules.md`:** Use the UC annotation match signals table from `migration-phase5d-reference.md`.
 
 **c) Append to UC-DRAFT** (never overwrite or reorder existing content):
 
@@ -521,14 +436,7 @@ If no amendments exist → skip this step.
 
 ### Step 1 — Locate test nodes
 
-| Language | File patterns | Class / function signals |
-|---|---|---|
-| C# | `**/*.Tests/**/*.cs`, `**/*Test*.cs`, `**/*Spec*.cs` | `[TestClass]`, `[Fact]`, `[Theory]`, `[Test]` attributes |
-| Java | `src/test/**/*.java`, `**/*Test*.java`, `**/*Spec*.java` | `@Test`, `@ParameterizedTest` |
-| Python | `test_*.py`, `*_test.py` | `pytest` functions, `unittest.TestCase` subclasses |
-| TypeScript/JS | `*.test.ts`, `*.spec.ts`, `*.test.js`, `*.spec.js` | `describe(`, `it(`, `test(` calls |
-| Go | `*_test.go` | `func Test*` |
-| Ruby | `spec/**/*_spec.rb`, `test/**/*_test.rb` | `describe`, `it`, `RSpec` |
+Use the language-aware test file patterns from `migration-phase5d-reference.md` (already loaded at Phase 5d).
 
 ### Step 2 — Build test → production map
 
@@ -614,6 +522,9 @@ Same as graph-assisted Phase 5c. Key differences in code-walking mode:
 All other rules (Step 1 detection, Step 2 parsing, Step 3 glossary, Steps 4–6) apply unchanged.
 
 ## Phase 5d — Business rule extraction (manual)
+
+**Before Phase 5d Step 1:** Read `docs/iconix/templates/migration-phase5d-reference.md` if not already loaded.
+
 Same as graph-assisted Phase 5d. Key differences:
 
 - **Track D (domain logic):** grep source files directly rather than querying graph nodes. Restrict to domain/application/service layer paths by directory convention. When a class path is ambiguous, note `[VERIFY — layer classification uncertain]`.

@@ -142,6 +142,8 @@ try {
         Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-stack-patterns-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-preflight-fallback-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\templates\promote-fallback-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-verify-tiers-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-phase5d-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\ids-registry-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
 
         # Seed canonical architecture doc if not present

@@ -92,7 +92,9 @@ docs/
 └── iconix/
     └── templates/                      # reference files loaded on-demand by migration agents (not user-facing)
         ├── migration-schema-detection-reference.md  # Track B1-B5 / Track C lookup tables → migration-semantic Phase 5c (v1.0.47+)
-        └── migration-stack-patterns-reference.md    # Block A-D cross-stack patterns → migration-structural Phases 1/1b/3/4 (v1.0.59+)
+        ├── migration-stack-patterns-reference.md    # Block A-D cross-stack patterns → migration-structural Phases 1/1b/3/4 (v1.0.59+)
+        ├── migration-verify-tiers-reference.md      # [VERIFY] HIGH/MEDIUM/LOW severity tables → migration-semantic Phases 5-7 (v1.0.85+)
+        └── migration-phase5d-reference.md           # Track V/D tables, classification, UC match, Phase 6 test patterns → migration-semantic (v1.0.85+)
 ```
 
 ## Install into a project
@@ -252,6 +254,8 @@ docs/iconix/
     ├── migration-stack-patterns-reference.md
     ├── migration-preflight-fallback-reference.md
     ├── promote-fallback-reference.md
+    ├── migration-verify-tiers-reference.md
+    ├── migration-phase5d-reference.md
     ├── ids-registry-template.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md

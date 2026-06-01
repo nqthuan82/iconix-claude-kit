@@ -116,7 +116,7 @@ Current budget status (chars/4 estimate, refresh when files change materially):
 
 | Agent | Approximate tokens | Status |
 |---|---|---|
-| `iconix-migration-semantic.md` | ~11,355 | ⚠️ WARN (>10K soft, <12K hard) — already-promoted check now calls `migration_promoted.py`; next extract target is the Phase 5b UC packaging tables |
+| `iconix-migration-semantic.md` | ~9,717 | ✅ ([VERIFY] tier tables → `migration-verify-tiers-reference.md`; Phase 5d/6 lookup tables → `migration-phase5d-reference.md`, v1.0.85) |
 | `iconix-migration-structural.md` | ~8,831 | ✅ |
 | `iconix-migration-infra.md` | ~8,522 | ✅ (Steps 0–4 detection moved to `migration_preflight.py` + fallback reference in v1.0.82) |
 | `iconix-migration.md` (router) | ~1,438 | ✅ |
@@ -128,6 +128,8 @@ Reference files extracted (loaded on-demand by the cited agent):
 - `docs/iconix/templates/migration-stack-patterns-reference.md` — structural Phases 1, 1b, 3, 4
 - `docs/iconix/templates/migration-preflight-fallback-reference.md` — infra Steps 0–4 manual fallback (when `python3` absent)
 - `docs/iconix/templates/promote-fallback-reference.md` — traceability/`/iconix-promote` manual fallback (when `python3` absent)
+- `docs/iconix/templates/migration-verify-tiers-reference.md` — semantic [VERIFY] HIGH/MEDIUM/LOW tier tables (Phases 5–7)
+- `docs/iconix/templates/migration-phase5d-reference.md` — semantic Phase 5d Track V/D tables, classification, UC match, Phase 6 test patterns
 
 **Deterministic-logic venue (SDK Hybrid — Option B, v1.0.82+):** mechanical steps —
 migration routing, checkpoint I/O, ID allocation, pre-flight idempotency detection, the
@@ -152,7 +154,7 @@ Before adding content to any agent that is near or over budget:
 
 3. **Prefer XML gate tags over markdown headers** for mandatory STOP points — they are shorter and more reliably parsed at long context: `<gate id="x" mandatory="true">...</gate>`.
 
-4. **Watch the migration sub-agents.** Both `iconix-migration-structural.md` and `iconix-migration-semantic.md` have grown materially since their last extract round. If either crosses ~9,500 tokens again, the next extract target is the Phase 4b domain-model filter rules (structural) or the Phase 5b UC packaging tables (semantic).
+4. **Watch the migration sub-agents.** If `iconix-migration-structural.md` or `iconix-migration-semantic.md` crosses ~9,500 tokens again, the next extract target is the Phase 4b domain-model filter rules (structural) or the BDD-DRAFT feature-block output templates (semantic — currently the largest remaining inline block).
 
 ## Agent prompt discipline
 

@@ -189,6 +189,8 @@ if [[ "${SCOPE}" == "project" ]]; then
   cp "${WORKDIR}/docs/iconix/templates/migration-stack-patterns-reference.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/templates/migration-preflight-fallback-reference.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/docs/iconix/templates/promote-fallback-reference.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/templates/migration-verify-tiers-reference.md" "docs/iconix/templates/" 2>/dev/null || true
+  cp "${WORKDIR}/docs/iconix/templates/migration-phase5d-reference.md" "docs/iconix/templates/" 2>/dev/null || true
   cp "${WORKDIR}/templates/ids-registry-template.md" "docs/iconix/templates/" 2>/dev/null || true
 
   # Seed canonical architecture doc if not present
