@@ -80,35 +80,6 @@ try {
         }
     }
 
-    # Copy scripts (.claude/scripts/) — deterministic helpers invoked via the Bash tool
-    # by agents/commands. Installed at all scopes (project + global); project-independent.
-    $scriptsSrc = Join-Path $WorkDir "scripts"
-    if (Test-Path $scriptsSrc) {
-        Get-ChildItem $scriptsSrc -Filter "*.py" | ForEach-Object {
-            $dest = Join-Path $ScriptsDir $_.Name
-            if ((Test-Path $dest) -and (-not $Force)) {
-                Write-Host "  skip script $($_.Name)"
-            } else {
-                Copy-Item $_.FullName $dest -Force
-                Write-Host "  installed script: $($_.Name)"
-            }
-        }
-    }
-
-    # Python preflight — scripts need Python 3.9+ on PATH. WARN only; agents fall back
-    # to in-prompt logic when absent.
-    # NOTE: do NOT call python.exe here — on Windows Server 2025 the App Execution Alias
-    # for python causes unexpected PS 5.1 pipeline state that skips subsequent code.
-    # Get-Command alone (no exec) is side-effect-free.
-    $py = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
-    if ($py) {
-        Write-Host "  python found: $($py.Source)"
-    } else {
-        Write-Host "  [warn] Python not found on PATH — .claude/scripts/ helpers will fall back"
-        Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
-    }
-
     # Project-scope seeding
     if (-not $Global) {
         $ConfigFile = Join-Path (Get-Location) "iconix.config.yaml"
@@ -228,6 +199,33 @@ try {
                 Write-Host "  installed git integration: generic (CI wiring left to the user)"
             }
         }
+    }
+
+    # Copy scripts (.claude/scripts/) — after seeding so Get-Location for config is
+    # captured before any cross-drive ForEach-Object pipeline alters PS provider state.
+    # Installed at all scopes (project + global); project-independent.
+    $scriptsSrc = Join-Path $WorkDir "scripts"
+    if (Test-Path $scriptsSrc) {
+        Get-ChildItem $scriptsSrc -Filter "*.py" | ForEach-Object {
+            $dest = Join-Path $ScriptsDir $_.Name
+            if ((Test-Path $dest) -and (-not $Force)) {
+                Write-Host "  skip script $($_.Name)"
+            } else {
+                Copy-Item $_.FullName $dest -Force
+                Write-Host "  installed script: $($_.Name)"
+            }
+        }
+    }
+
+    # Python preflight — scripts need Python 3.9+ on PATH. WARN only; agents fall back
+    # to in-prompt logic when absent. Get-Command only, no exec (avoids PS 5.1 side effects).
+    $py = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
+    if ($py) {
+        Write-Host "  python found: $($py.Source)"
+    } else {
+        Write-Host "  [warn] Python not found on PATH — .claude/scripts/ helpers will fall back"
+        Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
     }
 
     Write-Host ""

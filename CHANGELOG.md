@@ -13,12 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   pytest `tmp_path` is on `C:` but CWD is on `D:`. Fixed with `try/except ValueError` fallback
   to the raw path. 8 `test_migration_promoted` cases now pass on `windows-latest`.
 - `iconix-init.ps1`: on Windows Server 2025, the project-scope seeding block was silently
-  skipped — `iconix.config.yaml` and project folders were never created. Root cause was
-  spurious state introduced by the `$ProjectRoot` inline-`if` expression and
-  `Set-Location $ProjectRoot` that were added as speculative CWD fixes. Reverted seeding
-  block to exactly the main-branch form (`Join-Path (Get-Location) "iconix.config.yaml"`)
-  and removed `$ProjectRoot` entirely; the scripts copy and python PATH check are the only
-  new additions vs main.
+  skipped when the scripts copy ForEach-Object pipeline ran before it — `iconix.config.yaml`
+  and project folders were never created. The cross-drive ForEach-Object (source C:, dest D:)
+  alters PS 5.1 provider state in a way that causes `if (-not \$Global)` to evaluate as
+  false. Fixed by moving the scripts copy and python PATH check AFTER the seeding block, so
+  `Get-Location` and `\$Global` are evaluated in clean PS provider state.
 
 No methodology or agent changes. No token-budget impact.
 
