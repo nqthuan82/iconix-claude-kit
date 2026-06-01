@@ -613,8 +613,29 @@ Takes precedence over `--max-uc`. If the named entry point is not found in the s
 
 ## SDK Hybrid — Python scripts for deterministic parts (Claude Code-compatible)
 
-**Status:** Proposed (2026-05-29)
+**Status:** Partially Done — migration slice shipped v1.0.82/v1.0.83 (2026-06-01); orchestrator router + validate.py deferred
 **Origin:** Architecture discussion — Option B from "SDK-based architecture" entry. Full SDK rewrite (Option A) sacrifices Claude Code UX; this entry targets the same enforcement and token-saving gains while keeping slash commands, sub-agent dispatch, and `.md`-only customization.
+
+### Delivered (v1.0.82 / v1.0.83)
+
+Migration-first slice — 8 scripts, 97 pytest cases, Linux + Windows CI green:
+
+| Script | Status |
+|---|---|
+| `_common.py` | ✅ Shipped — shared config/prefix resolver, ID regex, checkpoint selector, JSON I/O |
+| `checkpoint.py` | ✅ Shipped — migration checkpoint read/write/validate; fixes `max_uc` typing bug + Case-E corruption |
+| `ids.py` | ✅ Shipped — ID allocation (highest+1, no reuse); reads/writes `ids.registry.md` |
+| `migration_params.py` | ✅ Shipped — normalize `--scope/--max-uc/--entry-point` |
+| `router.py` | ✅ Shipped — migration routing (Cases A-E from checkpoint); orchestrator routing deferred |
+| `migration_preflight.py` | ✅ Shipped — pre-flight idempotency detection (infra Steps 0-4); human gate stays in prompt |
+| `migration_promoted.py` | ✅ Shipped -- already-promoted entry-point check (semantic Phase 5) |
+| `promote.py` | ✅ Shipped -- DRAFT scan, [VERIFY] gate, ID assign, rename, xref rewrite, registry append |
+
+Installer: `iconix-init` / `iconix-init.ps1` copy `.claude/scripts/` to target projects. Python 3.9+ documented as optional prerequisite (fallback to in-prompt logic if absent).
+
+Known token savings (honest, post-audit): migration-side ~2,290 tokens/run + ~1,400/promote. Primary value is **determinism and correctness**, not token relief.
+
+### Deferred
 
 ### Problem
 
@@ -671,26 +692,15 @@ Commands and agents call Python scripts via Bash tool instead of spawning a full
     ← exit 1: gate fails, print missing links — Orchestrator freezes pipeline
 ```
 
-### Roadmap
+### Remaining roadmap (deferred)
 
-~8 commits, each independently testable. Commits 1–5 cover the general pipeline;
-commits 6–8 cover migration-specific deterministic work.
+Commits 1-2 cover the general pipeline and are the highest-risk / lowest-token-payoff pieces:
 
-1. **`router.py`** — reads `iconix.config.yaml` + artifact state (file existence, checkpoint), outputs JSON routing decision. Handles both general pipeline routing (PO→Analyst→Architect…) and migration routing (infra→structural→semantic). Update `iconix-orchestrator.md` and `iconix-migration.md` to call it via Bash before dispatching. Zero LLM tokens for routing.
+1. **`router.py --next/--preflight/--phase9`** — general pipeline routing (PO→Analyst→Architect…) and phase-9 iteration. Requires parsing artifact state across multiple directories. Update `iconix-orchestrator.md` to call it. Deferred: orchestrator loads fully regardless, so token savings are ~1,650 not ~4,861 as originally estimated.
 
-2. **`validate.py`** — M1/M2/M3 gate checks: greps artifact files, validates ID chain format (`REQ-XXX → UC-XXX → RB-XXX → SD-XXX → CLS-<Name> → TC-XXX`), reports missing links. Update Orchestrator gate steps to call it.
+2. **`validate.py`** — M1/M2/M3 gate checks: greps artifact files, validates ID chain format (`REQ-XXX → UC-XXX → RB-XXX → SD-XXX → CLS-<Name> → TC-XXX`), reports missing links. Update Orchestrator gate steps to call it. Deferred: requires a `.puml` / `.md` parsing layer; highest complexity of all scripts. Potential CI step to replace/complement `validate-traceability.sh`.
 
-3. **`ids.py`** — reads `ids.registry.md`, assigns `highest + 1` atomically, writes back. Update `iconix-traceability.md` to call it for new ID assignment instead of counting inline.
-
-4. **`checkpoint.py`** — atomic JSON read/write with schema validation for migration checkpoints. Update `iconix-migration-infra.md` Step 5 to call it.
-
-5. **`promote.py`** — scans `DRAFT` files, checks `[VERIFY]` count per artifact, renames files, updates cross-references. Update `/iconix-promote` command to call it.
-
-6. **`migration_preflight.py`** — replaces `iconix-migration-infra` Steps 0–4 (all deterministic checks before Phase 1): greenfield artifact detection (file pattern scan), promoted artifact check (grep `ids.registry.md`), human-edit detection (file modification timestamp vs last-run date), database container readiness check. Currently ~200 lines of prompt instructions prone to model misreads on file timestamps and counting. Update `iconix-migration-infra.md` to call this script and trust its exit code rather than re-deriving the result.
-
-7. **`migration_promoted.py`** — replaces the already-promoted entry-point check in `iconix-migration-semantic.md` Phase 5: greps `robustness/<PREFIX>-RB-*.puml` for permanent files (no `DRAFT` in filename), extracts inbound boundary node names, returns the list as JSON. Eliminates the risk of semantic agent re-drafting UC-DRAFTs for already-promoted entry points. Also used by `--entry-point` filter to skip promoted targets. Update semantic Phase 5 to call this script before drafting. **Note:** this script is a utility also consumed by `promote.py` (commit 5) — implement commit 7 before or alongside commit 5 to avoid duplication.
-
-8. **`migration_params.py`** — handles the **normalize + checkpoint write** half of parameter processing. The natural-language detection half (recognising `--scope`, `--max-uc`, `--entry-point` from user chat messages) must stay in the infra agent prompt — Python cannot read Claude Code chat input. What moves to Python: normalisation of `--entry-point` values (split on `,`, HTTP-method/path vs class.method detection, case-fold), range validation of `--max-uc`, and atomic checkpoint write of the parsed params. The agent detects values from NL, passes them as structured args to this script, then trusts its output.
+Also open: `ids.registry.md` write-locking for multi-repo parallel promote (documented limitation; single-writer assumed for now).
 
 ### Migration pipeline — why it matters more than the general pipeline
 
@@ -705,11 +715,11 @@ file glob matching, entry-point name normalisation). Moving them to Python:
 - **Quantified infra.md budget relief:** Steps 0–4 extraction (~990 tokens) + params normalization section (~150 tokens) = **~1,140 tokens removed from `iconix-migration-infra.md`**, reducing it from ~8,992 → ~7,852 tokens. Moves it back below the 10,000 soft warning with margin.
 - Eliminates the most common failure mode: model skipping or mis-executing an idempotency check
 
-### Open questions
+### Open questions (resolved)
 
-- **Installer:** should `iconix-init` copy `.claude/scripts/` to target projects? Likely yes — scripts are project-independent. Adds to the installer `$folders` array.
-- **Python version requirement:** minimum Python 3.9. Should be documented as a prerequisite alongside `bash` and `git`.
-- **CI integration:** `validate.py` can run as a CI step (replaces/complements `validate-traceability.sh`). Out of scope for this entry — separate commit when ready.
+- **Installer:** ✅ `iconix-init` and `iconix-init.ps1` copy `.claude/scripts/` to all target projects (project + global scope).
+- **Python version requirement:** ✅ Python 3.9+ documented in README as optional prerequisite; installer warns if absent; agents fall back to in-prompt logic.
+- **CI integration for `validate.py`:** deferred -- out of scope until the script is written.
 
 ### Rejected alternatives
 

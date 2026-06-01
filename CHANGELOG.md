@@ -5,6 +5,15 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.84] — 2026-06-01
+
+**BACKLOG.md: mark SDK Hybrid Option B migration slice as Partially Done.**
+
+- Updated "SDK Hybrid" entry status from *Proposed* to *Partially Done (v1.0.82/v1.0.83)*.
+- Added "Delivered" section listing all 8 shipped scripts with status.
+- Moved remaining roadmap (orchestrator router, validate.py) to "Deferred" section with honest rationale.
+- Resolved open questions (installer, Python 3.9+ prereq).
+
 ## [1.0.83] — 2026-06-01
 
 **CI bug fixes: Windows cross-drive path + PowerShell 5.1 installer regression (caught by PR #1 CI).**
