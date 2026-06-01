@@ -86,7 +86,10 @@ def scan(robustness_dir, prefix, entry_points):
             continue
         slug = os.path.basename(rb)
         uc_id = extract_uc_id(text, slug)
-        rel = os.path.relpath(rb).replace("\\", "/")
+        try:
+            rel = os.path.relpath(rb).replace("\\", "/")
+        except ValueError:  # cross-drive on Windows (e.g. tmp_path on C:, cwd on D:)
+            rel = rb.replace("\\", "/")
         for boundary in extract_boundaries(text):
             promoted_boundaries.append({"uc_id": uc_id, "boundary_name": boundary, "rb_file": rel})
 

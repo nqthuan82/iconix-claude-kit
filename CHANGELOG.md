@@ -5,6 +5,21 @@ All notable changes to the ICONIX Claude Kit.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.83] — 2026-06-01
+
+**CI bug fixes: Windows cross-drive path + PowerShell 5.1 installer regression (caught by PR #1 CI).**
+
+- `scripts/migration_promoted.py`: `os.path.relpath(rb)` raises `ValueError` on Windows when
+  pytest `tmp_path` is on `C:` but CWD is on `D:`. Fixed with `try/except ValueError` fallback
+  to the raw path. 8 `test_migration_promoted` cases now pass on `windows-latest`.
+- `iconix-init.ps1`: `$(& $py.Source --version 2>&1)` inside `Write-Host` string interpolation
+  with `$ErrorActionPreference = "Stop"` (PowerShell 5.1) caused the project-scope seeding
+  block (`if (-not $Global)`) to be skipped, so `iconix.config.yaml` and all project folders
+  were never created. Fixed by moving `2>&1` out of the `$(...)` subexpression:
+  `$pyVer = & $py.Source --version 2>&1; Write-Host "  python detected: $pyVer"`.
+
+No methodology or agent changes. No token-budget impact.
+
 ## [1.0.82] — 2026-05-31
 
 **SDK Hybrid (Option B) — migration-first slice: move deterministic migration logic into

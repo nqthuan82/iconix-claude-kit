@@ -100,7 +100,8 @@ try {
     $py = Get-Command python -ErrorAction SilentlyContinue
     if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
     if ($py) {
-        Write-Host "  python detected: $(& $py.Source --version 2>&1)"
+        $pyVer = & $py.Source --version 2>&1
+        Write-Host "  python detected: $pyVer"
     } else {
         Write-Host "  [warn] Python not found on PATH — .claude/scripts/ helpers will fall back"
         Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
