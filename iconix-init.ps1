@@ -111,6 +111,7 @@ try {
     }
 
     # Project-scope seeding
+    Write-Host "DEBUG: Global=$($Global) IsPresent=$($Global.IsPresent) negated=$(-not $Global) ProjectRoot=$ProjectRoot"
     if (-not $Global) {
         Set-Location $ProjectRoot  # restore CWD — python detection may have changed it
         $ConfigFile = Join-Path $ProjectRoot "iconix.config.yaml"
