@@ -12,11 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `scripts/migration_promoted.py`: `os.path.relpath(rb)` raises `ValueError` on Windows when
   pytest `tmp_path` is on `C:` but CWD is on `D:`. Fixed with `try/except ValueError` fallback
   to the raw path. 8 `test_migration_promoted` cases now pass on `windows-latest`.
-- `iconix-init.ps1`: `$(& $py.Source --version 2>&1)` inside `Write-Host` string interpolation
-  with `$ErrorActionPreference = "Stop"` (PowerShell 5.1) caused the project-scope seeding
-  block (`if (-not $Global)`) to be skipped, so `iconix.config.yaml` and all project folders
-  were never created. Fixed by moving `2>&1` out of the `$(...)` subexpression:
-  `$pyVer = & $py.Source --version 2>&1; Write-Host "  python detected: $pyVer"`.
+- `iconix-init.ps1`: on Windows Server 2025, `& python --version` changes the process
+  working directory to the Python installation dir. `Get-Location` in the project-scope
+  seeding block then returned the Python dir instead of the install target, so
+  `iconix.config.yaml` and all project folders were written to the wrong location (or
+  silently failed due to permissions). Fixed by capturing `$ProjectRoot` from `$TargetBase`
+  before any native-exe call, and calling `Set-Location $ProjectRoot` at the start of the
+  seeding block to restore the CWD.
 
 No methodology or agent changes. No token-budget impact.
 

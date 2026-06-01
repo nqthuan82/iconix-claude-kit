@@ -39,6 +39,9 @@ $AgentsDir   = Join-Path $TargetBase "agents"
 $CommandsDir = Join-Path $TargetBase "commands"
 $ScriptsDir  = Join-Path $TargetBase "scripts"
 New-Item -ItemType Directory -Force -Path $AgentsDir, $CommandsDir, $ScriptsDir | Out-Null
+# Capture project root now — native exe calls (e.g. python --version) can alter the
+# process CWD on Windows Server 2025, so we restore it explicitly before seeding.
+$ProjectRoot = if ($Global) { $null } else { Split-Path $TargetBase -Parent }
 
 # Resolve source
 $WorkDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("iconix-" + [guid]::NewGuid()))
@@ -109,7 +112,8 @@ try {
 
     # Project-scope seeding
     if (-not $Global) {
-        $ConfigFile = Join-Path (Get-Location) "iconix.config.yaml"
+        Set-Location $ProjectRoot  # restore CWD — python detection may have changed it
+        $ConfigFile = Join-Path $ProjectRoot "iconix.config.yaml"
         if ((-not (Test-Path $ConfigFile)) -or $Force) {
             Copy-Item (Join-Path $WorkDir "templates\iconix.config.yaml") $ConfigFile -Force
             if ($Prefix)   { (Get-Content $ConfigFile) -replace 'prefix: "PRJ"', "prefix: `"$Prefix`"" | Set-Content $ConfigFile }
