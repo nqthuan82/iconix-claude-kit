@@ -33,6 +33,14 @@ Thumbs.db
 /migration/
 /iconix.config.yaml
 
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated migration artifacts (not kit source)
+docs/iconix-migration-activity.puml
+
 # Logs and temp
 *.log
 *.tmp
