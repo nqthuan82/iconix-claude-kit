@@ -1,7 +1,7 @@
 ---
 name: iconix-migration-structural
 description: Second sub-agent in the ICONIX migration pipeline. Invoked by iconix-migration after iconix-migration-infra completes. Runs Phases 0–4b (graph readiness, code survey, cross-container correlation, class model, sequence diagrams, robustness diagrams, domain model) and writes migration/survey-phase1-<date>.md. Do not invoke directly — use iconix-migration as the entry point.
-model: claude-opus-4-7
+model: claude-opus-4-8
 tools: Read, Grep, Glob, Write, Bash
 ---
 
@@ -46,6 +46,63 @@ After the gate check, state the mode and entry_point_count from the checkpoint.
    - Older than 30 days → refuse to proceed without a refresh; stale graph leads to wrong artifacts
 3. Read `GRAPH_REPORT.md` for coverage and confidence distribution
 4. Note in the survey: total nodes, total edges, EXTRACTED vs INFERRED vs AMBIGUOUS counts
+
+## Phase 0b — Cross-container graph pre-scan (graph-assisted + multi-repo only)
+
+**Skip this phase** if either condition is true:
+- Mode is `code-walking` (from checkpoint), OR
+- Fewer than 2 containers have `path:` defined in `iconix.config.yaml`
+
+For each container with `path:` defined, check whether `<container.path>/graphify-out/graph.json` exists. If fewer than 2 containers have the file → skip and log: `Phase 0b skipped — fewer than 2 containers have graphify-out/graph.json.`
+
+**When conditions are met:** for each qualifying container, run via Bash:
+
+```bash
+python -c "
+import json
+from pathlib import Path
+g = json.loads(Path('CONTAINER_PATH/graphify-out/graph.json').read_text())
+print(json.dumps({
+  'container': 'CONTAINER_NAME',
+  'entities': [n['label'] for n in g['nodes'] if n.get('file_type') == 'code'],
+  'routes':   [n['label'] for n in g['nodes']
+               if '/' in n.get('label','') or 'http' in n.get('label','').lower()],
+  'edges':    [{'s': e['source'], 't': e['target']} for e in g['edges']
+               if e.get('confidence') == 'EXTRACTED']
+}))
+"
+```
+
+Compare results across containers. Apply confidence rules:
+- Node label in ≥2 containers with structural evidence (ORM class, API spec node) → **EXTRACTED**
+- Node label in ≥2 containers from comments or naming patterns only → **INFERRED**
+- Name match only (`Config`, `Utils`, `Service`) → **AMBIGUOUS** — flag in [VERIFY] section
+
+Produce `migration/cross-container-semantic-map-<date>.md`:
+
+```markdown
+# Cross-container semantic map — <date>
+Containers scanned: <list>
+
+## Shared entities
+| Entity | Containers | Confidence |
+|--------|-----------|------------|
+
+## Integration points
+| From | To | Route / Contract | Confidence |
+|------|----|-----------------|------------|
+
+## Shared actors
+| Actor | Containers | Confidence |
+|-------|-----------|------------|
+
+## [VERIFY] items
+<list of AMBIGUOUS shared names requiring confirmation>
+```
+
+Log: `Phase 0b complete — <N> shared entities, <M> integration points, <K> AMBIGUOUS items.`
+
+---
 
 ## Phase 1 — Code survey (graph-assisted)
 
@@ -104,6 +161,8 @@ Run this step in **both modes** immediately after Phase 1 completes for all cont
 This phase answers: *are two entry points in different containers actually two ends of the same user-visible use case?* Without it, a user action flowing Frontend → Backend API → Database would produce separate UC-DRAFTs per container instead of one unified UC.
 
 ### Step 0 — Detect incremental run and load previous boundary data
+
+**Semantic map:** If `migration/cross-container-semantic-map-<date>.md` exists (produced by Phase 0b), read it first. Treat EXTRACTED integration points as pre-confirmed cross-container pairs — skip re-deriving them from URL patterns. Treat AMBIGUOUS items as hypotheses to test against the survey data.
 
 **Scope note:** When `scope` is active in the checkpoint, this step still scans ALL `migration/survey-phase1-*.md` files — do not filter by scope. Cross-container UC pairing requires complete historical data. A UC spanning OrderService (Run 1) and PaymentService (Run 2) can only be detected when Run 2's Phase 1b loads Run 1's survey.
 

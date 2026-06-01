@@ -37,7 +37,8 @@ if ($Global) {
 
 $AgentsDir   = Join-Path $TargetBase "agents"
 $CommandsDir = Join-Path $TargetBase "commands"
-New-Item -ItemType Directory -Force -Path $AgentsDir, $CommandsDir | Out-Null
+$ScriptsDir  = Join-Path $TargetBase "scripts"
+New-Item -ItemType Directory -Force -Path $AgentsDir, $CommandsDir, $ScriptsDir | Out-Null
 
 # Resolve source
 $WorkDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("iconix-" + [guid]::NewGuid()))
@@ -139,6 +140,9 @@ try {
         Copy-Item (Join-Path $WorkDir "docs\iconix\metrics-glossary.md")               "docs\iconix\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-schema-detection-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-stack-patterns-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\templates\migration-preflight-fallback-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "docs\iconix\templates\promote-fallback-reference.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $WorkDir "templates\ids-registry-template.md") "docs\iconix\templates\" -Force -ErrorAction SilentlyContinue
 
         # Seed canonical architecture doc if not present
         $archDoc = "docs\architecture\system-architecture.md"
@@ -147,7 +151,7 @@ try {
             Write-Host "  seeded docs\architecture\system-architecture.md (fill in before running the Architect agent)"
         }
 
-        # Git integration — branch + commit conventions (always)
+        # Git integration -- branch + commit conventions (always)
         New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null
         Copy-Item (Join-Path $WorkDir "templates\git-integration\branch-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\git-integration\commit-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
@@ -195,6 +199,33 @@ try {
                 Write-Host "  installed git integration: generic (CI wiring left to the user)"
             }
         }
+    }
+
+    # Copy scripts (.claude/scripts/) -- after seeding so Get-Location for config is
+    # captured before any cross-drive ForEach-Object pipeline alters PS provider state.
+    # Installed at all scopes (project + global); project-independent.
+    $scriptsSrc = Join-Path $WorkDir "scripts"
+    if (Test-Path $scriptsSrc) {
+        Get-ChildItem $scriptsSrc -Filter "*.py" | ForEach-Object {
+            $dest = Join-Path $ScriptsDir $_.Name
+            if ((Test-Path $dest) -and (-not $Force)) {
+                Write-Host "  skip script $($_.Name)"
+            } else {
+                Copy-Item $_.FullName $dest -Force
+                Write-Host "  installed script: $($_.Name)"
+            }
+        }
+    }
+
+    # Python preflight -- scripts need Python 3.9+ on PATH. WARN only; agents fall back
+    # to in-prompt logic when absent. Get-Command only, no exec (avoids PS 5.1 side effects).
+    $py = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
+    if ($py) {
+        Write-Host "  python found: $($py.Source)"
+    } else {
+        Write-Host "  [warn] Python not found on PATH -- .claude/scripts/ helpers will fall back"
+        Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
     }
 
     Write-Host ""

@@ -116,15 +116,28 @@ Current budget status (chars/4 estimate, refresh when files change materially):
 
 | Agent | Approximate tokens | Status |
 |---|---|---|
-| `iconix-migration-semantic.md` | ~10,650 | ✅ (reduced from ~15,400 after BDD-table extract in v1.0.52) |
-| `iconix-migration-structural.md` | ~8,030 | ✅ (reduced from ~9,750 after stack-pattern extract in v1.0.59) |
-| `iconix-migration-infra.md` | ~7,870 | ✅ |
-| `iconix-migration.md` (router) | ~1,150 | ✅ |
+| `iconix-migration-semantic.md` | ~11,355 | ⚠️ WARN (>10K soft, <12K hard) — already-promoted check now calls `migration_promoted.py`; next extract target is the Phase 5b UC packaging tables |
+| `iconix-migration-structural.md` | ~8,831 | ✅ |
+| `iconix-migration-infra.md` | ~8,522 | ✅ (Steps 0–4 detection moved to `migration_preflight.py` + fallback reference in v1.0.82) |
+| `iconix-migration.md` (router) | ~1,438 | ✅ |
+| `iconix-traceability.md` | ~5,262 | ✅ |
 | All other agents | < 6,000 each | ✅ |
 
 Reference files extracted (loaded on-demand by the cited agent):
 - `docs/iconix/templates/migration-schema-detection-reference.md` — semantic Phase 5c
 - `docs/iconix/templates/migration-stack-patterns-reference.md` — structural Phases 1, 1b, 3, 4
+- `docs/iconix/templates/migration-preflight-fallback-reference.md` — infra Steps 0–4 manual fallback (when `python3` absent)
+- `docs/iconix/templates/promote-fallback-reference.md` — traceability/`/iconix-promote` manual fallback (when `python3` absent)
+
+**Deterministic-logic venue (SDK Hybrid — Option B, v1.0.82+):** mechanical steps —
+migration routing, checkpoint I/O, ID allocation, pre-flight idempotency detection, the
+already-promoted scan, and DRAFT promotion — live in `.claude/scripts/*.py` (stdlib-only,
+invoked via the Bash tool). The affected agents (`iconix-migration`, `-infra`,
+`-semantic`, `iconix-traceability`) carry a `<gate>` telling them to **trust the script's
+JSON** and fall back to in-prompt logic / an on-demand fallback reference only when
+`python3` is absent. This is execution-venue only — the ID format, `[VERIFY]` gate
+semantics, and the REQ→UC→RB→SD→CLS→TC chain are unchanged, so no process-reference-matrix
+row changes status. Scripts are tested by `scripts/tests/` (pytest, Linux + Windows in CI).
 
 **CI enforcement (v1.0.60+):** `.github/workflows/validate.yml` step **Agent token budget**
 measures chars/4 for every `agents/*.md`, warns past 10,000 tokens, hard-fails past 12,000.

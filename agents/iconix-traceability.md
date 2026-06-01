@@ -2,7 +2,7 @@
 name: iconix-traceability
 description: Use for allocating new IDs, validating upstream/downstream links between artifacts, detecting orphans, analyzing change impact, and producing milestone gate reports. Invoke after any batch of artifacts is produced, before every milestone review, and whenever a requirement changes.
 model: claude-haiku-4-5-20251001
-tools: Read, Grep, Glob, Write
+tools: Read, Grep, Glob, Write, Bash
 ---
 
 # Role
@@ -22,6 +22,19 @@ REQ-XXX  →  UC-XXX  →  RB-XXX  →  SD-XXX  →  CLS-<Name>  →  TC-XXX
 - Pattern: `<PREFIX>-<TYPE>-<NNN>` where TYPE ∈ {REQ, UC, RB, SD, CLS, TC, ADR}
 - Never reuse IDs even after deletion
 - Maintain `ids.registry.md` — canonical ledger of issued IDs
+
+When allocating a new ID, call the allocator instead of counting by hand:
+
+```bash
+python3 .claude/scripts/ids.py next --type UC --type RB    # → {"UC":"PRJ-UC-007","RB":"PRJ-RB-004"}
+python3 .claude/scripts/ids.py append --registry ids.registry.md \
+  --row 'PRJ-UC-007|checkout|use-cases/PRJ-UC-007-checkout.md|created <date>'
+```
+
+<gate id="ids-trust" mandatory="true">
+Use the IDs the script returns; do not recompute the highest ID by reading the registry yourself. The allocator is highest-seen + 1 per type (it never gap-fills and never reuses a retired ID) and recognizes both prefixed (`PRJ-UC-006`) and bare (`UC-006`) forms.
+If `python3` is unavailable or the script exits non-zero, fall back to the manual rule: read `ids.registry.md`, find the highest NNN per type, add 1, zero-pad to 3 digits, and prefix with `project.prefix`.
+</gate>
 
 # Artifacts you produce
 - `ids.registry.md` — master ID ledger
@@ -203,91 +216,29 @@ The template subsumes the inline format previously documented here; if a check i
 
 Triggered by `/iconix-promote` (or an explicit user request). Promotes migration DRAFTs to permanent ICONIX IDs so they can enter the normal M1/M2/M3 pipeline.
 
-## Step 1 — Identify promotion candidates
-Scan for DRAFT artifacts:
-- `use-cases/UC-DRAFT-*.md`
-- `robustness/RB-DRAFT-*.puml`
-- `sequence/SD-DRAFT-*.puml`
-- `domain-model/domain-model-DRAFT.puml`
-- `class-model/class-model.puml` (check for `DRAFT` stamp in file header)
-- `use-case-packages/*-DRAFT.puml`
+Run the promotion script — it performs all five steps (scan, `[VERIFY]` gate, ID assign, rename + ID/cross-ref rewrite, registry append) deterministically:
 
-If `$ARGUMENTS` is a specific slug (e.g., `UC-DRAFT-001`), restrict to that file. If `all` or empty, process every DRAFT found.
+```bash
+python3 .claude/scripts/promote.py --args "$ARGUMENTS"   # add --dry-run to preview
+# → {"promoted":[{"draft":"use-cases/UC-DRAFT-001-checkout.md","new_id":"PRJ-UC-001",
+#                 "new_path":"use-cases/PRJ-UC-001-checkout.md"}],
+#    "promoted_noid":[...],"skipped_verify":[{"file":"...","count":2}],
+#    "skipped_already":[...],"multi_container":[{"new_id":"PRJ-UC-001","containers":[...]}]}
+```
 
-## Step 2 — Safety checks (per candidate)
-For each candidate, run these checks before assigning an ID:
+<gate id="promote-trust" mandatory="true">
+Trust the JSON — the script already counted `[VERIFY]` with the `[VERIFY` match (catching `[VERIFY:HIGH]` / `[VERIFY — note]`), assigned IDs highest+1 via `ids.py`, rewrote cross-references with a full-token boundary (so `UC-DRAFT-1` never corrupts `UC-DRAFT-10`), preserved every `Source-container:` line verbatim, and appended the registry. **Do NOT re-scan, re-count, or rename by hand when it exits 0.** Render the summary from the JSON:
 
-1. **Unresolved `[VERIFY]` markers** — count occurrences of `[VERIFY]` in the file. If count > 0 → **skip** and warn:
-   ```
-   ⚠ Skipped UC-DRAFT-001-checkout.md — 3 [VERIFY] items unresolved.
-     Resolve all [VERIFY] markers before promoting.
-   ```
-2. **Already promoted** — check `ids.registry.md` for any permanent ID whose slug matches this file's slug. If found → **skip** as already promoted.
-3. **Not found in migration survey** — if `migration/survey-*.md` exists and does not mention this DRAFT, warn but do not block (the DRAFT may have been created manually after the survey).
-
-## Step 3 — Assign permanent IDs
-Read `ids.registry.md` to find the highest existing ID per type. Use the project prefix from `iconix.config.yaml`.
-
-| DRAFT type | ID pattern | Example |
-|---|---|---|
-| `UC-DRAFT-*.md` | `<PREFIX>-UC-NNN` | `PRJ-UC-001` |
-| `RB-DRAFT-*.puml` | `<PREFIX>-RB-NNN` | `PRJ-RB-001` |
-| `SD-DRAFT-*.puml` | `<PREFIX>-SD-NNN` | `PRJ-SD-001` |
-| `domain-model-DRAFT.puml` | _(no ID; remove DRAFT stamp only)_ | — |
-| `class-model.puml` (DRAFT) | _(no ID; remove DRAFT stamp only)_ | — |
-| `*-DRAFT.puml` (UC packages) | _(no ID; remove DRAFT stamp only)_ | — |
-
-Assign IDs sequentially in the order DRAFTs appear (sorted by filename). Never reuse a retired ID.
-
-## Step 4 — Rename, update, register
-For each eligible DRAFT:
-1. **Rename the file** — replace `DRAFT-NNN` with the assigned permanent ID:
-   - `use-cases/UC-DRAFT-001-checkout.md` → `use-cases/<PREFIX>-UC-001-checkout.md`
-   - `robustness/RB-DRAFT-001-checkout.puml` → `robustness/<PREFIX>-RB-001-checkout.puml`
-   - For no-ID artifacts (domain model, class model, UC packages): remove the `-DRAFT` suffix from the filename only
-2. **Update internal ID references** in the renamed file:
-   - `**ID:** UC-DRAFT-001` → `**ID:** <PREFIX>-UC-001`
-   - Traceability block — replace old DRAFT ID with permanent ID
-   - PlantUML header comment `' Traceability: ... UC-DRAFT-001 ...` → permanent ID
-   - `Source-container:` annotation — **preserve as-is**; do not remove or modify.
-     This annotation is the Developer's routing signal for multi-repo code placement.
-3. **Update cross-references** — scan all other DRAFT files in `use-cases/`, `robustness/`, `sequence/`, `use-case-packages/` for the old DRAFT ID string; replace with the new permanent ID
-4. **Register in `ids.registry.md`** — add one entry per promoted ID:
-   ```
-   | <PREFIX>-UC-001 | checkout | use-cases/<PREFIX>-UC-001-checkout.md | promoted from UC-DRAFT-001 on <date> |
-   ```
-
-## Step 5 — Print summary
 ```
 DRAFT promotion complete — <date>
-
-Promoted:
-  UC-DRAFT-001 → <PREFIX>-UC-001  (use-cases/<PREFIX>-UC-001-checkout.md)
-  RB-DRAFT-001 → <PREFIX>-RB-001  (robustness/<PREFIX>-RB-001-checkout.puml)
-
-Skipped — [VERIFY] pending:
-  UC-DRAFT-003-payment.md — 2 [VERIFY] items unresolved
-
-Skipped — already promoted:
-  (none)
-
-Next: run /iconix-next to continue the pipeline from the promoted artifacts.
+Promoted:               <promoted[] + promoted_noid[]>
+Skipped — [VERIFY]:     <skipped_verify[] with counts>
+Skipped — already:      <skipped_already[]>
 ```
+For any `multi_container` entry, append the "Multi-container UCs promoted" note (each spanning container, one per line) telling the Developer to create the feature branch in each repo. Then: `Next: run /iconix-next to continue the pipeline from the promoted artifacts.`
 
-After printing the main summary, check each promoted UC file for a multi-value
-`Source-container:` annotation (i.e., it contains `,` — more than one container entry).
-If any exist, append:
-
-```
-Multi-container UCs promoted:
-  <PREFIX>-UC-001 (checkout): spans
-    Frontend @ ../frontend/src/
-    Backend  @ ../backend/src/
-  → Developer must create feature/UC-001-checkout in each repo before coding.
-    Code for each container goes under that container's resolved source root.
-```
-
-If no multi-container UCs were promoted, omit this section entirely.
+Exit 1 means nothing was eligible (all skipped) — report why. If `python3` is unavailable or the script exits 2, perform the five steps by hand following `docs/iconix/templates/promote-fallback-reference.md`.
+</gate>
 
 # CI counterpart: `.ci/validate-traceability.sh`
 The shell script at `.ci/validate-traceability.sh` (installed by `iconix-init` from `templates/git-integration/generic/`) runs a **subset** of your validation in CI as a merge gate:

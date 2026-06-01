@@ -579,3 +579,139 @@ Estimated ~2 commits. Both are tooling-adjacent, not methodology-surface.
   facilitation with domain experts. It cannot be mechanized into an agent. The kit
   can accept Event Storming *output* as input to the Architect's BC reasoning, but
   cannot replace the session itself.
+
+---
+
+## `--entry-point` — Target a specific entry point by name
+
+**Status:** Done (v1.0.78)
+**Origin:** User request — gap identified when using `--scope + --max-uc 1` batching: no way to target a specific entry point by name from `survey-phase1-<date>.md`.
+
+### Problem
+
+`--max-uc N` controls *how many* UC-DRAFTs are produced but not *which one*. The semantic agent picks by confidence order (EXTRACTED → INFERRED → AMBIGUOUS). If the entry point you want to draft is INFERRED, you must exhaust all EXTRACTED entry points first.
+
+For teams doing selective migration ("we want to ICONIX-ify the payment flow first, not whatever the agent thinks is highest confidence"), there is no way to express that intent in the current kit.
+
+### Solution implemented
+
+`--entry-point <name>` added as a semantic-only filter — consistent with how `--max-uc` works. Structural still runs fully for all entry points in scope; only Phase 5 filters to the targeted entry point.
+
+Two name formats supported (matched case-insensitively):
+- Contains a space → `<HTTP-method /path>` (e.g., `POST /orders`)
+- No space → `<class.method>` (e.g., `OrderController.PlaceOrder`)
+
+Multiple targets via comma-separation: `--entry-point "POST /orders,POST /payments"`.
+
+Takes precedence over `--max-uc`. If the named entry point is not found in the survey, STOP with valid names list. If already promoted, skip and log.
+
+### Changes
+- `agents/iconix-migration-infra.md` — parameter table, acknowledgement block, behavior description, checkpoint field `entry_point_filter`
+- `agents/iconix-migration-semantic.md` — entry-point filter block in Phase 5 (graph-assisted + code-walking)
+
+---
+
+## SDK Hybrid — Python scripts for deterministic parts (Claude Code-compatible)
+
+**Status:** Proposed (2026-05-29)
+**Origin:** Architecture discussion — Option B from "SDK-based architecture" entry. Full SDK rewrite (Option A) sacrifices Claude Code UX; this entry targets the same enforcement and token-saving gains while keeping slash commands, sub-agent dispatch, and `.md`-only customization.
+
+### Problem
+
+*(Same root cause as "SDK-based architecture" entry — see that entry for full analysis.)*
+
+Two symptoms addressed by Option B specifically:
+1. **Soft enforcement only** — routing, gates, ID assignment are prompt instructions the model can skip or misinterpret. No programmatic guarantee a gate was evaluated.
+2. **Token waste from routing** — Orchestrator agent (~4,861 tokens) loaded on every `/iconix-next` call, including pure routing decisions that need zero LLM reasoning.
+
+### What stays in Claude Code
+
+| Component | Stays as-is |
+|---|---|
+| Slash commands (`/iconix-next`, `/iconix-migrate`…) | ✅ |
+| Sub-agent dispatch UI | ✅ |
+| Agent `.md` files — edit and done, no deploy | ✅ |
+| Content generation (UC drafting, RB synthesis, ADRs…) | ✅ |
+| `iconix.config.yaml` per-project config | ✅ |
+
+### What moves to Python
+
+Python scripts live in `.claude/scripts/` — invoked via `Bash` tool from inside Claude Code agents and commands. No separate process, no `pip install`, no `ANTHROPIC_API_KEY` separate from Claude Code.
+
+| Script | Replaces | Saves |
+|---|---|---|
+| `router.py` | Orchestrator agent routing logic | ~4,861 tokens per `/iconix-next` call |
+| `validate.py` | Traceability M1/M2/M3 gate checks | ~3,000 tokens per gate call × 3 gates = **~9,000 tokens per full pipeline run** |
+| `ids.py` | Model-driven ID assignment | ~1,000 tokens + eliminates collision risk |
+| `checkpoint.py` | Agent-written migration JSON | ~500 tokens + eliminates corruption risk |
+| `promote.py` | Traceability agent promote flow | ~2,000 tokens per `/iconix-promote` |
+| `migration_preflight.py` | `iconix-migration-infra` Steps 0–4 | **~990 tokens per migration run** + eliminates timestamp/counting errors |
+| `migration_promoted.py` | Semantic Phase 5 already-promoted check | ~100 tokens + eliminates re-draft risk; shared utility with `promote.py` |
+| `migration_params.py` | Normalize + checkpoint write of parsed params | ~150 tokens (NL detection stays in infra prompt) |
+
+**Estimated token savings:**
+- **Greenfield pipeline run:** 40–50% (commits 1–5 only)
+- **Migration run:** higher — commits 1–5 plus routing (~1,150) + preflight (~990) + params normalize (~150) = ~2,290 additional tokens saved per run. Savings scale with number of batches.
+
+### Integration pattern
+
+Commands and agents call Python scripts via Bash tool instead of spawning a full agent for deterministic work:
+
+```
+/iconix-next
+  → Bash: python .claude/scripts/router.py --config iconix.config.yaml
+    ← stdout: { "next_agent": "iconix-analyst", "phase": "M2", "scope": "UC-017" }
+  → Dispatch iconix-analyst with scope from router output
+```
+
+```
+[M1 gate — inside iconix-orchestrator]
+  → Bash: python .claude/scripts/validate.py --gate M1 --config iconix.config.yaml
+    ← exit 0: gate passes, print summary
+    ← exit 1: gate fails, print missing links — Orchestrator freezes pipeline
+```
+
+### Roadmap
+
+~8 commits, each independently testable. Commits 1–5 cover the general pipeline;
+commits 6–8 cover migration-specific deterministic work.
+
+1. **`router.py`** — reads `iconix.config.yaml` + artifact state (file existence, checkpoint), outputs JSON routing decision. Handles both general pipeline routing (PO→Analyst→Architect…) and migration routing (infra→structural→semantic). Update `iconix-orchestrator.md` and `iconix-migration.md` to call it via Bash before dispatching. Zero LLM tokens for routing.
+
+2. **`validate.py`** — M1/M2/M3 gate checks: greps artifact files, validates ID chain format (`REQ-XXX → UC-XXX → RB-XXX → SD-XXX → CLS-<Name> → TC-XXX`), reports missing links. Update Orchestrator gate steps to call it.
+
+3. **`ids.py`** — reads `ids.registry.md`, assigns `highest + 1` atomically, writes back. Update `iconix-traceability.md` to call it for new ID assignment instead of counting inline.
+
+4. **`checkpoint.py`** — atomic JSON read/write with schema validation for migration checkpoints. Update `iconix-migration-infra.md` Step 5 to call it.
+
+5. **`promote.py`** — scans `DRAFT` files, checks `[VERIFY]` count per artifact, renames files, updates cross-references. Update `/iconix-promote` command to call it.
+
+6. **`migration_preflight.py`** — replaces `iconix-migration-infra` Steps 0–4 (all deterministic checks before Phase 1): greenfield artifact detection (file pattern scan), promoted artifact check (grep `ids.registry.md`), human-edit detection (file modification timestamp vs last-run date), database container readiness check. Currently ~200 lines of prompt instructions prone to model misreads on file timestamps and counting. Update `iconix-migration-infra.md` to call this script and trust its exit code rather than re-deriving the result.
+
+7. **`migration_promoted.py`** — replaces the already-promoted entry-point check in `iconix-migration-semantic.md` Phase 5: greps `robustness/<PREFIX>-RB-*.puml` for permanent files (no `DRAFT` in filename), extracts inbound boundary node names, returns the list as JSON. Eliminates the risk of semantic agent re-drafting UC-DRAFTs for already-promoted entry points. Also used by `--entry-point` filter to skip promoted targets. Update semantic Phase 5 to call this script before drafting. **Note:** this script is a utility also consumed by `promote.py` (commit 5) — implement commit 7 before or alongside commit 5 to avoid duplication.
+
+8. **`migration_params.py`** — handles the **normalize + checkpoint write** half of parameter processing. The natural-language detection half (recognising `--scope`, `--max-uc`, `--entry-point` from user chat messages) must stay in the infra agent prompt — Python cannot read Claude Code chat input. What moves to Python: normalisation of `--entry-point` values (split on `,`, HTTP-method/path vs class.method detection, case-fold), range validation of `--max-uc`, and atomic checkpoint write of the parsed params. The agent detects values from NL, passes them as structured args to this script, then trusts its output.
+
+### Migration pipeline — why it matters more than the general pipeline
+
+The migration agents carry the highest deterministic-work ratio in the kit. A typical
+`/iconix-next` call on a greenfield project routes to one agent and the LLM does meaningful
+work immediately. A `/iconix-migrate` call on a large legacy codebase runs Steps 0–4
+(~200 lines of file-scan instructions) before any real work begins — and those steps are
+pure mechanical checks that a model can get wrong on edge cases (timestamp comparison,
+file glob matching, entry-point name normalisation). Moving them to Python:
+
+- Makes pre-flight deterministic and auditable (script is testable with `pytest`)
+- **Quantified infra.md budget relief:** Steps 0–4 extraction (~990 tokens) + params normalization section (~150 tokens) = **~1,140 tokens removed from `iconix-migration-infra.md`**, reducing it from ~8,992 → ~7,852 tokens. Moves it back below the 10,000 soft warning with margin.
+- Eliminates the most common failure mode: model skipping or mis-executing an idempotency check
+
+### Open questions
+
+- **Installer:** should `iconix-init` copy `.claude/scripts/` to target projects? Likely yes — scripts are project-independent. Adds to the installer `$folders` array.
+- **Python version requirement:** minimum Python 3.9. Should be documented as a prerequisite alongside `bash` and `git`.
+- **CI integration:** `validate.py` can run as a CI step (replaces/complements `validate-traceability.sh`). Out of scope for this entry — separate commit when ready.
+
+### Rejected alternatives
+
+- **Option A — full SDK rewrite:** loses Claude Code UX entirely (`/iconix-next` becomes `iconix next` in terminal). See "SDK-based architecture" backlog entry for full analysis.
+- **Skills as pre-processors:** skills run in the main model context — same tokens, no routing savings. Useful for UX, orthogonal to this entry.

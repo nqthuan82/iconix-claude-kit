@@ -19,13 +19,30 @@ Before anything else, check whether the user's invocation message specifies run-
 | Container scope | `--scope <ContainerName>` | "scope to OrderService", "only OrderService", "just the payment container" |
 | UC cap | `--max-uc N` | `--max-uc 20`, "limit to 20 use cases", "stop after 20 UCs" |
 | Greenfield coexistence | `--allow-greenfield` | "allow greenfield", "coexist with existing UCs", "I know I have greenfield artifacts" |
+| Entry-point filter | `--entry-point <name>` | `--entry-point "POST /orders"`, `--entry-point OrderController.PlaceOrder`, "draft UC for POST /orders", "only the PlaceOrder endpoint" |
 
 If detected, acknowledge immediately:
 ```
-Scope:   OrderService  (Phase 1 will survey this container only)
-Max UCs: 20            (semantic agent will stop after producing 20 UC-DRAFTs)
+Scope:        OrderService   (Phase 1 will survey this container only)
+Max UCs:      20             (semantic agent will stop after producing 20 UC-DRAFTs)
+Entry point:  POST /orders   (semantic agent will draft only this UC)
 ```
-If not specified, both values remain `null` (no filtering applied).
+If not specified, all values remain `null` (no filtering applied).
+
+Once you have detected the raw values from the message, normalize them before use:
+
+```bash
+python3 .claude/scripts/migration_params.py \
+  --scope "<raw scope or empty>" \
+  --max-uc "<raw max-uc or empty>" \
+  --entry-point "<raw entry-point string or empty>"
+# → {"scope":"OrderService","max_uc":20,"entry_point_filter":["POST /orders/{param}"],"precedence_applied":false}
+```
+
+<gate id="params-trust" mandatory="true">
+Use this normalized JSON verbatim when writing the checkpoint in Step 5 — it has already split entry points on `,`, canonicalised HTTP path params to `{param}`, range-checked `max_uc` (positive integer), and applied entry-point-over-`max_uc` precedence. Do NOT re-parse the raw flags by hand.
+If `python3` is unavailable or the script exits non-zero (e.g. invalid `--max-uc`), surface its stderr; for a missing interpreter, fall back to the rules described in the behavior subsections below.
+</gate>
 
 **Scope behavior:**
 - `--scope` filters the Phase 1 entry-point survey (run by `iconix-migration-structural`) to the named container only.
@@ -38,6 +55,16 @@ If not specified, both values remain `null` (no filtering applied).
 - `--max-uc N` caps the UC-DRAFTs the semantic agent produces at N, ordered by entry-point confidence (EXTRACTED first, then INFERRED, then AMBIGUOUS).
 - Remaining entry points are listed at the end of the semantic phase with a count and re-run suggestion.
 - Combine with `--scope` for fine-grained batching: `--scope OrderService --max-uc 20` processes the top 20 highest-confidence entry points in OrderService only.
+
+**Entry-point filter behavior:**
+- `--entry-point <name>` tells the semantic agent to draft a UC only for the named entry point, regardless of confidence order.
+- `<name>` is matched case-insensitively. Two formats are supported:
+  - Contains a space → treated as `<HTTP-method /path>` (e.g., `POST /orders`). Path params are normalized before matching.
+  - No space → treated as `<class.method>` (e.g., `OrderController.PlaceOrder`).
+- Multiple targets: comma-separated (e.g., `--entry-point "POST /orders,POST /payments"`).
+- Takes precedence over `--max-uc` — if both are set, `--max-uc` is ignored.
+- If the named entry point is not found in the survey → STOP with a list of valid names from `survey-phase1-<date>.md`.
+- If the named entry point is already promoted → skip and log; do not re-draft.
 
 # Operating modes
 
@@ -181,163 +208,62 @@ This annotation tells `/iconix-promote` and the Traceability agent which externa
 
 # Pre-run idempotency check
 
-Run this before any Phase 1 work, in both modes. It prevents silent overwrites of human-reviewed artifacts from a previous migration run AND collisions with greenfield ICONIX artifacts authored by the main pipeline (Product Owner / Analyst / Developer).
+Run this before any Phase 1 work, in both modes. It prevents silent overwrites of human-reviewed artifacts AND collisions with greenfield ICONIX artifacts authored by the main pipeline. The **detection** in Steps 0–4b is purely mechanical — run the pre-flight script and act on its booleans rather than scanning by hand:
 
-## Step 0 — Greenfield artifact collision check
-
-Migration is designed to retrofit ICONIX onto code that has no existing artifacts. If the project already has greenfield (non-DRAFT) UCs, RBs, SDs, class model, or use-case packages, migration would either overwrite them or pollute the folder with mixed `UC-*.md` + `UC-DRAFT-*.md` files that confuse downstream agents (Analyst, Tester).
-
-Scan for greenfield artifacts:
-
-| Path | Greenfield filename pattern | Migration filename pattern |
-|---|---|---|
-| `use-cases/*.md` | `UC-*.md` (no DRAFT in name) | `UC-DRAFT-*.md` |
-| `robustness/*.puml` | `RB-*.puml` (no DRAFT) | `RB-DRAFT-*.puml` |
-| `sequence/*.puml` | `SD-*.puml` (no DRAFT) | `SD-DRAFT-*.puml` |
-| `use-case-packages/*.puml` | `*.puml` not ending `-DRAFT.puml` | `*-DRAFT.puml` |
-| `class-model/class-model.puml` | canonical filename | **same filename** — REAL collision risk |
-
-`domain-model/domain-model.puml` (greenfield) and `domain-model/domain-model-DRAFT.puml` (migration) use different filenames — no collision. Same for the `-DRAFT` patterns above. The only true filename collision is `class-model/class-model.puml`.
-
-### Step 0a — Abort if greenfield detected (default behavior)
-
-If **any** greenfield artifact is detected AND `--allow-greenfield` is NOT in `$ARGUMENTS`:
-
-STOP. Print:
-```
-Greenfield ICONIX artifacts detected — migration is for retrofitting code
-that has NO existing artifacts. Running migration here would overwrite
-class-model/class-model.puml (filename collision) and produce a confusing
-mix of greenfield UC-*.md and migration UC-DRAFT-*.md in use-cases/.
-
-Detected greenfield files:
-<list, one per line>
-
-Options:
-(a) If this project is already on the ICONIX greenfield path, do NOT run
-    migration — continue with /iconix-next.
-(b) If you genuinely need migration coexistence (e.g., adding a new
-    untouched module to a project that already has greenfield ICONIX work
-    elsewhere), re-run with --allow-greenfield. Migration will write the
-    class-model output to class-model/class-model-DRAFT.puml instead of
-    overwriting the greenfield one, and the greenfield class-model.puml
-    becomes a read-only input.
+```bash
+python3 .claude/scripts/migration_preflight.py --args "$ARGUMENTS"
+# → {"greenfield_detected":false,"abort_greenfield":false,"last_run_date":"2026-04-10",
+#    "promoted_artifacts":[...],"human_edited_drafts":[...],"safe_to_regenerate":[...],
+#    "nothing_left_to_migrate":false,"domain_glossary_exists":false,
+#    "schema_files_present":true,"db_readiness_warning":true,"scope":"OrderService"}
 ```
 
-Do NOT proceed.
+<gate id="preflight-trust" mandatory="true">
+Trust these booleans — do NOT re-scan the artifact folders or recompute timestamps. Then make the **human decisions** the script deliberately leaves to you:
 
-### Step 0b — Proceed with greenfield coexistence (--allow-greenfield)
+- **`abort_greenfield: true`** → STOP (Step 0a). Print the greenfield-collision message listing `greenfield_files`, and tell the user to either continue with `/iconix-next` or re-run with `--allow-greenfield`. Do NOT proceed.
+- **`abort_greenfield: false` but `greenfield_detected: true`** → `--allow-greenfield` was given (Step 0b): print `Greenfield coexistence enabled — class-model output redirected to class-model-DRAFT.puml`, and in Step 5 set `greenfield_coexistence=true` + pass `greenfield_files`. Structural Phase 2 then writes `class-model/class-model-DRAFT.puml`.
+- **`nothing_left_to_migrate: true`** → abort; tell the user everything is already promoted or human-edited, nothing to migrate.
+- **`human_edited_drafts`** → default to SKIP each (do not overwrite); regenerate only `safe_to_regenerate`. Honor `--force` only if the user explicitly asked.
+- **`db_readiness_warning: true`** → scoped app-container run with SQL schema present elsewhere and no `migration/domain-glossary.md`. Confirm the schema-bearing container is genuinely a database container (zero application entry points — you have the survey), then issue the Step 4b continue/cancel prompt and **wait for the user's reply** ("cancel" → STOP, do not write the checkpoint; "continue" → proceed to Step 5).
 
-If `--allow-greenfield` IS in `$ARGUMENTS`:
-- Record `greenfield_coexistence: true` and `greenfield_files: [...]` in the checkpoint (Step 5).
-- `iconix-migration-structural` Phase 2 will use this flag to write `class-model/class-model-DRAFT.puml` instead of overwriting the greenfield canonical file.
-- Print a single-line acknowledgement: `Greenfield coexistence enabled — class-model output redirected to class-model-DRAFT.puml`.
+Emit the Step 4 pre-run summary (previous run, promoted-skips, human-edit-skips, safe-to-regenerate) from the script's fields before proceeding.
 
-## Step 1 — Detect previous migration runs
-Check whether `migration/` contains any `checkpoint-*.json` or `survey-*.md` files. If yes, record the most recent date as `<last-run-date>`.
-
-## Step 2 — Check for promoted artifacts
-Read `ids.registry.md` (maintained by Traceability). For each permanent ID of type UC, RB, SD, CLS, TC — check whether a corresponding DRAFT file exists in the output paths below. If a permanent ID exists for a slug, that artifact has already been promoted and must not be overwritten. Report it as **already promoted — skipping**.
-
-## Step 3 — Check for human-edited DRAFTs
-For each of the following output paths, check if the file exists AND was last modified after `<last-run-date>`:
-
-```
-docs/architecture/system-architecture.md
-docs/architecture/package-map.md
-migration/coverage-gaps.md
-class-model/class-model.puml
-sequence/SD-DRAFT-*.puml
-robustness/RB-DRAFT-*.puml
-domain-model/domain-model-DRAFT.puml
-use-cases/UC-DRAFT-*.md
-use-case-packages/*-DRAFT.puml
-```
-
-If a file has been modified after the last survey date, a human has likely edited it. **Do not overwrite silently.** Report each such file as:
-
-```
-⚠ DRAFT modified since last run: use-cases/UC-DRAFT-001-checkout.md
-  Last migration: 2026-04-10 | File modified: 2026-04-15
-  Options: (a) skip this artifact, (b) overwrite and lose edits
-  → Defaulting to SKIP. Pass --force to overwrite.
-```
-
-Proceed only with artifacts that are:
-- Not yet promoted (no permanent ID in registry), AND
-- Not modified since the last migration run (or `--force` was passed)
-
-## Step 4 — Report before proceeding
-
-Before starting Phase 1, output a pre-run summary:
-
-```
-## Idempotency check
-- Previous run detected: <last-run-date> | none
-- Artifacts already promoted (will skip): <list or "none">
-- DRAFTs modified by humans (will skip): <list or "none">
-- Artifacts safe to (re)generate: <list>
-```
-
-If all artifacts are already promoted or human-edited, abort and tell the user there is nothing left to migrate.
-
-## Step 4b — Database container readiness check (scoped runs only)
-
-Run this check only when `scope` is non-null AND the current scope container is an application container (has entry points such as controllers, handlers, CLI, gRPC services).
-
-**Step 1 — Detect database-like containers in config**
-
-Scan all containers in `architecture.containers` *other than* the current scope. For each, check for database container signals:
-- Schema files present: `*.sql`, `*.sqlproj`, `schema.prisma`, `V*__*.sql`, `*.flyway.sql`, `db/migrate/*.rb`, `alembic/versions/*.py`
-- Zero application entry points (no controllers, handlers, gRPC services, CLI entry points)
-
-**Step 2 — Check for existing domain-glossary.md**
-
-Check whether `migration/domain-glossary.md` exists.
-
-**Step 3 — Warn if needed**
-
-If **at least one database-like container is found** AND **no `domain-glossary.md` exists**, STOP and output:
-
-```
-⚠️  Database container detected — BDD generation will be skipped
-
-Containers with SQL schema files and no entry points:
-  - <ContainerName(s)>
-
-No domain-glossary.md exists yet. Continuing with --scope <AppContainer> will:
-  ✅ Produce UC-DRAFTs and structural artifacts
-  ⛔ Skip BDD generation (Phase 5c) — no schema in scope, no glossary from a previous DB run
-
-Options:
-  1. Cancel  — run `--scope <DBContainerName>` first to build domain-glossary.md,
-               then return to `--scope <AppContainer>` to get BDD alongside UC-DRAFTs
-  2. Continue — get UC-DRAFTs now; re-run `--scope <AppContainer>` after the DB
-               container run to generate BDD from the glossary
-
-Reply "continue" or "cancel".
-```
-
-Wait for user reply before proceeding.
-- **"cancel"**: STOP. Do not write checkpoint. Do not proceed further.
-- **"continue"**: proceed to Step 5 normally.
-
-**Step 4 — Skip condition**
-
-If `domain-glossary.md` already exists → skip this warning entirely (Phase 5c Case B will fire — BDD will be generated from the existing glossary). Proceed directly to Step 5.
+**Fallback:** if `python3` is unavailable or the script exits non-zero, perform Steps 0–4b by hand following `docs/iconix/templates/migration-preflight-fallback-reference.md`.
+</gate>
 
 ---
 
 ## Step 5 — Write initial checkpoint
 
-After the idempotency check passes and before Phase 1 runs, write `migration/checkpoint-<date>.json`:
+After the idempotency check passes and before Phase 1 runs, create `migration/checkpoint-<date>.json` by calling the checkpoint script (it owns the schema and the field typing — notably `max_uc` is written as a real integer, not a string):
+
+```bash
+python3 .claude/scripts/checkpoint.py write \
+  --path migration/checkpoint-<date>.json \
+  --field run_date=<YYYY-MM-DD> \
+  --field mode=<graph-assisted|code-walking> \
+  --field scope=<ContainerName or empty> \
+  --field max_uc=<N or empty> \
+  --field "entry_point_filter=<name1>,<name2>" \
+  --field greenfield_coexistence=<true|false> \
+  --field "greenfield_files=<file1>,<file2>"
+```
+
+- `scope` / `max_uc` / `entry_point_filter` come from `# Scope and run parameters` above. Pass an **empty value** (`--field max_uc=`) when the user did not supply one — the script writes `null`.
+- Set `greenfield_coexistence=true` and pass the Step 0a file list as `greenfield_files=` only when `--allow-greenfield` was given; otherwise omit both (they default to `false` / `[]`).
+
+<gate id="checkpoint-trust" mandatory="true">
+The script prints the resulting JSON to stdout. **Use that JSON as written — do not hand-author the checkpoint or re-type its fields.**
+If `python3` is not found or the script exits non-zero, surface its stderr and fall back to writing the file by hand from this schema (the only field that ever bit us is `max_uc` — it MUST be an integer or `null`, never a quoted string):
 
 ```json
 {
   "run_date": "<YYYY-MM-DD>",
   "mode": "<graph-assisted|code-walking>",
   "scope": "<ContainerName or null>",
-  "max_uc": "<N or null>",
+  "max_uc": <N or null>,
+  "entry_point_filter": ["<name1>", "<name2>"] or null,
   "greenfield_coexistence": false,
   "greenfield_files": [],
   "phases_completed": ["infra"],
@@ -346,10 +272,7 @@ After the idempotency check passes and before Phase 1 runs, write `migration/che
   "next_phase": "structural"
 }
 ```
-
-Set `scope` and `max_uc` from the parameters detected in `# Scope and run parameters` above. If not provided by the user, write `null` for both fields.
-
-Set `greenfield_coexistence: true` and populate `greenfield_files` with the file list from Step 0a when `--allow-greenfield` was passed. Otherwise leave both at their defaults (`false` and `[]`).
+</gate>
 
 Update `containers_surveyed` and `entry_point_count` after Phase 1b completes (Step 5 of Phase 1b below).
 
@@ -517,15 +440,16 @@ Do NOT propose groupings for unmatched pairs.
 
 Append a `## Cross-container boundary correlation` section to `migration/survey-phase1-<date>.md` with the full matched pairs table, UC groupings, amendment proposals, and change flow candidates (same format as the original migration agent).
 
-Then update `migration/checkpoint-<date>.json`:
-```json
-{
-  "phases_completed": ["infra"],
-  "containers_surveyed": ["<container1>", "<container2>", "..."],
-  "entry_point_count": <total across all containers>,
-  "next_phase": "structural"
-}
+Then update the checkpoint with the survey totals (this is a partial merge — it preserves `phases_completed` and every other field):
+
+```bash
+python3 .claude/scripts/checkpoint.py update \
+  --path migration/checkpoint-<date>.json \
+  --field "containers_surveyed=<container1>,<container2>" \
+  --field entry_point_count=<total across all containers>
 ```
+
+Trust the JSON it echoes. If `python3` is unavailable or the script errors, edit the file by hand, changing only `containers_surveyed` (the surveyed list) and `entry_point_count` (the total across all containers) and leaving `phases_completed: ["infra"]` and `next_phase: "structural"` intact.
 
 ## Step 6 — Feed into Phase 5 (note for structural/semantic)
 
@@ -624,7 +548,13 @@ If a Write tool call is blocked or returns a permission error:
 ---
 
 <gate id="infra-complete" mandatory="true">
-Before stopping, verify migration/checkpoint-<date>.json exists and contains:
+Before stopping, verify the checkpoint passes the infra gate:
+
+```bash
+python3 .claude/scripts/checkpoint.py validate --path migration/checkpoint-<date>.json --phase infra
+```
+
+Exit 0 → the gate holds. Exit non-zero → read the printed `issues` and fix the checkpoint before stopping (do NOT hand off to structural with a failing checkpoint). If `python3` is unavailable, verify by hand that the file exists and contains:
   - phases_completed: ["infra"]
   - next_phase: "structural"
   - containers_surveyed: non-empty list

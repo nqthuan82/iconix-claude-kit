@@ -329,6 +329,13 @@ jobs:
           # v0.9.0: use case package overview template + folder
           test -d use-case-packages || { echo "use-case-packages/ folder missing"; exit 1; }
           test -f docs/iconix/templates/use-case-diagram-template.puml || { echo "use-case-diagram-template.puml missing"; exit 1; }
+          # SDK Hybrid (Option B): .claude/scripts/ Python helpers + fallback references
+          for s in _common checkpoint ids router migration_params migration_preflight migration_promoted promote; do
+            test -f ".claude/scripts/${s}.py" || { echo ".claude/scripts/${s}.py missing"; exit 1; }
+          done
+          test -f docs/iconix/templates/migration-preflight-fallback-reference.md || { echo "migration-preflight-fallback-reference.md missing"; exit 1; }
+          test -f docs/iconix/templates/promote-fallback-reference.md || { echo "promote-fallback-reference.md missing"; exit 1; }
+          test -f docs/iconix/templates/ids-registry-template.md || { echo "ids-registry-template.md missing"; exit 1; }
           echo "OK — installation validated"
 
   smoke-test-installer-windows:
@@ -420,4 +427,36 @@ jobs:
           Assert-Dir  "use-case-packages"
           Assert-File "docs\iconix\templates\use-case-diagram-template.puml"
 
+          # SDK Hybrid (Option B): .claude/scripts/ Python helpers + fallback references
+          foreach ($s in @("_common","checkpoint","ids","router","migration_params","migration_preflight","migration_promoted","promote")) {
+            Assert-File ".claude\scripts\$s.py"
+          }
+          Assert-File "docs\iconix\templates\migration-preflight-fallback-reference.md"
+          Assert-File "docs\iconix\templates\promote-fallback-reference.md"
+          Assert-File "docs\iconix\templates\ids-registry-template.md"
+
           Write-Host "OK - installation validated"
+
+  test-scripts:
+    # pytest suite for the .claude/scripts/ Python helpers (SDK Hybrid — Option B).
+    # Runs on Linux AND Windows: the user's primary platform is Windows and agents
+    # shell out to these scripts on both. The scripts are stdlib-only (no PyYAML);
+    # pytest is the sole dev dependency. Pinned to Python 3.9 — the documented
+    # minimum — so a 3.10+-only construct can't slip in unnoticed.
+    #
+    # NOTE: validate.py-style gate enforcement is intentionally NOT wired into CI for
+    # this slice (see BACKLOG.md "SDK Hybrid — Option B"); only the unit tests run here.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+      - name: Run script tests
+        run: python -m pytest scripts/tests/ -q

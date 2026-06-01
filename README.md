@@ -123,6 +123,11 @@ When both scopes define the same agent, project scope wins (Claude Code behavior
 
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) installed and authenticated
 - `bash`, `git`, `sed` (standard on macOS/Linux; use WSL on Windows)
+- **Python 3.9+** on PATH (invoked as `python3`) — recommended. Powers the
+  deterministic `.claude/scripts/` helpers (migration routing, checkpoint I/O, ID
+  allocation, DRAFT promotion). They are **stdlib-only** (no `pip install`). If Python
+  is absent the agents fall back to their in-prompt logic, so the kit still works — it
+  just does the mechanical steps by reasoning instead of by script.
 - Optional: a PlantUML renderer for diagrams
 
 ## Per-project configuration
@@ -184,21 +189,30 @@ After `iconix-init` the project gains two layers: **kit machinery** (agents, com
 │   ├── iconix-migration-infra.md    ← pre-flight + dep recon (v1.0.47+)
 │   ├── iconix-migration-structural.md ← survey + class model + SDs + RBs (v1.0.47+)
 │   └── iconix-migration-semantic.md   ← UCs + BDD + rules + handoff (v1.0.47+)
-└── commands/                        ← 13 slash commands
-    ├── iconix-next.md               /iconix-next
-    ├── iconix-status.md             /iconix-status
-    ├── iconix-impact.md             /iconix-impact
-    ├── iconix-review.md             /iconix-review
-    ├── iconix-bug.md                /iconix-bug
-    ├── iconix-pr.md                 /iconix-pr
-    ├── iconix-trace-check.md        /iconix-trace-check
-    ├── iconix-concurrent.md         /iconix-concurrent
-    ├── iconix-metrics.md            /iconix-metrics
-    ├── iconix-upgrade.md            /iconix-upgrade
-    ├── iconix-docs.md               /iconix-docs
-    ├── iconix-migrate.md            /iconix-migrate
-    ├── iconix-promote.md            /iconix-promote
-    └── iconix-graphify.md           /iconix-graphify
+├── commands/                        ← 13 slash commands
+│   ├── iconix-next.md               /iconix-next
+│   ├── iconix-status.md             /iconix-status
+│   ├── iconix-impact.md             /iconix-impact
+│   ├── iconix-review.md             /iconix-review
+│   ├── iconix-bug.md                /iconix-bug
+│   ├── iconix-pr.md                 /iconix-pr
+│   ├── iconix-trace-check.md        /iconix-trace-check
+│   ├── iconix-concurrent.md         /iconix-concurrent
+│   ├── iconix-metrics.md            /iconix-metrics
+│   ├── iconix-upgrade.md            /iconix-upgrade
+│   ├── iconix-docs.md               /iconix-docs
+│   ├── iconix-migrate.md            /iconix-migrate
+│   ├── iconix-promote.md            /iconix-promote
+│   └── iconix-graphify.md           /iconix-graphify
+└── scripts/                         ← deterministic Python helpers, invoked via Bash (v1.0.82+)
+    ├── _common.py                   shared: config/prefix resolve, ID regex, checkpoint selector
+    ├── checkpoint.py                migration checkpoint read/write/update/validate
+    ├── ids.py                       ID allocation (highest+1 per type, never reuse)
+    ├── migration_params.py          normalize --scope / --max-uc / --entry-point
+    ├── router.py                    migration routing (checkpoint Cases A–E)
+    ├── migration_preflight.py       pre-flight idempotency detection (Steps 0–4)
+    ├── migration_promoted.py        already-promoted entry-point scan
+    └── promote.py                   DRAFT promotion (IDs, rename, [VERIFY] gate, xrefs)
 
 docs/iconix/
 ├── metrics-glossary.md
@@ -236,6 +250,9 @@ docs/iconix/
     ├── business-rules-template.md
     ├── migration-schema-detection-reference.md
     ├── migration-stack-patterns-reference.md
+    ├── migration-preflight-fallback-reference.md
+    ├── promote-fallback-reference.md
+    ├── ids-registry-template.md
     ├── graphify-setup.md
     ├── intake-transcript-template.md
     ├── intake-brd-template.md

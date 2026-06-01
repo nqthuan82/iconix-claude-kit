@@ -1,7 +1,7 @@
 ---
 name: iconix-migration-semantic
 description: Third sub-agent in the ICONIX migration pipeline. Invoked by iconix-migration after iconix-migration-structural completes. Runs Phases 5–7 (use case drafts, UC packages, BDD scenarios, business rules, test coverage map, handoff report). Do not invoke directly — use iconix-migration as the entry point.
-model: claude-opus-4-7
+model: claude-opus-4-8
 tools: Read, Grep, Glob, Write, Bash
 ---
 
@@ -75,8 +75,32 @@ Before drafting, read the `## Cross-container boundary correlation` section in
 `migration/survey-phase3-<date>.md` (compact hand-off from structural). Entry points in the same proposed
 group produce **one** UC-DRAFT, not separate drafts per entry point or per container.
 
-**Max-uc cap:** If `max_uc` field in the checkpoint is non-null:
-- **First, remove already-promoted entry points:** read `iconix.config.yaml` for the project prefix; scan `robustness/<PREFIX>-RB-*.puml` (permanent files — no `DRAFT` in filename); extract the inbound boundary node name from each (this is the entry point covered by that promoted UC); remove matching entry points from the candidate list. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
+**Cross-container semantic map:** If `migration/cross-container-semantic-map-<date>.md` exists (produced by structural Phase 0b), read it before grouping. Use EXTRACTED integration points as pre-confirmed cross-container UC groupings — prefer them over URL-prefix heuristics. AMBIGUOUS items remain hypotheses; apply normal URL-prefix logic for those.
+
+**Already-promoted check (run once for both filters below):**
+
+```bash
+python3 .claude/scripts/migration_promoted.py --robustness-dir robustness \
+  --config iconix.config.yaml --entry-points "<entry_point_filter, or omit for --max-uc only>"
+# → {already_promoted:[{entry_point,uc_id,...}], ambiguous:[...], promoted_boundaries:[...]}
+```
+
+<gate id="promoted-trust" mandatory="true">
+Trust this — don't grep `robustness/`. Skip each entry point in `already_promoted` (log `… already promoted as <uc_id> — skipping`); `ambiguous` items need user confirmation, not auto-skip; for `--max-uc`-only runs, drop candidates matching `promoted_boundaries`. Fallback when `python3` is missing: scan `robustness/<PREFIX>-RB-*.puml` (non-DRAFT) for inbound boundary names by hand.
+</gate>
+
+**Entry-point filter:** If `entry_point_filter` field in the checkpoint is non-null, apply before any other filtering:
+1. **Apply already-promoted check:** skip every target listed in `already_promoted` from the script above (log each `Entry point "<name>" already promoted as <UC-ID> — skipping.`) and remove it from the target list.
+2. **Match filter values against the SD-DRAFTs index** in `migration/survey-phase3-<date>.md`:
+   - Value contains a space → treat as `<HTTP-method /path>` (e.g., `POST /orders`); match against route column (case-insensitive; normalize path params before matching).
+   - No space → treat as `<class.method>` (e.g., `OrderController.PlaceOrder`); match against entry point class/method column (case-insensitive).
+3. If any filter value has **no match** → STOP. Print: `Entry point "<value>" not found in survey. Valid entry points:` followed by the full entry point list from `migration/survey-phase1-<date>.md`. Do not proceed.
+4. Draft **only** the matched UC-DRAFTs. Skip all other entry points entirely.
+5. `--entry-point` takes precedence over `--max-uc` — ignore `max_uc` when `entry_point_filter` is set.
+6. Continue to Phase 5b, 5c, 5d, 6, 7 using only the matched UC-DRAFTs.
+
+**Max-uc cap:** If `max_uc` field in the checkpoint is non-null (and `entry_point_filter` is null):
+- **First, remove already-promoted entry points** using the `promoted_boundaries` list from the already-promoted script above (run it without `--entry-points`): drop any candidate whose entry point matches a promoted boundary. Log: `Skipping <N> already-promoted entry points: [node names]`. This prevents a same-scope batch-2 run from re-drafting batch-1 entry points.
 - Draft remaining entry points ordered by confidence: EXTRACTED first, INFERRED second, AMBIGUOUS last.
 - Stop after producing `max_uc` UC-DRAFTs.
 - After reaching the cap, log:
@@ -426,7 +450,7 @@ Maintain a sequential BR-ID counter (`BR-001`, `BR-002` …) across all categori
 
 ### Step 4 — Annotate UC-DRAFT preconditions
 
-**Gate:** skip this step if no `docs/use-cases/UC-DRAFT-*.md` files exist.
+**Gate:** skip this step if no `use-cases/UC-DRAFT-*.md` files exist.
 
 For each UC-DRAFT-XXX:
 
@@ -568,7 +592,7 @@ Fill in every section:
 # Workflow — Code-walking mode (Phases 5–7)
 
 ## Phase 5 — Use case draft (manual)
-Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Apply the same max-uc cap logic as graph-assisted Phase 5 if `max_uc` is set in the checkpoint. Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
+Before drafting, read the `## Cross-container boundary correlation` section in `migration/survey-phase3-<date>.md`. Entry points in the same proposed group produce **one** UC-DRAFT covering the full multi-container flow. Same `[VERIFY]` rules as graph-assisted Phase 5 for MEDIUM-confidence groupings. Apply the same entry-point filter logic and max-uc cap logic as graph-assisted Phase 5 (`entry_point_filter` takes precedence over `max_uc`). Otherwise: same as graph-assisted Phase 5 but only from code + on-disk docs.
 
 ## Phase 5b — Use case package overview synthesis (manual)
 Same as graph-assisted Phase 5b. Without graph clustering, cluster manually:
