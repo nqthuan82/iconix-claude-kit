@@ -151,7 +151,7 @@ try {
             Write-Host "  seeded docs\architecture\system-architecture.md (fill in before running the Architect agent)"
         }
 
-        # Git integration — branch + commit conventions (always)
+        # Git integration -- branch + commit conventions (always)
         New-Item -ItemType Directory -Force -Path "docs\iconix\templates\git-integration" | Out-Null
         Copy-Item (Join-Path $WorkDir "templates\git-integration\branch-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
         Copy-Item (Join-Path $WorkDir "templates\git-integration\commit-conventions.md") "docs\iconix\templates\git-integration\" -Force -ErrorAction SilentlyContinue
@@ -201,7 +201,7 @@ try {
         }
     }
 
-    # Copy scripts (.claude/scripts/) — after seeding so Get-Location for config is
+    # Copy scripts (.claude/scripts/) -- after seeding so Get-Location for config is
     # captured before any cross-drive ForEach-Object pipeline alters PS provider state.
     # Installed at all scopes (project + global); project-independent.
     $scriptsSrc = Join-Path $WorkDir "scripts"
@@ -217,14 +217,14 @@ try {
         }
     }
 
-    # Python preflight — scripts need Python 3.9+ on PATH. WARN only; agents fall back
+    # Python preflight -- scripts need Python 3.9+ on PATH. WARN only; agents fall back
     # to in-prompt logic when absent. Get-Command only, no exec (avoids PS 5.1 side effects).
     $py = Get-Command python -ErrorAction SilentlyContinue
     if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
     if ($py) {
         Write-Host "  python found: $($py.Source)"
     } else {
-        Write-Host "  [warn] Python not found on PATH — .claude/scripts/ helpers will fall back"
+        Write-Host "  [warn] Python not found on PATH -- .claude/scripts/ helpers will fall back"
         Write-Host "         to in-prompt logic. Install Python 3.9+ to enable them."
     }
 
