@@ -12,13 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `scripts/migration_promoted.py`: `os.path.relpath(rb)` raises `ValueError` on Windows when
   pytest `tmp_path` is on `C:` but CWD is on `D:`. Fixed with `try/except ValueError` fallback
   to the raw path. 8 `test_migration_promoted` cases now pass on `windows-latest`.
-- `iconix-init.ps1`: on Windows Server 2025, calling `& python.exe --version` via the App
-  Execution Alias in PS 5.1 pipeline causes all code after the call to be silently skipped
-  (seeding block never runs, `iconix.config.yaml` never created). Root cause is a PS 5.1 +
-  Windows App Execution Alias interaction — the alias may launch Python asynchronously or
-  alter pipeline state. Fixed by NOT executing Python at all during install: replaced
-  `& $py.Source --version 2>&1` with `$py.Source` path display only. `Get-Command` alone
-  (no exec) is side-effect-free and sufficient for the PATH-presence check.
+- `iconix-init.ps1`: on Windows Server 2025, the project-scope seeding block was silently
+  skipped — `iconix.config.yaml` and project folders were never created. Root cause was
+  spurious state introduced by the `$ProjectRoot` inline-`if` expression and
+  `Set-Location $ProjectRoot` that were added as speculative CWD fixes. Reverted seeding
+  block to exactly the main-branch form (`Join-Path (Get-Location) "iconix.config.yaml"`)
+  and removed `$ProjectRoot` entirely; the scripts copy and python PATH check are the only
+  new additions vs main.
 
 No methodology or agent changes. No token-budget impact.
 
